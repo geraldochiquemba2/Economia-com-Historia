@@ -1,0 +1,14 @@
+# Render Blueprint Specification for "Economia com História"
+# This file automates the configuration when importing the repository to Render.
+
+services:
+  - type: web
+    name: economia-com-historia
+    env: static
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    routes:
+      # Rewrite all traffic to index.html to support React Single Page Application (SPA) routing
+      - type: rewrite
+        source: /*
+        destination: /index.html
