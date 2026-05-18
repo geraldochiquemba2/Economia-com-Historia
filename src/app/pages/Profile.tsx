@@ -16,7 +16,7 @@ import {
   Award
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import imgStudent from "../../imports/image-4.png";
+const imgStudent = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 
 export function Profile() {
   const navigate = useNavigate();

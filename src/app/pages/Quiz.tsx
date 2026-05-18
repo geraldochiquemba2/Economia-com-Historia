@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { quizQuestions, rankingData } from "../data/mockData";
 
-import imgWinner from "../../imports/image-5.png";
-import imgSecond from "../../imports/image-6.png";
-import imgThird from "../../imports/image-7.png";
+const imgWinner = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
+const imgSecond = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
+const imgThird = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 
 export function Quiz() {
   const navigate = useNavigate();

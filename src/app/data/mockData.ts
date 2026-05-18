@@ -1,8 +1,8 @@
-import imgInf from "../../imports/image-8.png";
-import imgCol from "../../imports/image-9.png";
-import imgWom from "../../imports/image-10.png";
-import imgMixa from "../../imports/image-11.png";
-import imgCoins from "../../imports/image-17.png";
+const imgInf = "https://images.unsplash.com/photo-1542838132-92c53300491e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
+const imgCol = "https://images.unsplash.com/photo-1473186505569-9c61870c11f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
+const imgWom = "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
+const imgMixa = "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
+const imgCoins = "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 
 export const exploreContents = [
   { id: "1", type: "video", title: "Inflação em Angola", description: "Vídeo sobre inflação com dados históricos e atuais.", thumbnail: imgInf },

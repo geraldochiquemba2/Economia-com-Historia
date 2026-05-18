@@ -22,8 +22,7 @@ const imgCoins = "https://images.unsplash.com/photo-1589180176337-503fed4bcfe0?c
 const imgIndustrial = "https://images.unsplash.com/photo-1576666735065-b24beb27b939?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 const imgMarket = "https://images.unsplash.com/photo-1558907530-83566904e778?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 const imgLuxury = "https://images.unsplash.com/photo-1528459105426-b9548367069b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
-
-import imgProfile from "../../imports/image-16.png";
+const imgProfile = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 
 export function Home() {
   const categories = [
