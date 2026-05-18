@@ -3,7 +3,6 @@ import { Outlet, NavLink, useLocation, useNavigate, MemoryRouter } from "react-r
 import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
-
 import { ScrollToTop } from "../components/ScrollToTop";
 
 export function AdminLayout() {
@@ -17,21 +16,47 @@ export function AdminLayout() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 text-gray-100 font-sans max-w-md mx-auto shadow-2xl relative border-x-4 border-t-4 border-[#3A0310]">
+    <div className="flex flex-col min-h-screen w-full bg-gray-900 text-gray-100 font-sans md:max-w-none md:border-x-0 md:border-t-0 mx-auto max-w-md shadow-2xl relative border-x-4 border-t-4 border-[#3A0310] transition-all duration-300">
       <ScrollToTop />
+      
       {/* Header */}
-      <header className="bg-black/40 backdrop-blur-md border-b border-[#3A0310]/20 px-4 py-4 flex items-center justify-between shadow-md z-10 sticky top-0">
-        <div className="flex items-center gap-2 text-rose-500">
-          <ShieldAlert className="w-5 h-5" />
-          <span className="font-bold text-lg tracking-tight text-white">Admin</span>
+      <header className="bg-black/40 backdrop-blur-md border-b border-[#3A0310]/20 px-6 py-4 flex items-center justify-between shadow-md z-10 sticky top-0 w-full">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 text-rose-500 cursor-pointer" onClick={() => navigate("/admin")}>
+            <ShieldAlert className="w-5 h-5" />
+            <span className="font-bold text-lg tracking-tight text-white uppercase">Admin</span>
+          </div>
+          
+          {/* Horizontal Nav Links for PC */}
+          <nav className="md:flex hidden items-center gap-6">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.exact}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                    isActive ? "text-rose-500" : "text-gray-400 hover:text-white"
+                  }`
+                }
+              >
+                <item.icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
         </div>
-        <button onClick={() => navigate("/app")} className="text-gray-400 hover:text-white transition-colors flex items-center gap-1 text-sm font-medium bg-gray-800 px-3 py-1.5 rounded-full">
-          <LogOut className="w-4 h-4" /> Sair
+
+        <button 
+          onClick={() => navigate("/app")} 
+          className="text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-black uppercase tracking-wider bg-gray-800 px-4 py-2.5 rounded-xl border border-white/5 cursor-pointer"
+        >
+          <LogOut className="w-4 h-4" /> Voltar ao App
         </button>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pb-20 relative">
+      <main className="flex-1 overflow-y-auto pb-20 relative w-full md:max-w-5xl md:mx-auto md:px-6 md:pt-10">
         <AnimatePresence mode="wait">
           <PageTransition key={location.pathname} className="h-full">
             <Outlet />
@@ -39,8 +64,8 @@ export function AdminLayout() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="bg-gray-950 border-t border-[#3A0310]/20 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex justify-around items-center h-16 shadow-[0_-4px_15px_-1px_rgba(0,0,0,0.8)] z-20 border-x-4 border-[#3A0310] border-b-4 border-b-[#3A0310]">
+      {/* Bottom Navigation for Mobile */}
+      <nav className="bg-gray-950 border-t border-[#3A0310]/20 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-16 shadow-[0_-4px_15px_-1px_rgba(0,0,0,0.8)] z-20 border-x-4 border-[#3A0310] border-b-4 border-b-[#3A0310]">
         {navItems.map((item) => (
           <NavLink
             key={item.to}

@@ -114,17 +114,25 @@ export function ContentDetail() {
             {content.description}
           </p>
           <div className="space-y-6 text-neutral-400 leading-relaxed font-medium">
-            <p>
-              Este conteúdo detalha as nuances históricas e os impactos diretos na sociedade angolana. 
-              É crucial entender como o período analisado moldou as relações comerciais e de produção.
-            </p>
-            <p>
-              Os dados indicam que as mudanças estruturais não aconteceram de forma isolada, mas sim como 
-              uma resposta direta às pressões externas e à reorganização do poder local.
-            </p>
-            <p>
-              Exploramos aqui o conceito de prestígio económico através das rotas comerciais antigas, onde o valor não era apenas medido em ouro, mas na influência cultural exercida sobre as regiões vizinhas.
-            </p>
+            {content.fullText && content.fullText.length > 0 ? (
+              content.fullText.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))
+            ) : (
+              <>
+                <p>
+                  Este conteúdo detalha as nuances históricas e os impactos diretos na sociedade angolana. 
+                  É crucial entender como o período analisado moldou as relações comerciais e de produção.
+                </p>
+                <p>
+                  Os dados indicam que as mudanças estruturais não aconteceram de forma isolada, mas sim como 
+                  uma resposta direta às pressões externas e à reorganização do poder local.
+                </p>
+                <p>
+                  Exploramos aqui o conceito de prestígio económico através das rotas comerciais antigas, onde o valor não era apenas medido em ouro, mas na influência cultural exercida sobre as regiões vizinhas.
+                </p>
+              </>
+            )}
           </div>
         </motion.div>
         

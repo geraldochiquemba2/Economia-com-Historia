@@ -37,11 +37,11 @@ export function Explore() {
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {["all", "video", "text", "podcast"].map((f) => (
+          {["all", "video", "text", "jindungo", "podcast"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border ${
+              className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border whitespace-nowrap ${
                 filter === f
                   ? "bg-[#3A0310] text-white border-[#E8B4B8]/30 shadow-[0_0_15px_rgba(58,3,16,0.3)]"
                   : "bg-white/5 text-neutral-500 border-white/5 hover:bg-white/10 hover:text-neutral-300"
@@ -50,6 +50,7 @@ export function Explore() {
               {f === "all" && "Todos"}
               {f === "video" && "Vídeos"}
               {f === "text" && "Leituras"}
+              {f === "jindungo" && "Com Jindungo 🔥"}
               {f === "podcast" && "Áudios"}
             </button>
           ))}
@@ -85,7 +86,8 @@ export function Explore() {
                         {content.type === "video" && <PlayCircle className="w-3.5 h-3.5 mr-1.5" />}
                         {content.type === "text" && <FileText className="w-3.5 h-3.5 mr-1.5" />}
                         {content.type === "podcast" && <Mic className="w-3.5 h-3.5 mr-1.5" />}
-                        {content.type}
+                        {content.type === "jindungo" && <span className="mr-1.5">🔥</span>}
+                        {content.type === "jindungo" ? "Jindungo" : content.type}
                       </span>
                     </div>
                   </div>
