@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Users, Search, MoreVertical, Ban, Mail } from "lucide-react";
+import { Users, Search, MoreVertical, Ban, Mail, ShieldAlert } from "lucide-react";
 import { rankingData } from "../../data/mockData";
 
 export function AdminUsers() {
@@ -11,69 +11,90 @@ export function AdminUsers() {
   );
 
   return (
-    <div className="p-6 pb-24 space-y-6">
+    <div className="p-6 pb-24 space-y-6 max-w-5xl mx-auto">
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex justify-between items-center"
+        className="flex items-center gap-4 mb-2"
       >
+        <div className="w-12 h-12 rounded-2xl bg-[#3A0310] dark:bg-[#3A0310]/20 border border-[#3A0310]/20 dark:border-[#E8B4B8]/30 flex items-center justify-center shadow-lg">
+          <Users className="w-6 h-6 force-gold" />
+        </div>
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">Usuários</h1>
-          <p className="text-gray-400 text-sm">Gerencie acessos e subscrições.</p>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-[#3A0310] dark:text-white mb-0.5">Usuários</h1>
+          <p className="text-[#3A0310]/70 dark:text-[#E8B4B8]/70 text-[10px] font-black uppercase tracking-widest">Gerencie acessos e subscrições</p>
         </div>
       </motion.div>
 
+      {/* Search Bar */}
       <div className="relative mb-6">
         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-500" />
+          <Search className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
         </div>
         <input
           type="text"
           placeholder="Pesquisar usuário..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 bg-gray-800 border-0 ring-1 ring-gray-700 rounded-2xl shadow-sm focus:ring-2 focus:ring-rose-500 transition-shadow text-gray-100 placeholder-gray-500"
+          className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-[1.5rem] shadow-md focus:ring-2 focus:ring-[#3A0310]/30 focus:border-[#3A0310] transition-all text-neutral-800 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 text-xs font-bold uppercase tracking-wider outline-none"
         />
       </div>
 
-      <div className="space-y-4">
-        {filteredUsers.map((user, index) => (
-          <motion.div
-            key={user.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="flex items-center p-4 bg-gray-800 rounded-2xl border border-gray-700 hover:border-gray-600 transition-all gap-4 group"
-          >
-            <div className="w-12 h-12 bg-rose-900 text-rose-200 rounded-full flex items-center justify-center font-bold text-lg shadow-inner">
-              {user.name.charAt(0)}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-100 truncate">{user.name}</h3>
-              <p className="text-xs text-gray-400 mt-0.5">{user.points} pts • Plano Gratuito</p>
-            </div>
+      {/* Users List */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <AnimatePresence mode="popLayout">
+          {filteredUsers.map((user, index) => (
+            <motion.div
+              key={user.id}
+              layout
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ delay: index * 0.05 }}
+              className="flex items-center p-4 bg-white dark:bg-white/5 rounded-[1.5rem] border border-[#3A0310]/30 dark:border-white/10 hover:border-[#3A0310]/60 dark:hover:border-[#E8B4B8]/40 transition-all gap-4 group shadow-md hover:shadow-lg"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] force-white rounded-[1rem] flex items-center justify-center font-black text-lg shadow-inner border border-[#E8B4B8]/20 shrink-0">
+                {user.name.charAt(0)}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h3 className="font-black text-sm text-[#3A0310] dark:text-white uppercase tracking-tight truncate">{user.name}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] font-black text-[#E8B4B8] dark:text-[#E8B4B8] uppercase tracking-widest bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 px-2 py-0.5 rounded-md">
+                    {user.points} pts
+                  </span>
+                  <span className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
+                    Plano Gratuito
+                  </span>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button className="p-2 text-gray-400 hover:text-white bg-gray-700 rounded-xl hover:bg-rose-600 transition-colors">
-                <Mail className="w-4 h-4" />
+              <div className="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <button className="p-2.5 text-[#3A0310] dark:text-[#E8B4B8] hover:text-white bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 hover:bg-[#3A0310] dark:hover:bg-[#E8B4B8]/30 rounded-xl transition-colors">
+                  <Mail className="w-4 h-4" />
+                </button>
+                <button className="p-2.5 text-red-600 dark:text-red-400 hover:text-white bg-red-50 dark:bg-red-500/10 hover:bg-red-500 dark:hover:bg-red-500/30 rounded-xl transition-colors">
+                  <Ban className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <button className="p-2.5 text-neutral-400 dark:text-neutral-500 hover:text-[#3A0310] dark:hover:text-white md:group-hover:hidden transition-opacity shrink-0">
+                <MoreVertical className="w-5 h-5" />
               </button>
-              <button className="p-2 text-gray-400 hover:text-red-400 bg-gray-700 rounded-xl hover:bg-gray-600 transition-colors">
-                <Ban className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <button className="p-2 text-gray-500 hover:text-white group-hover:hidden transition-opacity">
-              <MoreVertical className="w-5 h-5" />
-            </button>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
+        </AnimatePresence>
 
         {filteredUsers.length === 0 && (
-          <div className="text-center py-10 bg-gray-800/50 rounded-2xl border border-gray-700 border-dashed">
-            <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400 font-medium">Nenhum usuário encontrado.</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16 bg-white/50 dark:bg-white/5 rounded-[2rem] border border-neutral-200 dark:border-white/10 border-dashed backdrop-blur-sm"
+          >
+            <Users className="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3" />
+            <p className="text-neutral-500 dark:text-neutral-400 font-black uppercase tracking-widest text-[10px]">Nenhum usuário encontrado.</p>
+          </motion.div>
         )}
       </div>
     </div>

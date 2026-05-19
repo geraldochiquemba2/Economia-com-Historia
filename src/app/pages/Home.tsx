@@ -62,51 +62,71 @@ export function Home() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="px-6 pt-10 pb-6 bg-[#0F0F0F]/80 backdrop-blur-xl sticky top-0 z-50 border-b border-white/5"
+        className="relative overflow-hidden px-6 pt-14 pb-12 md:pt-20 md:pb-16 md:px-10 sticky top-0 md:relative md:top-auto z-50 md:z-10 border-b md:border border-white/5 md:border-white/10 bg-black md:rounded-[2.5rem] md:mt-6 shadow-2xl"
       >
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <Link to="/app/profile" className="relative group">
-              <div className="absolute -inset-1.5 bg-gradient-to-r from-[#3A0310] to-[#E8B4B8] rounded-2xl blur opacity-20 group-hover:opacity-60 transition duration-500"></div>
-              <div className="relative w-14 h-14 rounded-2xl overflow-hidden border border-white/10 p-0.5 bg-black">
-                <ImageWithFallback 
-                  src={imgProfile} 
-                  alt="Avatar" 
-                  className="w-full h-full rounded-xl object-cover grayscale-[20%]"
-                />
-              </div>
-              <div className="absolute -bottom-1 -right-1 bg-[#3A0310] w-5 h-5 rounded-lg border-2 border-[#0F0F0F] flex items-center justify-center">
-                <Sparkles className="w-2.5 h-2.5 text-[#E8B4B8]" />
-              </div>
-            </Link>
-            <div>
-              <p className="text-[9px] text-[#E8B4B8] font-black uppercase tracking-[0.25em]">Círculo de Prestígio</p>
-              <h1 className="text-xl font-black text-white tracking-tight uppercase">Olá, Marcos</h1>
-            </div>
-          </div>
-          
-          <button className="relative p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors border border-white/10 shadow-2xl">
-            <Bell className="w-5 h-5 text-neutral-300" />
-            <span className="absolute top-3 right-3 w-2 h-2 bg-[#3A0310] rounded-full border border-white/20"></span>
-          </button>
+        {/* Background Image of Historical Theme */}
+        <div className="absolute inset-0 z-0 select-none pointer-events-none">
+          <img 
+            src="https://images.unsplash.com/photo-1447069387593-a5de0862481e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" 
+            alt="Fundo Temático" 
+            className="w-full h-full object-cover opacity-80 scale-105"
+          />
+          {/* Sepia & light overlay gradient for contrast */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black/85" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#3A0310]/40 to-transparent" />
         </div>
 
-        {/* Search Bar - Glassmorphism */}
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="w-4 h-4 text-neutral-500" />
+        <div className="relative z-10">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.25em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] opacity-95" style={{ color: '#E8B4B8' }}>Bem-vindo à</p>
+              <h1 className="text-xl md:text-3xl font-black tracking-tight uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] mt-1.5" style={{ color: '#ffffff' }}>Economia com História</h1>
+            </div>
+            
+            <button className="relative p-3 bg-white/20 backdrop-blur-md rounded-2xl hover:bg-white/30 transition-all duration-350 border border-white/25 shadow-2xl active:scale-95">
+              <Bell className="w-5 h-5" style={{ color: '#ffffff' }} />
+              <span className="absolute top-3 right-3 w-2 h-2 bg-[#E8B4B8] rounded-full border border-black shadow-[0_0_8px_#E8B4B8]"></span>
+            </button>
           </div>
-          <input 
-            type="text" 
-            placeholder="Procurar tesouros de conhecimento..." 
-            className="w-full bg-white/5 border border-white/10 text-white placeholder-neutral-500 rounded-2xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-[#3A0310]/50 transition-all text-xs font-bold uppercase tracking-widest"
-          />
+
+          {/* Search Bar - Premium Glassmorphism */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.8)' }} />
+            </div>
+            <input 
+              type="text" 
+              placeholder="Procurar tesouros de conhecimento..." 
+              className="w-full bg-white/15 backdrop-blur-md border border-white/20 placeholder-white/70 rounded-2xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/20 transition-all text-xs font-bold uppercase tracking-widest shadow-2xl"
+              style={{ color: '#ffffff' }}
+            />
+          </div>
         </div>
       </motion.header>
 
       {/* Main Content */}
       <main className="px-6 pt-8 space-y-12">
         
+        {/* Personal Greeting Card */}
+        <motion.section
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="relative overflow-hidden p-6 rounded-[2.5rem] bg-white/5 border border-white/5 shadow-2xl flex items-center justify-between"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-2.5 h-12 rounded-full bg-gradient-to-b from-[#3A0310] to-[#E8B4B8]" />
+            <div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">Olá, Marcos</h2>
+              <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mt-1">Pronto para a jornada de hoje?</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 bg-[#3A0310]/30 text-[#E8B4B8] px-4 py-2 rounded-full border border-[#E8B4B8]/20 text-[9px] font-black uppercase tracking-wider">
+            <Flame className="w-3.5 h-3.5" fill="currentColor" />
+            <span>3 Dias Ativo</span>
+          </div>
+        </motion.section>
+
         {/* Featured Themes */}
         <section>
           <div className="flex justify-between items-end mb-6">
@@ -119,14 +139,14 @@ export function Home() {
             </div>
           </div>
           
-          <div className="flex gap-5 overflow-x-auto pb-4 -mx-6 px-6 hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex md:grid md:grid-cols-2 gap-6 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-6 px-6 md:mx-0 md:px-0 hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {featuredThemes.map((theme, index) => (
               <motion.div
                 key={theme.id}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                className="flex-shrink-0 w-[85vw] max-w-[340px] group"
+                className="flex-shrink-0 md:flex-shrink w-[85vw] md:w-auto max-w-[340px] md:max-w-none group"
               >
                 <Link to={theme.link} className="block relative h-96 rounded-[2.5rem] overflow-hidden border border-white/10 group-hover:border-[#3A0310]/50 transition-all duration-500 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]">
                   <ImageWithFallback 
@@ -138,17 +158,17 @@ export function Home() {
                   
                   <div className="absolute inset-0 p-8 flex flex-col justify-end">
                     <div className="flex items-center gap-2 mb-4">
-                      <span className="bg-[#3A0310] text-[#E8B4B8] text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border border-[#E8B4B8]/20 shadow-2xl">
+                      <span className="bg-[#3A0310] text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border border-[#E8B4B8]/20 shadow-2xl" style={{ color: '#E8B4B8' }}>
                         {theme.tag}
                       </span>
                       <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                        <Gem className="w-3 h-3 text-white" />
+                        <Gem className="w-3 h-3" style={{ color: '#ffffff' }} />
                       </div>
                     </div>
-                    <h3 className="text-white font-black text-2xl leading-tight mb-3 drop-shadow-2xl uppercase tracking-tighter">
+                    <h3 className="font-black text-2xl leading-tight mb-3 drop-shadow-2xl uppercase tracking-tighter" style={{ color: '#ffffff' }}>
                       {theme.title}
                     </h3>
-                    <p className="text-neutral-300 text-sm font-medium line-clamp-2 mb-6">
+                    <p className="text-sm font-medium line-clamp-2 mb-6" style={{ color: '#e5e5e5' }}>
                       {theme.subtitle}
                     </p>
                     
@@ -161,10 +181,10 @@ export function Home() {
                             </div>
                           ))}
                         </div>
-                        <span className="text-[9px] text-neutral-400 font-black uppercase tracking-widest">+1.2k Alunos</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#a3a3a3' }}>+1.2k Alunos</span>
                       </div>
                       <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-[#3A0310] group-hover:border-[#E8B4B8]/30 transition-all duration-300 shadow-2xl">
-                        <Play className="w-4 h-4 text-white ml-0.5" fill="currentColor" />
+                        <Play className="w-4 h-4 ml-0.5" fill="currentColor" style={{ color: '#ffffff' }} />
                       </div>
                     </div>
                   </div>
@@ -176,7 +196,7 @@ export function Home() {
 
         {/* Quick Categories */}
         <section>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-4 md:gap-8 md:max-w-3xl md:mx-auto">
             {categories.map((cat, idx) => (
               <Link 
                 key={cat.id} 
@@ -185,9 +205,9 @@ export function Home() {
               >
                 <motion.div 
                   whileHover={{ y: -5, scale: 1.05 }}
-                  className="w-16 h-16 rounded-[1.5rem] bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-[#3A0310]/20 group-hover:border-[#3A0310]/50 transition-all duration-300 shadow-2xl"
+                  className="w-16 h-16 rounded-[1.5rem] bg-white dark:bg-white/5 border border-[#3A0310]/30 dark:border-[#3A0310]/50 flex items-center justify-center group-hover:bg-[#3A0310]/10 dark:group-hover:bg-[#3A0310]/20 group-hover:border-[#3A0310]/80 transition-all duration-300 shadow-xl"
                 >
-                  <cat.icon className="w-6 h-6 text-[#E8B4B8] group-hover:scale-110 transition-transform" />
+                  <cat.icon className="w-6 h-6 text-[#3A0310] dark:text-[#E8B4B8] group-hover:scale-110 transition-transform" />
                 </motion.div>
                 <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest text-center group-hover:text-white transition-colors">{cat.name}</span>
               </Link>
@@ -208,16 +228,16 @@ export function Home() {
             
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-2xl group-hover:bg-[#E8B4B8] transition-colors duration-500">
-                  <Trophy className="w-7 h-7 text-[#E8B4B8] group-hover:text-[#3A0310] transition-colors" />
+                <div className="w-14 h-14 rounded-2xl bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-2xl transition-all duration-300 group-hover:scale-105 group-hover:bg-black/60">
+                  <Trophy className="w-7 h-7" style={{ color: '#E8B4B8' }} />
                 </div>
                 <div>
-                  <h4 className="text-white font-black text-xl uppercase tracking-tighter">Ranking de Elite</h4>
-                  <p className="text-[#E8B4B8]/70 text-[10px] font-bold uppercase tracking-widest mt-1 italic">Vê a tua posição no Panteão</p>
+                  <h4 className="font-black text-xl uppercase tracking-tighter" style={{ color: '#ffffff' }}>Ranking de Elite</h4>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mt-1 italic" style={{ color: 'rgba(232, 180, 184, 0.8)' }}>Vê a tua posição no Panteão</p>
                 </div>
               </div>
               <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:translate-x-2 transition-transform">
-                <ChevronRight className="w-5 h-5 text-white" />
+                <ChevronRight className="w-5 h-5" style={{ color: '#ffffff' }} />
               </div>
             </div>
 
@@ -229,7 +249,7 @@ export function Home() {
                    </div>
                  ))}
               </div>
-              <span className="text-[9px] font-black text-[#E8B4B8] uppercase tracking-[0.2em]">Ana, João e +1.2k Ativos</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: '#E8B4B8' }}>Ana, João e +1.2k Ativos</span>
             </div>
           </Link>
         </section>
@@ -246,7 +266,7 @@ export function Home() {
             </Link>
           </div>
           
-          <div className="space-y-5">
+          <div className="space-y-5 md:space-y-0 md:grid md:grid-cols-3 md:gap-6">
             {[
               { id: 1, title: "Mercados Africanos: Do Escambo ao Digital", category: "Economia Real", image: imgMarket },
               { id: 2, title: "A Arte de Escrever a Economia", category: "Literatura", image: "https://images.unsplash.com/photo-1473186505569-9c61870c11f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" },
@@ -260,9 +280,9 @@ export function Home() {
               >
                 <Link 
                   to="/app/explore"
-                  className="flex bg-white/5 rounded-[2rem] p-4 border border-white/5 hover:bg-white/10 hover:border-[#3A0310]/30 transition-all duration-300 group shadow-2xl overflow-hidden relative"
+                  className="flex bg-white dark:bg-white/5 rounded-[2rem] p-4 border-2 border-[#3A0310] dark:border-white/10 hover:bg-[#3A0310]/5 dark:hover:bg-white/10 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 transition-all duration-300 group shadow-lg overflow-hidden relative"
                 >
-                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 shadow-xl">
+                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 border border-[#3A0310]/20 dark:border-white/10 shadow-xl">
                     <ImageWithFallback 
                       src={rec.image} 
                       alt={rec.title}
@@ -272,15 +292,15 @@ export function Home() {
                   </div>
                   
                   <div className="flex flex-col justify-center ml-5 flex-1">
-                    <span className="text-[9px] font-black text-[#E8B4B8] uppercase tracking-[0.25em] mb-2 block">
+                    <span className="text-[9px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-[0.25em] mb-2 block">
                       {rec.category}
                     </span>
-                    <h3 className="text-white font-bold text-base leading-tight group-hover:text-[#E8B4B8] transition-colors line-clamp-2 uppercase tracking-tight">
+                    <h3 className="text-neutral-800 dark:text-white font-black text-sm leading-tight group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-2 uppercase tracking-tight">
                       {rec.title}
                     </h3>
                     
-                    <div className="mt-3 flex items-center gap-1.5 opacity-50">
-                       <div className="w-1.5 h-1.5 rounded-full bg-[#E8B4B8]" />
+                    <div className="mt-3 flex items-center gap-1.5 opacity-55">
+                       <div className="w-1.5 h-1.5 rounded-full bg-[#3A0310] dark:bg-[#E8B4B8]" />
                        <span className="text-[8px] font-black text-neutral-400 uppercase tracking-widest">Aceder ao Arquivo</span>
                     </div>
                   </div>

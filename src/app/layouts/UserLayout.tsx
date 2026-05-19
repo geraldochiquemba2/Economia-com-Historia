@@ -41,66 +41,88 @@ export function UserLayout() {
     localStorage.setItem("theme", !isLight ? "light" : "dark");
   };
 
+  const getLinkClass = (isActive: boolean) => {
+    if (isActive) {
+      return isLight
+        ? "flex items-center gap-1.5 lg:gap-2.5 px-2.5 py-2 lg:px-4 lg:py-2.5 rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest bg-[#3A0310]/5 text-[#3A0310] transition-all duration-300"
+        : "flex items-center gap-1.5 lg:gap-2.5 px-2.5 py-2 lg:px-4 lg:py-2.5 rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest bg-[#E8B4B8]/10 text-[#E8B4B8] transition-all duration-300";
+    } else {
+      return isLight
+        ? "flex items-center gap-1.5 lg:gap-2.5 px-2.5 py-2 lg:px-4 lg:py-2.5 rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest text-neutral-500 hover:text-[#3A0310] hover:bg-[#3A0310]/5 transition-all duration-300"
+        : "flex items-center gap-1.5 lg:gap-2.5 px-2.5 py-2 lg:px-4 lg:py-2.5 rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest text-neutral-400 hover:text-neutral-200 hover:bg-white/5 transition-all duration-300";
+    }
+  };
+
   return (
-    <div className="flex flex-col min-h-screen w-full bg-[#0F0F0F] text-neutral-100 font-sans md:max-w-none md:border-x-0 mx-auto max-w-md shadow-2xl relative border-x border-[#3A0310]/30 transition-all duration-300">
+    <div className={`flex flex-col min-h-screen w-full font-sans md:max-w-none md:border-x-0 mx-auto max-w-md shadow-2xl relative border-x border-[#3A0310]/30 transition-all duration-300 ${
+      isLight ? "bg-[#FDFBFB] text-neutral-800" : "bg-[#0F0F0F] text-neutral-100"
+    }`}>
       <ScrollToTop />
 
       {/* Top Sticky Navigation for PC */}
-      <header className="bg-[#0F0F0F]/90 backdrop-blur-xl border-b border-white/5 sticky top-0 z-[100] md:block hidden w-full shadow-md transition-all duration-300 sticky-nav">
-        <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
-          <NavLink to="/app" className="flex items-center gap-3">
-            <span className="font-black text-xl tracking-tight text-white uppercase drop-shadow-sm">
-              Economia com História
+      <header className={`backdrop-blur-xl sticky top-0 z-[100] md:block hidden w-full shadow-md transition-all duration-300 sticky-nav ${
+        isLight 
+          ? "bg-white/95 border-b border-neutral-200/80" 
+          : "bg-[#0F0F0F]/90 border-b border-white/5"
+      }`}>
+        <div className="max-w-5xl mx-auto px-6 h-24 flex items-center justify-between">
+          <NavLink to="/app" className="flex items-center gap-3 flex-shrink-0">
+            <span className={`font-black text-xl tracking-tight uppercase drop-shadow-sm transition-colors ${
+              isLight ? "text-[#3A0310]" : "text-white"
+            }`}>
+              <span className="md:inline hidden">Economia com História</span>
+              <span className="md:hidden inline">Economia</span>
             </span>
           </NavLink>
           
-          <nav className="flex items-center gap-6 lg:gap-8">
+          <nav className="flex items-center gap-1.5 lg:gap-2.5 overflow-hidden">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.exact}
-                className={({ isActive }) =>
-                  `flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-all duration-300 ${
-                    isActive ? "text-[#E8B4B8] scale-105" : "text-neutral-400 hover:text-neutral-200"
-                  }`
-                }
+                className={({ isActive }) => getLinkClass(isActive)}
+                title={item.label}
               >
-                <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
+              <item.icon className="w-4.5 h-4.5 stroke-[2px] flex-shrink-0" />
+              <span className="inline">{item.label}</span>
+            </NavLink>
+          ))}
 
-            {/* Painel Administrativo */}
-            <NavLink
-              to="/admin"
-              className={({ isActive }) =>
-                `flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-all duration-300 ${
-                  isActive ? "text-[#E8B4B8] scale-105" : "text-neutral-400 hover:text-neutral-200"
-                }`
-              }
-            >
-              <ShieldAlert className="w-4 h-4" />
-              <span>Painel Admin</span>
+          {/* Painel Administrativo */}
+          <NavLink
+            to="/admin"
+            className={({ isActive }) => getLinkClass(isActive)}
+            title="Painel Admin"
+          >
+            <ShieldAlert className="w-4.5 h-4.5 stroke-[2px] flex-shrink-0" />
+            <span className="inline">Painel Admin</span>
             </NavLink>
 
-            {/* Modo Claro Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-neutral-400 hover:text-neutral-200 transition-colors bg-white/5 px-4 py-2.5 rounded-xl border border-white/10 cursor-pointer"
-            >
-              {isLight ? (
-                <>
-                  <Moon className="w-4 h-4 text-neutral-400" />
-                  <span>Escuro</span>
-                </>
-              ) : (
-                <>
-                  <Sun className="w-4 h-4 text-amber-500" />
-                  <span>Claro</span>
-                </>
-              )}
-            </button>
+            {/* Modo Claro Toggle Switch */}
+            <div className={`flex items-center gap-2 ml-2 lg:ml-4 border-l pl-4 lg:pl-6 transition-colors duration-300 ${
+              isLight ? "border-neutral-200" : "border-white/10"
+            }`}>
+              <Sun className={`w-4.5 h-4.5 transition-colors flex-shrink-0 ${isLight ? "text-[#3A0310]" : "text-neutral-400"}`} />
+              <span className={`text-[10px] lg:text-xs font-black uppercase tracking-widest transition-colors inline ${
+                isLight ? "text-[#3A0310]" : "text-neutral-400"
+              }`}>
+                Modo Claro
+              </span>
+              <button
+                onClick={toggleTheme}
+                aria-label="Alternar tema"
+                className={`w-10 h-5.5 rounded-full p-0.5 transition-all duration-300 focus:outline-none cursor-pointer relative shadow-inner flex-shrink-0 ${
+                  isLight ? "bg-[#3A0310]" : "bg-neutral-800"
+                }`}
+              >
+                <div
+                  className={`w-4.5 h-4.5 rounded-full bg-white shadow-md transform transition-all duration-300 ${
+                    isLight ? "translate-x-4.5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
           </nav>
         </div>
       </header>

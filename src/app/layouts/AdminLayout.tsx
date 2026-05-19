@@ -16,13 +16,13 @@ export function AdminLayout() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-gray-900 text-gray-100 font-sans md:max-w-none md:border-x-0 md:border-t-0 mx-auto max-w-md shadow-2xl relative border-x-4 border-t-4 border-[#3A0310] transition-all duration-300">
+    <div className="flex flex-col min-h-screen w-full bg-[#0F0F0F] text-neutral-100 font-sans md:max-w-none md:border-x-0 md:border-t-0 mx-auto max-w-md shadow-2xl relative border-x-4 border-t-4 border-[#3A0310] transition-all duration-300">
       <ScrollToTop />
       
       {/* Header */}
-      <header className="bg-black/40 backdrop-blur-md border-b border-[#3A0310]/20 px-6 py-4 flex items-center justify-between shadow-md z-10 sticky top-0 w-full">
+      <header className="bg-[#0F0F0F]/80 backdrop-blur-md border-b border-[#3A0310]/20 px-6 py-4 flex items-center justify-between shadow-md z-10 sticky top-0 w-full">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-rose-500 cursor-pointer" onClick={() => navigate("/admin")}>
+          <div className="flex items-center gap-2 text-[#E8B4B8] cursor-pointer" onClick={() => navigate("/admin")}>
             <ShieldAlert className="w-5 h-5" />
             <span className="font-bold text-lg tracking-tight text-white uppercase">Admin</span>
           </div>
@@ -49,7 +49,7 @@ export function AdminLayout() {
 
         <button 
           onClick={() => navigate("/app")} 
-          className="text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-black uppercase tracking-wider bg-gray-800 px-4 py-2.5 rounded-xl border border-white/5 cursor-pointer"
+          className="text-[#3A0310] dark:text-white hover:text-white transition-all flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-[#3A0310]/10 dark:bg-white/5 px-4 py-2.5 rounded-xl border border-[#3A0310]/20 dark:border-white/10 cursor-pointer hover:bg-[#3A0310] dark:hover:bg-white/10 shadow-sm hover:shadow-md active:scale-95"
         >
           <LogOut className="w-4 h-4" /> Voltar ao App
         </button>

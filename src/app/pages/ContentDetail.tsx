@@ -38,26 +38,26 @@ export function ContentDetail() {
   }
 
   return (
-    <div className="bg-[#0F0F0F] min-h-screen pb-24 text-neutral-100">
+    <div className="bg-[#FDFBFB] dark:bg-[#0F0F0F] min-h-screen pb-24 text-neutral-800 dark:text-neutral-100 transition-all duration-300">
       {/* Header Overlay */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 p-6 flex items-center justify-between"
+        className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md md:max-w-5xl z-[60] p-6 flex items-center justify-between"
       >
         <Link to="/app/explore" className="w-12 h-12 bg-black/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 text-white hover:bg-black/40 transition-all shadow-2xl">
-          <ArrowLeft className="w-6 h-6" />
+          <ArrowLeft className="w-6 h-6" style={{ color: '#ffffff' }} />
         </Link>
         <div className="flex gap-3">
           <button className="w-12 h-12 bg-black/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 text-white hover:bg-[#3A0310]/40 transition-all shadow-2xl group">
-            <Heart className="w-5 h-5 group-hover:fill-red-500 group-hover:text-red-500 transition-colors" />
+            <Heart className="w-5 h-5 group-hover:fill-red-500 group-hover:text-red-500 transition-colors" style={{ color: '#ffffff' }} />
           </button>
           <button className="w-12 h-12 bg-black/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 text-white hover:bg-black/40 transition-all shadow-2xl">
-            <Share2 className="w-5 h-5" />
+            <Share2 className="w-5 h-5" style={{ color: '#ffffff' }} />
           </button>
         </div>
       </motion.div>
-
+ 
       {/* Hero Content */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -69,30 +69,39 @@ export function ContentDetail() {
           alt={content.title}
           className="w-full h-full object-cover grayscale-[20%]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F0F] via-[#0F0F0F]/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#FDFBFB] dark:from-[#0F0F0F] via-black/40 to-transparent" />
         
         {content.type === "video" && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center z-20">
             <motion.div 
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               className="w-20 h-20 bg-white/10 backdrop-blur-3xl rounded-full flex items-center justify-center border border-white/20 shadow-2xl cursor-pointer group"
             >
-              <PlayCircle className="w-10 h-10 text-white group-hover:text-[#E8B4B8] transition-colors" />
+              <PlayCircle className="w-10 h-10 text-white group-hover:text-[#E8B4B8] transition-colors" style={{ color: '#ffffff' }} />
             </motion.div>
           </div>
         )}
-
-        <div className="absolute bottom-10 left-0 right-0 px-6">
+ 
+        <div className="absolute bottom-10 left-0 right-0 px-6 z-20">
           <div className="flex items-center gap-2 mb-4">
-             <span className="bg-[#3A0310] text-[#E8B4B8] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-[#E8B4B8]/20">
+             <span 
+               className="bg-[#3A0310] px-3 py-1 rounded-full uppercase tracking-widest border border-[#E8B4B8]/20 text-[10px] font-black"
+               style={{ color: '#E8B4B8' }}
+             >
               {content.type}
             </span>
-            <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 uppercase tracking-widest">
+            <span 
+              className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 uppercase tracking-widest text-[10px] font-bold"
+              style={{ color: '#ffffff' }}
+            >
               Nível 3
             </span>
           </div>
-          <h1 className="text-4xl font-black text-white leading-none uppercase tracking-tighter drop-shadow-2xl">
+          <h1 
+            className="text-4xl font-black leading-none uppercase tracking-tighter drop-shadow-2xl"
+            style={{ color: '#ffffff' }}
+          >
             {content.title}
           </h1>
         </div>
@@ -110,10 +119,10 @@ export function ContentDetail() {
           transition={{ delay: 0.2 }}
           className="prose prose-invert max-w-none"
         >
-          <p className="text-xl text-neutral-300 font-medium leading-relaxed italic mb-8 border-l-4 border-[#3A0310] pl-6">
+          <p className="text-xl text-neutral-600 dark:text-neutral-300 font-medium leading-relaxed italic mb-8 border-l-4 border-[#3A0310] pl-6">
             {content.description}
           </p>
-          <div className="space-y-6 text-neutral-400 leading-relaxed font-medium">
+          <div className="space-y-6 text-neutral-500 dark:text-neutral-400 leading-relaxed font-medium">
             {content.fullText && content.fullText.length > 0 ? (
               content.fullText.map((paragraph, index) => (
                 <p key={index}>{paragraph}</p>
@@ -148,17 +157,18 @@ export function ContentDetail() {
               setTimeout(() => navigate("/app/explore"), 1500);
             }}
             className="w-full py-5 bg-[#3A0310] text-white rounded-3xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_15px_35px_rgba(58,3,16,0.4)] hover:bg-[#5A051A] transition-all active:scale-[0.98] group border border-[#E8B4B8]/20"
+            style={{ color: '#ffffff' }}
           >
             <CheckCircle2 className="w-5 h-5 text-[#E8B4B8] group-hover:scale-110 transition-transform" />
             Concluir Estudo
           </button>
-          <p className="mt-4 text-[9px] text-neutral-600 font-black uppercase tracking-[0.2em]">Clica para gravar este conhecimento</p>
+          <p className="mt-4 text-[9px] text-neutral-500 dark:text-neutral-600 font-black uppercase tracking-[0.2em]">Clica para gravar este conhecimento</p>
         </motion.div>
 
         {/* Comments Section */}
-        <section className="pt-12 border-t border-white/5 pb-10">
-          <h3 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
-            <MessageCircle className="w-6 h-6 text-[#E8B4B8]" />
+        <section className="pt-12 border-t border-[#3A0310]/10 dark:border-white/5 pb-10">
+          <h3 className="text-xl font-black text-neutral-800 dark:text-white mb-8 flex items-center gap-3 uppercase tracking-tight">
+            <MessageCircle className="w-6 h-6 text-[#3A0310] dark:text-[#E8B4B8]" />
             Discussão de Elite ({commentsList.length})
           </h3>
           
@@ -169,21 +179,21 @@ export function ContentDetail() {
                   key={comment.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-white/5 p-6 rounded-[2rem] border border-white/5 hover:border-[#3A0310]/30 transition-all relative overflow-hidden"
+                  className="bg-white dark:bg-white/5 p-6 rounded-[2rem] border border-[#3A0310]/25 dark:border-white/5 hover:border-[#3A0310]/60 transition-all relative overflow-hidden shadow-sm"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center text-[10px] font-black text-[#E8B4B8] border border-white/10 uppercase">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center text-[10px] font-black text-[#E8B4B8] border border-white/10 uppercase" style={{ color: '#E8B4B8' }}>
                         {comment.author.charAt(0)}
                       </div>
                       <div>
-                        <span className="font-bold text-white text-xs block leading-none mb-1">{comment.author}</span>
+                        <span className="font-bold text-neutral-800 dark:text-white text-xs block leading-none mb-1">{comment.author}</span>
                         <span className="text-[9px] text-neutral-500 font-black uppercase tracking-widest">Académico</span>
                       </div>
                     </div>
-                    <span className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">{comment.time}</span>
+                    <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-600 uppercase tracking-widest">{comment.time}</span>
                   </div>
-                  <p className="text-sm text-neutral-400 font-medium leading-relaxed italic">"{comment.text}"</p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed italic">"{comment.text}"</p>
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -192,22 +202,24 @@ export function ContentDetail() {
       </div>
 
       {/* Floating Comment Bar */}
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[calc(100%-48px)] z-50">
+      <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[calc(100%-48px)] md:max-w-xl z-[60] transition-all duration-300">
         <form 
           onSubmit={handleAddComment} 
-          className="bg-black/40 backdrop-blur-2xl p-2 rounded-[2rem] border border-white/10 flex gap-2 shadow-2xl"
+          className="bg-black/80 backdrop-blur-2xl p-2 rounded-[2rem] border border-white/15 flex gap-2 shadow-2xl"
         >
           <input 
             type="text" 
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Contribuir para o debate..." 
-            className="flex-1 bg-transparent border-none rounded-full px-5 py-3 text-sm focus:outline-none text-white placeholder-neutral-500" 
+            className="flex-1 bg-transparent border-none rounded-full px-5 py-3 text-sm focus:outline-none placeholder-neutral-500" 
+            style={{ color: '#ffffff' }}
           />
           <button 
             type="submit"
             disabled={!newComment.trim()}
             className="bg-[#3A0310] text-[#E8B4B8] px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-[#5A051A] transition-all disabled:opacity-50 border border-[#E8B4B8]/20"
+            style={{ color: '#E8B4B8' }}
           >
             Enviar
           </button>
