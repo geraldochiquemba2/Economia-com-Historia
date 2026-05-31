@@ -201,24 +201,25 @@ export function AdminContent() {
             {filteredItems.map((item, index) => (
               <motion.div key={item.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: index * 0.04 }}
                 className="bg-white dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-[1.5rem] overflow-hidden flex flex-col shadow-lg hover:shadow-xl transition-all group">
-                <div className="h-36 bg-neutral-100 dark:bg-[#0F0F0F] relative w-full overflow-hidden border-b border-neutral-100 dark:border-white/5">
-                  {thumbSrc(item) ? (
+                <div className="h-40 bg-neutral-100 dark:bg-[#0F0F0F] relative w-full overflow-hidden border-b border-neutral-100 dark:border-white/5">
+                  {item.type === "video" && item.videoUrl ? (
+                    getYouTubeId(item.videoUrl) ? (
+                      <iframe src={`https://www.youtube.com/embed/${getYouTubeId(item.videoUrl)}`} className="w-full h-full" frameBorder="0" allowFullScreen></iframe>
+                    ) : (
+                      <video src={item.videoUrl} controls className="w-full h-full object-cover"></video>
+                    )
+                  ) : thumbSrc(item) ? (
                     <img src={thumbSrc(item)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <ImageIcon className="w-10 h-10 text-neutral-300 dark:text-neutral-700" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  {item.videoUrl && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-12 h-12 bg-red-600/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl">
-                        <Youtube className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
+                  {item.type !== "video" && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                   )}
-                  <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 text-[9px] font-black text-white uppercase tracking-widest">
-                    {item.type}
+                  <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 text-[9px] font-black text-white tracking-widest pointer-events-none">
+                    {item.type.toUpperCase()}
                   </div>
                 </div>
                 <div className="p-4 flex flex-col flex-1">
@@ -357,18 +358,19 @@ export function AdminContent() {
                 )}
 
                 {/* Imagem de Capa */}
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 flex items-center gap-1.5 block">
-                    <ImageIcon className="w-3.5 h-3.5" /> URL da Imagem de Capa
-                    {formData.type === "video" && <span className="text-neutral-400 font-medium">(opcional se tiver YouTube)</span>}
-                  </label>
-                  <input type="url" value={formData.thumbnail} onChange={e => setFormData(d => ({ ...d, thumbnail: e.target.value }))}
-                    placeholder="https://exemplo.com/imagem.jpg"
-                    className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 px-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 transition-colors" />
-                  {formData.thumbnail && (
-                    <img src={formData.thumbnail} alt="Pré-visualização" className="mt-3 h-24 w-full object-cover rounded-xl border border-neutral-200 dark:border-white/10" />
-                  )}
-                </div>
+                {formData.type !== "video" && (
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 flex items-center gap-1.5 block">
+                      <ImageIcon className="w-3.5 h-3.5" /> URL da Imagem de Capa
+                    </label>
+                    <input type="url" value={formData.thumbnail} onChange={e => setFormData(d => ({ ...d, thumbnail: e.target.value }))}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                      className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 px-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 transition-colors" />
+                    {formData.thumbnail && (
+                      <img src={formData.thumbnail} alt="Pré-visualização" className="mt-3 h-24 w-full object-cover rounded-xl border border-neutral-200 dark:border-white/10" />
+                    )}
+                  </div>
+                )}
 
                 {/* Conteúdo completo */}
                 <div>
