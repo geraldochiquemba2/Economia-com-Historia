@@ -177,7 +177,7 @@ export function UserLayout() {
       </main>
 
       {/* Bottom Navigation for Mobile */}
-      <nav className="bg-[#0F0F0F]/90 backdrop-blur-xl border-t border-white/5 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-20 shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.5)] z-[60]">
+      <nav className="bg-white/90 dark:bg-[#0F0F0F]/90 backdrop-blur-xl border-t border-neutral-200 dark:border-white/5 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.5)] z-[60]">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -185,7 +185,7 @@ export function UserLayout() {
             end={item.exact}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
-                isActive ? "text-[#E8B4B8]" : "text-neutral-500 hover:text-neutral-300"
+                isActive ? "text-black dark:text-white" : "text-neutral-500 dark:text-neutral-500 hover:text-black dark:hover:text-white"
               }`
             }
           >
@@ -200,7 +200,7 @@ export function UserLayout() {
                   {isActive && (
                     <motion.div 
                        layoutId="nav-glow"
-                      className="absolute -inset-2 bg-[#3A0310] rounded-full blur-md opacity-30 -z-10"
+                      className="absolute -inset-2 bg-neutral-200 dark:bg-[#3A0310] rounded-full blur-md opacity-50 dark:opacity-30 -z-10"
                     />
                   )}
                 </motion.div>
@@ -211,7 +211,7 @@ export function UserLayout() {
                 {isActive && (
                   <motion.div
                     layoutId="bottom-nav-dot"
-                    className="absolute bottom-2 w-1.5 h-1.5 bg-[#E8B4B8] rounded-full shadow-[0_0_8px_#E8B4B8]"
+                    className="absolute bottom-2 w-1.5 h-1.5 bg-black dark:bg-[#E8B4B8] rounded-full shadow-none dark:shadow-[0_0_8px_#E8B4B8]"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
