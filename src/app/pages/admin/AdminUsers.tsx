@@ -83,13 +83,13 @@ export function AdminUsers() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-4 top-3.5 h-5 w-5 text-neutral-400" />
+        <Search className="absolute left-4 top-3.5 h-5 w-5 text-[#3A0310]/60 dark:text-[#E8B4B8]/60" />
         <input
           type="text"
           placeholder="Pesquisar por nome ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-[1.5rem] shadow-md focus:ring-2 focus:ring-[#3A0310]/30 focus:border-[#3A0310] transition-all text-neutral-800 dark:text-white placeholder-neutral-400 text-xs font-bold uppercase tracking-wider outline-none"
+          className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-[#E8B4B8]/60 rounded-[1.5rem] shadow-md focus:ring-2 focus:ring-[#3A0310]/30 focus:border-[#3A0310] dark:focus:border-[#E8B4B8] transition-all text-neutral-800 dark:text-white placeholder-[#3A0310]/40 dark:placeholder-neutral-400 text-xs font-bold uppercase tracking-wider outline-none"
         />
       </div>
 
@@ -109,7 +109,7 @@ export function AdminUsers() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: index * 0.04 }}
-                className="flex items-center p-4 bg-white dark:bg-white/5 rounded-[1.5rem] border border-[#3A0310]/20 dark:border-white/10 hover:border-[#3A0310]/50 dark:hover:border-[#E8B4B8]/30 transition-all gap-4 group shadow-md hover:shadow-lg"
+                className="flex items-center p-4 bg-white dark:bg-white/5 rounded-[1.5rem] border-2 border-[#3A0310] dark:border-[#E8B4B8] hover:border-[#3A0310]/80 dark:hover:border-[#E8B4B8]/80 transition-all gap-4 group shadow-md hover:shadow-lg"
               >
                 {/* Avatar */}
                 <div className="w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-[1rem] flex items-center justify-center font-black text-lg text-white shadow-inner border border-[#E8B4B8]/20 shrink-0">
