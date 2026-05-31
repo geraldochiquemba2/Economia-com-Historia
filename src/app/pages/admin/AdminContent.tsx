@@ -197,7 +197,7 @@ export function AdminContent() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-[#3A0310] border border-[#3A0310]/20 dark:border-[#E8B4B8]/30 flex items-center justify-center shadow-lg">
-            <FileVideo className="w-6 h-6 text-white" />
+            <FileVideo className="w-6 h-6 text-white force-white" />
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-[#3A0310] dark:text-white mb-0.5">Gerir Conteúdo</h1>

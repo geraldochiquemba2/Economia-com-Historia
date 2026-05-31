@@ -294,7 +294,7 @@ app.delete('/api/content/:id', async (req, res) => {
 // Listar utilizadores (GET)
 app.get('/api/users', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT id, name, email, role, profession, "createdAt" FROM "User" ORDER BY "createdAt" DESC');
+    const { rows } = await pool.query('SELECT id, name, email, role, profession, avatar, "createdAt" FROM "User" ORDER BY "createdAt" DESC');
     res.json(rows);
   } catch (error) {
     console.error(error);

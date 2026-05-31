@@ -8,6 +8,7 @@ type UserItem = {
   email: string;
   role: string;
   profession: string;
+  avatar?: string;
   createdAt: string;
 };
 
@@ -65,7 +66,7 @@ export function AdminUsers() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4 mb-2">
         <div className="w-12 h-12 rounded-2xl bg-[#3A0310] border border-[#3A0310]/20 dark:border-[#E8B4B8]/30 flex items-center justify-center shadow-lg">
-          <Users className="w-6 h-6 text-white" />
+          <Users className="w-6 h-6 text-white force-white" />
         </div>
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-[#3A0310] dark:text-white mb-0.5">Utilizadores</h1>
@@ -112,8 +113,12 @@ export function AdminUsers() {
                 className="flex items-center p-4 bg-white dark:bg-white/5 rounded-[1.5rem] border-2 border-[#3A0310] dark:border-[#E8B4B8] hover:border-[#3A0310]/80 dark:hover:border-[#E8B4B8]/80 transition-all gap-4 group shadow-md hover:shadow-lg"
               >
                 {/* Avatar */}
-                <div className="w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-[1rem] flex items-center justify-center font-black text-lg force-white shadow-inner border border-[#E8B4B8]/20 shrink-0">
-                  {user.name.charAt(0).toUpperCase()}
+                <div className="w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-[1rem] flex items-center justify-center font-black text-lg force-white shadow-inner border border-[#E8B4B8]/20 shrink-0 overflow-hidden">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    user.name.charAt(0).toUpperCase()
+                  )}
                 </div>
 
                 {/* Info */}
