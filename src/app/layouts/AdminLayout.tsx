@@ -9,6 +9,19 @@ export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Aplicar o tema guardado quando o admin é montado
+  React.useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    const isDark = saved ? saved === "dark" : false;
+    if (isDark) {
+      document.documentElement.classList.remove("light");
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+    }
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
