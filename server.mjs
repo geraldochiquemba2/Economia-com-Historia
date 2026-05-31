@@ -118,6 +118,10 @@ async function initDB() {
         "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    // 3. Garantir que a coluna avatar existe na tabela User
+    await pool.query(`
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "avatar" VARCHAR(512);
+    `);
     console.log('[DB] Base de Dados sincronizada com sucesso.');
   } catch (err) {
     console.error('[DB] Erro ao sincronizar Base de Dados:', err);
@@ -207,10 +211,24 @@ app.post('/api/auth/login', async (req, res) => {
     if (!valid) return res.status(400).json({ error: 'Senha incorreta' });
 
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar || null } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Atualizar avatar do utilizador
+app.put('/api/users/:id/avatar', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhum ficheiro enviado' });
+  try {
+    const fileId = await uploadToTelegram(req.file.buffer, req.file.originalname, req.file.mimetype);
+    const avatarUrl = `/api/media/${fileId}`;
+    await pool.query('UPDATE "User" SET avatar = $1 WHERE id = $2', [avatarUrl, req.params.id]);
+    res.json({ avatar: avatarUrl });
+  } catch (err) {
+    console.error('[Avatar Upload Error]', err);
+    res.status(500).json({ error: err.message || 'Erro ao fazer upload do avatar' });
   }
 });
 

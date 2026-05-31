@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate, MemoryRouter } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -13,17 +13,44 @@ import {
   Settings,
   Crown,
   History,
-  Award
+  Award,
+  Camera,
+  Loader2
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-
-const imgStudent = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 
 export function Profile() {
   const navigate = useNavigate();
   const [subscribed, setSubscribed] = useState(false);
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : { name: "Estudante", role: "student" };
+
+  const [avatar, setAvatar] = useState<string | null>(user.avatar || null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    setAvatarError("");
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch(`/api/users/${user.id}/avatar`, { method: "PUT", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao carregar foto");
+      setAvatar(data.avatar);
+      // Actualizar localStorage
+      const updatedUser = { ...user, avatar: data.avatar };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    } catch (err: any) {
+      setAvatarError(err.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const options = [
     { icon: User, label: "Perfil Académico" },
@@ -49,17 +76,32 @@ export function Profile() {
           {/* Profile Basic Info Column */}
           <div className="flex flex-col items-center md:items-start md:col-span-5 mb-8 md:mb-0">
             <div className="relative mb-5">
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
               <div className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] bg-white/5 p-1.5 backdrop-blur-xl border border-white/10 shadow-[0_15px_30px_rgba(0,0,0,0.4)] overflow-hidden">
-                <ImageWithFallback 
-                  src={imgStudent}
-                  alt={user.name}
-                  className="w-full h-full rounded-[1.5rem] object-cover grayscale-[20%]"
-                />
+                {avatar ? (
+                  <img src={avatar} alt={user.name} className="w-full h-full rounded-[1.5rem] object-cover" />
+                ) : (
+                  <div className="w-full h-full rounded-[1.5rem] bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center">
+                    <span className="text-3xl font-black text-white">{user.name?.charAt(0).toUpperCase()}</span>
+                  </div>
+                )}
               </div>
-              <button className="absolute -bottom-1 -right-1 bg-[#3A0310] force-white p-2 rounded-xl shadow-2xl border border-[#E8B4B8]/20 hover:scale-110 transition-transform active:scale-95">
-                <Settings className="w-4 h-4 force-white" />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="absolute -bottom-1 -right-1 bg-[#3A0310] text-white p-2 rounded-xl shadow-2xl border border-[#E8B4B8]/20 hover:scale-110 transition-transform active:scale-95 disabled:opacity-50"
+              >
+                {uploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
               </button>
             </div>
+            {avatarError && <p className="text-red-400 text-[10px] font-bold mb-2 text-center">{avatarError}</p>}
             
             <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-0.5 text-center md:text-left force-white">{user.name}</h2>
             <p className="font-bold text-[9px] uppercase tracking-[0.2em] text-center md:text-left force-gold">{user.role === 'admin' ? 'Administrador' : 'Académico Ilustre • Nível 4'}</p>
