@@ -29,14 +29,13 @@ export function UserLayout() {
     navItems.push({ to: "/app/profile", icon: User, label: "Perfil" });
   }
 
-  // Theme support: Light Mode / Dark Mode
   const [isLight, setIsLight] = React.useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
       if (saved) return saved === "light";
-      return document.documentElement.classList.contains("light");
+      return true; // Default to Light Mode
     }
-    return false;
+    return true;
   });
 
   React.useEffect(() => {
