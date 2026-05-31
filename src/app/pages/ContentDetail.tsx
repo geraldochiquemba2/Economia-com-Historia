@@ -119,10 +119,10 @@ export function ContentDetail() {
           transition={{ delay: 0.2 }}
           className="prose prose-invert max-w-none"
         >
-          <p className="text-xl text-neutral-600 dark:text-neutral-300 font-medium leading-relaxed italic mb-8 border-l-4 border-[#3A0310] pl-6">
+          <p className="text-xl text-neutral-900 dark:text-neutral-300 font-medium leading-relaxed italic mb-8 border-l-4 border-[#3A0310] pl-6">
             {content.description}
           </p>
-          <div className="space-y-6 text-neutral-500 dark:text-neutral-400 leading-relaxed font-medium">
+          <div className="space-y-6 text-neutral-900 dark:text-neutral-400 leading-relaxed font-medium">
             {content.fullText && content.fullText.length > 0 ? (
               content.fullText.map((paragraph, index) => (
                 <p key={index}>{paragraph}</p>

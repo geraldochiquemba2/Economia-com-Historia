@@ -143,7 +143,7 @@ export function ForumDetail() {
             {topic.title}
           </h1>
           
-          <div className="prose prose-invert prose-sm text-neutral-400 leading-relaxed font-medium mb-8">
+          <div className="prose prose-invert prose-sm text-neutral-900 dark:text-neutral-400 leading-relaxed font-medium mb-8">
             <p className="italic border-l-2 border-[#3A0310] pl-4">
               "Olá a todos! Tenho acompanhado os últimos desenvolvimentos económicos e gostava de abrir uma discussão sobre este tema. 
               Quais são as vossas perspetivas sobre o impacto que as recentes políticas terão a médio e longo prazo?"
