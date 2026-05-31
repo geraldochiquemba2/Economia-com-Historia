@@ -112,7 +112,7 @@ export function AdminUsers() {
                 className="flex items-center p-4 bg-white dark:bg-white/5 rounded-[1.5rem] border-2 border-[#3A0310] dark:border-[#E8B4B8] hover:border-[#3A0310]/80 dark:hover:border-[#E8B4B8]/80 transition-all gap-4 group shadow-md hover:shadow-lg"
               >
                 {/* Avatar */}
-                <div className="w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-[1rem] flex items-center justify-center font-black text-lg text-white shadow-inner border border-[#E8B4B8]/20 shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-[1rem] flex items-center justify-center font-black text-lg force-white shadow-inner border border-[#E8B4B8]/20 shrink-0">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
 

@@ -80,7 +80,7 @@ export function AdminDashboard() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-[#3A0310] border border-[#3A0310]/20 dark:border-[#E8B4B8]/30 flex items-center justify-center shadow-lg">
-            <ShieldAlert className="w-6 h-6 text-white" />
+            <ShieldAlert className="w-6 h-6 force-white" />
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-[#3A0310] dark:text-white mb-0.5">Visão Geral</h1>
@@ -147,7 +147,7 @@ export function AdminDashboard() {
           ) : (
             recentUsers.map((u) => (
               <div key={u.id} className="flex items-center gap-3 bg-neutral-50 dark:bg-white/5 rounded-xl p-3 border border-neutral-100 dark:border-white/5">
-                <div className="w-9 h-9 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-xl flex items-center justify-center font-black text-white text-sm shrink-0">
+                <div className="w-9 h-9 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-xl flex items-center justify-center font-black force-white text-sm shrink-0">
                   {u.name.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
