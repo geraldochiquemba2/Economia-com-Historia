@@ -108,9 +108,9 @@ export function ContentDetail() {
       </motion.div>
 
       <div className="px-6 space-y-8 -mt-4 relative z-10">
-        <div className="flex items-center gap-6 text-neutral-900 dark:text-neutral-500 text-[10px] font-black uppercase tracking-widest">
-          <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#3A0310]" /> 12 MIN DE LEITURA</span>
-          <span className="flex items-center gap-1.5"><Eye className="w-4 h-4 text-[#3A0310]" /> 1.2K VISTAS</span>
+        <div className="flex items-center gap-6 text-neutral-900 dark:text-white text-[10px] font-black uppercase tracking-widest">
+          <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#3A0310] dark:text-[#E8B4B8]" /> 12 MIN DE LEITURA</span>
+          <span className="flex items-center gap-1.5"><Eye className="w-4 h-4 text-[#3A0310] dark:text-[#E8B4B8]" /> 1.2K VISTAS</span>
         </div>
 
         <motion.div
@@ -162,7 +162,7 @@ export function ContentDetail() {
             <CheckCircle2 className="w-5 h-5 text-[#E8B4B8] group-hover:scale-110 transition-transform" />
             Concluir Estudo
           </button>
-          <p className="mt-4 text-[9px] text-neutral-900 dark:text-neutral-600 font-black uppercase tracking-[0.2em]">Clica para gravar este conhecimento</p>
+          <p className="mt-4 text-[9px] text-neutral-900 dark:text-white font-black uppercase tracking-[0.2em]">Clica para gravar este conhecimento</p>
         </motion.div>
 
         {/* Comments Section */}
@@ -188,12 +188,12 @@ export function ContentDetail() {
                       </div>
                       <div>
                         <span className="font-bold text-neutral-800 dark:text-white text-xs block leading-none mb-1">{comment.author}</span>
-                        <span className="text-[9px] text-neutral-900 dark:text-neutral-500 font-black uppercase tracking-widest">Académico</span>
+                        <span className="text-[9px] text-neutral-900 dark:text-neutral-300 font-black uppercase tracking-widest">Académico</span>
                       </div>
                     </div>
-                    <span className="text-[9px] font-black text-neutral-900 dark:text-neutral-600 uppercase tracking-widest">{comment.time}</span>
+                    <span className="text-[9px] font-black text-neutral-900 dark:text-neutral-300 uppercase tracking-widest">{comment.time}</span>
                   </div>
-                  <p className="text-sm text-neutral-900 dark:text-neutral-400 font-medium leading-relaxed italic">"{comment.text}"</p>
+                  <p className="text-sm text-neutral-900 dark:text-neutral-200 font-medium leading-relaxed italic">"{comment.text}"</p>
                 </motion.div>
               ))}
             </AnimatePresence>
