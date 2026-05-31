@@ -191,9 +191,9 @@ export const forumTopics = [
 ];
 
 export const rankingData = [
-  { id: "1", name: "Mário Alberto Silva", userName: "Luanda", points: 4500 },
-  { id: "2", name: "Ana Paula dos Santos", userName: "Benguela", points: 3800 },
-  { id: "3", name: "Sofia Margarida Neto", userName: "Cabinda", points: 3200 },
-  { id: "4", name: "Carlos Manuel Gomes", userName: "Lunda Sul", points: 2900 },
-  { id: "5", name: "Maria Isabel Chipenda", userName: "Huambo", points: 2100 },
+  { id: "1", name: "Mário Alberto Silva", userName: "Luanda", points: 4500, profession: "Docente", email: "mario.silva@email.com", role: "admin" },
+  { id: "2", name: "Ana Paula dos Santos", userName: "Benguela", points: 3800, profession: "Estudante", email: "ana.paula@email.com", role: "user" },
+  { id: "3", name: "Sofia Margarida Neto", userName: "Cabinda", points: 3200, profession: "Estudante", email: "sofia.neto@email.com", role: "user" },
+  { id: "4", name: "Carlos Manuel Gomes", userName: "Lunda Sul", points: 2900, profession: "Trabalhador", email: "carlos.gomes@email.com", role: "user" },
+  { id: "5", name: "Maria Isabel Chipenda", userName: "Huambo", points: 2100, profession: "Estudante", email: "maria.chipenda@email.com", role: "user" },
 ];

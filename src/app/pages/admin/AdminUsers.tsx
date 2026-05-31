@@ -42,7 +42,7 @@ export function AdminUsers() {
       </div>
 
       {/* Users List */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredUsers.map((user, index) => (
             <motion.div
@@ -59,10 +59,14 @@ export function AdminUsers() {
               </div>
               
               <div className="flex-1 min-w-0">
-                <h3 className="font-black text-sm text-[#3A0310] dark:text-white uppercase tracking-tight truncate">{user.name}</h3>
-                <div className="flex items-center gap-2 mt-1">
+                <h3 className="font-black text-sm text-[#3A0310] dark:text-white uppercase tracking-tight break-words leading-tight">{user.name}</h3>
+                <p className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate mb-1.5">{user.email || "Sem email"}</p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className="text-[10px] font-black text-[#E8B4B8] dark:text-[#E8B4B8] uppercase tracking-widest bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 px-2 py-0.5 rounded-md">
                     {user.points} pts
+                  </span>
+                  <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300 uppercase tracking-widest bg-neutral-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
+                    {user.profession || "Estudante"}
                   </span>
                   <span className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
                     Plano Gratuito
