@@ -9,6 +9,12 @@ export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
   const navItems = [
     { to: "/admin", icon: LayoutDashboard, label: "Painel", exact: true },
     { to: "/admin/content", icon: FileVideo, label: "Conteúdo" },
@@ -47,12 +53,21 @@ export function AdminLayout() {
           </nav>
         </div>
 
-        <button 
-          onClick={() => navigate("/app")} 
-          className="text-[#3A0310] dark:text-white hover:text-white transition-all flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-[#3A0310]/10 dark:bg-white/5 px-4 py-2.5 rounded-xl border border-[#3A0310]/20 dark:border-white/10 cursor-pointer hover:bg-[#3A0310] dark:hover:bg-white/10 shadow-sm hover:shadow-md active:scale-95"
-        >
-          <LogOut className="w-4 h-4" /> Voltar ao App
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate("/app")} 
+            className="text-[#3A0310] dark:text-white hover:text-white transition-all flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-[#3A0310]/10 dark:bg-white/5 px-4 py-2.5 rounded-xl border border-[#3A0310]/20 dark:border-white/10 cursor-pointer hover:bg-[#3A0310] dark:hover:bg-white/10 shadow-sm hover:shadow-md active:scale-95"
+          >
+            <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Voltar ao App</span>
+          </button>
+          <button 
+            onClick={handleLogout}
+            title="Terminar Sessão"
+            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white force-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-95 border border-red-700/50"
+          >
+            <LogOut className="w-4 h-4" /> <span className="hidden md:inline">Sair</span>
+          </button>
+        </div>
       </header>
 
       {/* Main Content Area */}

@@ -1,7 +1,6 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 
 // Pages
-import { Splash } from "./pages/Splash";
 import { Home } from "./pages/Home";
 import { Explore } from "./pages/Explore";
 import { ContentDetail } from "./pages/ContentDetail";
@@ -9,6 +8,8 @@ import { Quiz } from "./pages/Quiz";
 import { Forum } from "./pages/Forum";
 import { Profile } from "./pages/Profile";
 import { Rankings } from "./pages/Rankings";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
 
 import { ForumDetail } from "./pages/ForumDetail";
 
@@ -24,7 +25,15 @@ import { AdminLayout } from "./layouts/AdminLayout";
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: Splash,
+    Component: () => <Navigate to="/app" replace />,
+  },
+  {
+    path: "/login",
+    Component: Login,
+  },
+  {
+    path: "/register",
+    Component: Register,
   },
   {
     path: "/app",

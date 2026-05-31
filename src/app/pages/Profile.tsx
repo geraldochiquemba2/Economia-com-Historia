@@ -22,6 +22,8 @@ const imgStudent = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d
 export function Profile() {
   const navigate = useNavigate();
   const [subscribed, setSubscribed] = useState(false);
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : { name: "Estudante", role: "student" };
 
   const options = [
     { icon: User, label: "Perfil Académico" },
@@ -50,7 +52,7 @@ export function Profile() {
               <div className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] bg-white/5 p-1.5 backdrop-blur-xl border border-white/10 shadow-[0_15px_30px_rgba(0,0,0,0.4)] overflow-hidden">
                 <ImageWithFallback 
                   src={imgStudent}
-                  alt="Marcos Silva"
+                  alt={user.name}
                   className="w-full h-full rounded-[1.5rem] object-cover grayscale-[20%]"
                 />
               </div>
@@ -59,8 +61,8 @@ export function Profile() {
               </button>
             </div>
             
-            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-0.5 text-center md:text-left force-white">Marcos Silva</h2>
-            <p className="font-bold text-[9px] uppercase tracking-[0.2em] text-center md:text-left force-gold">Académico Ilustre • Nível 4</p>
+            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-0.5 text-center md:text-left force-white">{user.name}</h2>
+            <p className="font-bold text-[9px] uppercase tracking-[0.2em] text-center md:text-left force-gold">{user.role === 'admin' ? 'Administrador' : 'Académico Ilustre • Nível 4'}</p>
           </div>
           
           {/* Profile Stats Grid Column */}
@@ -185,7 +187,11 @@ export function Profile() {
           {/* Logout Button */}
           <div className="w-full md:pb-4">
             <button 
-              onClick={() => navigate("/")}
+              onClick={() => {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                navigate("/");
+              }}
               className="w-full flex items-center justify-center gap-2.5 py-4 text-[#3A0310] dark:text-[#E8B4B8]/60 font-black uppercase tracking-widest text-[9px] bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/5 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 rounded-xl transition-all active:scale-[0.98] shadow-sm"
             >
               <LogOut className="w-3.5 h-3.5" />

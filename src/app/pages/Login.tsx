@@ -1,0 +1,101 @@
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { motion } from "motion/react";
+import { Lock, Mail, ArrowRight, Loader2 } from "lucide-react";
+
+export function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Erro ao fazer login");
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      
+      navigate("/app");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-[#0F0F0F] min-h-screen flex items-center justify-center p-6 text-neutral-100 selection:bg-[#3A0310]">
+      {/* Decorative background elements */}
+      <div className="fixed top-0 right-0 w-96 h-96 bg-[#3A0310] rounded-full blur-[150px] opacity-20 pointer-events-none" />
+      
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative z-10"
+      >
+        <div className="text-center mb-10">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#E8B4B8] mb-2">Bem-vindo de volta</p>
+          <h1 className="text-3xl font-black uppercase tracking-tight">Login</h1>
+        </div>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-xl mb-6 text-sm text-center font-bold">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="relative">
+            <Mail className="absolute left-4 top-3.5 w-5 h-5 text-white/50 force-white-50" />
+            <input 
+              type="email" 
+              placeholder="SEU EMAIL" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-bold tracking-widest text-xs uppercase force-white force-white-placeholder"
+            />
+          </div>
+
+          <div className="relative">
+            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-white/50 force-white-50" />
+            <input 
+              type="password" 
+              placeholder="SUA SENHA" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-bold tracking-widest text-xs uppercase force-white force-white-placeholder"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-[#3A0310] to-[#E8B4B8] text-white font-black uppercase tracking-widest py-4 rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Entrar"}
+            {!loading && <ArrowRight className="w-5 h-5" />}
+          </button>
+        </form>
+
+        <p className="mt-8 text-center text-xs font-bold uppercase tracking-widest text-neutral-400">
+          Não tem uma conta? <Link to="/register" className="text-[#E8B4B8] hover:underline">Cadastre-se</Link>
+        </p>
+      </motion.div>
+    </div>
+  );
+}

@@ -1,3 +1,21 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+html.light body .force-border-white,
+.force-border-white {
+  border-color: #ffffff !important;
+}
+
+html.light body input.force-white {
+  color: #ffffff !important;
+}
+
+html.light body input.force-white-placeholder::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+html.light body .force-white-50,
+.force-white-50 {
+  color: rgba(255, 255, 255, 0.5) !important;
+}

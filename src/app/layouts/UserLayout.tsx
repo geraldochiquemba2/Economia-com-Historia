@@ -1,6 +1,6 @@
 import React from "react";
-import { Outlet, NavLink, useLocation, useNavigate, MemoryRouter } from "react-router";
-import { Home, Compass, BookOpenCheck, MessageSquare, User, ShieldAlert, Sun, Moon } from "lucide-react";
+import { Outlet, NavLink, Link, useLocation, useNavigate, MemoryRouter } from "react-router";
+import { Home, Compass, BookOpenCheck, MessageSquare, User, ShieldAlert, Sun, Moon, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
 import { ScrollToTop } from "../components/ScrollToTop";
@@ -8,13 +8,26 @@ import { ScrollToTop } from "../components/ScrollToTop";
 export function UserLayout() {
   const location = useLocation();
 
+  const token = localStorage.getItem("token");
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
   const navItems = [
     { to: "/app", icon: Home, label: "Início", exact: true },
     { to: "/app/explore", icon: Compass, label: "Explorar" },
     { to: "/app/quiz", icon: BookOpenCheck, label: "Quiz" },
     { to: "/app/forum", icon: MessageSquare, label: "Fórum" },
-    { to: "/app/profile", icon: User, label: "Perfil" },
   ];
+  if (token && user?.role !== 'admin') {
+    navItems.push({ to: "/app/profile", icon: User, label: "Perfil" });
+  }
 
   // Theme support: Light Mode / Dark Mode
   const [isLight, setIsLight] = React.useState(() => {
@@ -90,18 +103,46 @@ export function UserLayout() {
           ))}
 
           {/* Painel Administrativo */}
-          <NavLink
-            to="/admin"
-            className={({ isActive }) => getLinkClass(isActive)}
-            title="Painel Admin"
-          >
-            <ShieldAlert className="w-4.5 h-4.5 stroke-[2px] flex-shrink-0" />
-            <span className="inline">Painel Admin</span>
+          {user && user.role === 'admin' && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) => getLinkClass(isActive)}
+              title="Painel Admin"
+            >
+              <ShieldAlert className="w-4.5 h-4.5 stroke-[2px] flex-shrink-0" />
+              <span className="inline">Painel Admin</span>
             </NavLink>
+          )}
+
+          {/* Login and Register Buttons for Unauthenticated Users */}
+          {!token && (
+            <div className="flex items-center gap-2 ml-1">
+              <Link to="/login" className="text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] hover:bg-[#3A0310]/10 dark:hover:bg-white/10 px-4 py-2 rounded-xl transition-all border border-[#3A0310] dark:border-[#E8B4B8]">
+                Login
+              </Link>
+              <Link to="/register" className="text-[10px] font-black uppercase tracking-widest text-white bg-[#3A0310] hover:bg-[#5A051A] dark:bg-[#E8B4B8] dark:text-[#3A0310] dark:hover:bg-white px-4 py-2 rounded-xl transition-all shadow-md border border-[#3A0310] dark:border-[#E8B4B8]">
+                Cadastrar
+              </Link>
+            </div>
+          )}
+
+          {/* Logout Button for Authenticated Users */}
+          {token && (
+            <div className="flex items-center ml-1 border-l border-[#3A0310]/20 dark:border-white/10 pl-2 lg:pl-3">
+              <button 
+                onClick={handleLogout}
+                title="Terminar Sessão"
+                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-600/10 dark:hover:bg-red-400/10 px-3 py-2 rounded-xl transition-all"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden md:inline">Sair</span>
+              </button>
+            </div>
+          )}
 
             {/* Modo Claro Toggle Switch */}
             <div className={`flex items-center gap-2 ml-2 lg:ml-4 border-l pl-4 lg:pl-6 transition-colors duration-300 ${
-              isLight ? "border-neutral-200" : "border-white/10"
+              isLight ? 'border-[#3A0310]/20' : 'border-white/10'
             }`}>
               <Sun className={`w-4.5 h-4.5 transition-colors flex-shrink-0 ${isLight ? "text-[#3A0310]" : "text-neutral-400"}`} />
               <span className={`text-[10px] lg:text-xs font-black uppercase tracking-widest transition-colors inline ${
@@ -182,12 +223,14 @@ export function UserLayout() {
       </nav>
       
       {/* Admin Quick Access (Floating) - HIDDEN ON PC */}
-      <NavLink 
-        to="/admin" 
-        className="fixed bottom-24 right-6 w-12 h-12 bg-[#3A0310] rounded-full flex md:hidden items-center justify-center shadow-2xl border border-[#E8B4B8]/20 z-50 text-white active:scale-95 transition-transform"
-      >
-        <ShieldAlert className="w-5 h-5" />
-      </NavLink>
+      {user && user.role === 'admin' && (
+        <NavLink 
+          to="/admin" 
+          className="fixed bottom-24 right-6 w-12 h-12 bg-[#3A0310] rounded-full flex md:hidden items-center justify-center shadow-2xl border border-[#E8B4B8]/20 z-50 text-white active:scale-95 transition-transform"
+        >
+          <ShieldAlert className="w-5 h-5" />
+        </NavLink>
+      )}
     </div>
   );
 }
