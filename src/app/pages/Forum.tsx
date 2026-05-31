@@ -7,6 +7,9 @@ import { forumTopics } from "../data/mockData";
 export function Forum() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"recent" | "oldest" | "popular">("recent");
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isAdmin = user?.role === 'admin';
 
   const filteredAndSortedTopics = useMemo(() => {
     let result = forumTopics.filter((t) =>
@@ -58,26 +61,28 @@ export function Forum() {
               </div>
               <div>
                 <h1 className="text-xl font-black text-neutral-800 dark:text-white tracking-tight uppercase">Fórum</h1>
-                <p className="text-[9px] text-neutral-400 dark:text-neutral-500 uppercase tracking-widest font-black">Círculo de Discussão</p>
+                <p className="text-[9px] text-neutral-400 dark:text-white uppercase tracking-widest font-black">Círculo de Discussão</p>
               </div>
             </div>
-            <button className="bg-[#3A0310] force-white p-2.5 rounded-xl shadow-md hover:bg-[#5A051A] transition-all border border-[#E8B4B8]/20 group active:scale-95">
-              <PlusCircle className="w-5 h-5 force-gold group-hover:scale-110 transition-transform" />
-            </button>
+            {isAdmin && (
+              <button className="bg-[#3A0310] force-white p-2.5 rounded-xl shadow-md hover:bg-[#5A051A] transition-all border border-[#E8B4B8]/20 group active:scale-95">
+                <PlusCircle className="w-5 h-5 force-gold group-hover:scale-110 transition-transform" />
+              </button>
+            )}
           </div>
 
           {/* Themed Search Bar & Filters Side-by-Side on PC */}
           <div className="flex flex-col md:flex-row gap-3 items-stretch">
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
+                <Search className="h-4 w-4 text-neutral-400 dark:text-white" />
               </div>
               <input
                 type="text"
                 placeholder="Pesquisar debates..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#3A0310]/50 focus:bg-neutral-100 dark:focus:bg-white/10 transition-all text-xs font-bold uppercase tracking-wider"
+                className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white placeholder-neutral-400 dark:placeholder-white rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#3A0310]/50 focus:bg-neutral-100 dark:focus:bg-white/10 transition-all text-xs font-bold uppercase tracking-wider"
               />
             </div>
 
@@ -89,7 +94,7 @@ export function Forum() {
                   className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border whitespace-nowrap active:scale-95 shadow-sm ${
                     filter === f
                       ? "bg-[#3A0310] force-white border-[#E8B4B8]/30 shadow-[0_4px_15px_rgba(58,3,16,0.25)]"
-                      : "bg-neutral-50 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-white/10 hover:text-[#3A0310] dark:hover:text-neutral-200"
+                      : "bg-neutral-50 dark:bg-white/5 text-neutral-500 dark:text-white border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-white/10 hover:text-[#3A0310] dark:hover:text-white"
                   }`}
                 >
                   {f === "recent" && "Recentes"}
@@ -128,17 +133,17 @@ export function Forum() {
                   </div>
                   <div>
                     <p className="text-neutral-800 dark:text-white text-xs font-bold leading-none mb-0.5">{topic.author}</p>
-                    <p className="text-neutral-400 dark:text-neutral-500 text-[8px] font-black uppercase tracking-widest">Académico Nível 2</p>
+                    <p className="text-neutral-400 dark:text-white text-[8px] font-black uppercase tracking-widest">Académico Nível 2</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 text-neutral-400 dark:text-neutral-500 text-[8px] font-bold uppercase tracking-widest">
+                <div className="flex items-center gap-3 text-neutral-400 dark:text-white text-[8px] font-bold uppercase tracking-widest">
                   <span className="flex items-center gap-1 bg-neutral-100 dark:bg-black/40 px-2 py-0.5 rounded-lg border border-neutral-200 dark:border-white/5">
-                    <Clock className="w-3 h-3 text-[#3A0310] dark:text-[#E8B4B8]" /> 
+                    <Clock className="w-3 h-3 text-[#3A0310] dark:text-white" /> 
                     {topic.date}
                   </span>
-                  <span className="flex items-center gap-1 bg-neutral-100 dark:bg-black/40 px-2 py-0.5 rounded-lg border border-neutral-200 dark:border-white/5 group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors">
-                    <MessageSquare className="w-3 h-3 text-[#3A0310] dark:text-[#E8B4B8]" /> 
+                  <span className="flex items-center gap-1 bg-neutral-100 dark:bg-black/40 px-2 py-0.5 rounded-lg border border-neutral-200 dark:border-white/5 group-hover:text-[#3A0310] dark:group-hover:text-white transition-colors">
+                    <MessageSquare className="w-3 h-3 text-[#3A0310] dark:text-white" /> 
                     {topic.comments}
                   </span>
                 </div>

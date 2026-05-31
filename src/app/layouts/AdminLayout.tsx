@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, NavLink, useLocation, useNavigate, MemoryRouter } from "react-router";
-import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
 import { ScrollToTop } from "../components/ScrollToTop";

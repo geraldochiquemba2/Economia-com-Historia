@@ -15,9 +15,11 @@ import {
   History,
   Award,
   Camera,
-  Loader2
+  Loader2,
+  Bookmark
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { ImageModal } from "../components/ImageModal";
 
 export function Profile() {
   const navigate = useNavigate();
@@ -29,6 +31,16 @@ export function Profile() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    try {
+      setFavorites(JSON.parse(localStorage.getItem('forum_favorites') || '[]'));
+    } catch {
+      setFavorites([]);
+    }
+  }, []);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,7 +96,10 @@ export function Profile() {
                 className="hidden"
                 onChange={handleAvatarChange}
               />
-              <div className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] bg-white/5 p-1.5 backdrop-blur-xl border border-white/10 shadow-[0_15px_30px_rgba(0,0,0,0.4)] overflow-hidden">
+              <div 
+                className={`w-24 h-24 md:w-28 md:h-28 rounded-[2rem] bg-white/5 p-1.5 backdrop-blur-xl border border-white/10 shadow-[0_15px_30px_rgba(0,0,0,0.4)] overflow-hidden ${avatar ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+                onClick={() => avatar && setSelectedImage(avatar)}
+              >
                 {avatar ? (
                   <img src={avatar} alt={user.name} className="w-full h-full rounded-[1.5rem] object-cover" />
                 ) : (
@@ -96,9 +111,10 @@ export function Profile() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="absolute -bottom-1 -right-1 bg-[#3A0310] text-white p-2 rounded-xl shadow-2xl border border-[#E8B4B8]/20 hover:scale-110 transition-transform active:scale-95 disabled:opacity-50"
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#3A0310] text-white px-3 py-1.5 rounded-full shadow-2xl border border-[#E8B4B8]/20 hover:scale-105 transition-transform active:scale-95 disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap z-10"
               >
-                {uploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                {uploadingAvatar ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                <span className="text-[9px] font-black uppercase tracking-widest mt-0.5">Alterar foto</span>
               </button>
             </div>
             {avatarError && <p className="text-red-400 text-[10px] font-bold mb-2 text-center">{avatarError}</p>}
@@ -243,10 +259,41 @@ export function Profile() {
         </div>
 
         {/* Right Column: Menu Options */}
-        <div className="md:col-span-6 space-y-3 w-full">
-          <h3 className="text-[9px] font-black uppercase tracking-[0.3em] px-2 text-neutral-400 dark:text-neutral-500">Configurações de Arquivo</h3>
+        <div className="md:col-span-6 space-y-6 w-full">
           
-          <div className="bg-white dark:bg-white/5 rounded-[2rem] border border-neutral-100 dark:border-white/5 overflow-hidden divide-y divide-neutral-100 dark:divide-white/5 shadow-xl">
+          <div className="space-y-3">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.3em] px-2 text-neutral-400 dark:text-neutral-500">Debates Guardados ({favorites.length})</h3>
+            <div className="bg-white dark:bg-white/5 rounded-[2rem] border border-neutral-100 dark:border-white/5 overflow-hidden divide-y divide-neutral-100 dark:divide-white/5 shadow-xl">
+              {favorites.length === 0 ? (
+                <div className="p-6 text-center text-xs text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-widest">
+                  Nenhum debate guardado
+                </div>
+              ) : (
+                favorites.map((fav, index) => (
+                  <button 
+                    key={fav.id || index}
+                    onClick={() => navigate(`/app/forum/${fav.id}`)}
+                    className="w-full flex items-center justify-between p-4.5 md:p-5 hover:bg-neutral-50 dark:hover:bg-white/[0.03] transition-all group active:bg-neutral-100 dark:active:bg-white/[0.05]"
+                  >
+                    <div className="flex items-center gap-4 text-left">
+                      <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-[#3A0310]/15 dark:group-hover:bg-[#E8B4B8]/20 transition-all">
+                        <Bookmark className="w-4 h-4 text-[#3A0310] dark:text-[#E8B4B8]" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs md:text-sm font-bold text-neutral-800 dark:text-white uppercase tracking-tight group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-1">{fav.title}</h4>
+                        <p className="text-[9px] text-neutral-400 dark:text-neutral-500 font-black uppercase tracking-widest mt-0.5">{fav.author} • {fav.date}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-neutral-400 flex-shrink-0 group-hover:translate-x-0.5 transition-all" />
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.3em] px-2 text-neutral-400 dark:text-neutral-500">Configurações de Arquivo</h3>
+            <div className="bg-white dark:bg-white/5 rounded-[2rem] border border-neutral-100 dark:border-white/5 overflow-hidden divide-y divide-neutral-100 dark:divide-white/5 shadow-xl">
             {options.map((item, index) => (
               <button 
                 key={item.label}
@@ -263,8 +310,14 @@ export function Profile() {
             ))}
           </div>
         </div>
-
       </div>
+      </div>
+
+      <ImageModal 
+        isOpen={!!selectedImage} 
+        onClose={() => setSelectedImage(null)} 
+        imageUrl={selectedImage || ''} 
+      />
     </div>
   );
 }

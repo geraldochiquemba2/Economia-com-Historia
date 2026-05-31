@@ -244,6 +244,19 @@ app.get('/api/content', async (req, res) => {
   }
 });
 
+// Buscar conteúdo por ID (GET)
+app.get('/api/content/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { rows } = await pool.query('SELECT * FROM "Content" WHERE id = $1', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar conteúdo' });
+  }
+});
+
 // Criar conteúdo (POST)
 app.post('/api/content', async (req, res) => {
   const { title, description, type, thumbnail, fullText, videoUrl } = req.body;

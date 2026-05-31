@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "start": "node server.mjs",
-    "dev": "vite"
+    "dev": "concurrently \"node server.mjs\" \"vite\""
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

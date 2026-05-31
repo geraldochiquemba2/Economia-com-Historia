@@ -185,7 +185,7 @@ export function UserLayout() {
             end={item.exact}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
-                isActive ? "text-black dark:text-white" : "text-neutral-500 dark:text-neutral-500 hover:text-black dark:hover:text-white"
+                isActive ? "text-black dark:text-white" : "text-black dark:text-white opacity-60 hover:opacity-100"
               }`
             }
           >
@@ -204,14 +204,14 @@ export function UserLayout() {
                     />
                   )}
                 </motion.div>
-                <span className={`text-[10px] uppercase tracking-widest font-black transition-all duration-300 ${isActive ? "opacity-100" : "opacity-0 translate-y-2"}`}>
+                <span className="text-[10px] uppercase tracking-widest font-black transition-all duration-300 mt-1">
                   {item.label}
                 </span>
                 
                 {isActive && (
                   <motion.div
                     layoutId="bottom-nav-dot"
-                    className="absolute bottom-2 w-1.5 h-1.5 bg-black dark:bg-[#E8B4B8] rounded-full shadow-none dark:shadow-[0_0_8px_#E8B4B8]"
+                    className="absolute bottom-2 w-1.5 h-1.5 bg-black dark:bg-[#E8B4B8] rounded-full shadow-none"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -219,8 +219,27 @@ export function UserLayout() {
             )}
           </NavLink>
         ))}
+
+        {/* Theme Toggle inside bottom nav */}
+        <button
+          onClick={toggleTheme}
+          className="flex flex-col items-center justify-center w-full h-full text-black dark:text-white opacity-60 hover:opacity-100 transition-all duration-300"
+          aria-label="Alternar tema"
+        >
+          <motion.div
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
+            {isLight ? <Moon className="w-6 h-6 mb-1 stroke-[1.5px]" /> : <Sun className="w-6 h-6 mb-1 stroke-[1.5px]" />}
+          </motion.div>
+          <span className="text-[10px] uppercase tracking-widest font-black mt-1">
+            {isLight ? "Escuro" : "Claro"}
+          </span>
+        </button>
       </nav>
       
+
+
       {/* Admin Quick Access (Floating) - HIDDEN ON PC */}
       {user && user.role === 'admin' && (
         <NavLink 

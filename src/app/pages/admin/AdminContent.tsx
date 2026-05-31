@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2 } from "lucide-react";
+import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2, Play } from "lucide-react";
 
 type ContentItem = {
   id: string;
@@ -49,6 +49,8 @@ export function AdminContent() {
 
   const [uploadingThumb, setUploadingThumb] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  const [videoPlayer, setVideoPlayer] = useState<ContentItem | null>(null);
 
   const fetchContent = async () => {
     setLoading(true);
@@ -162,7 +164,7 @@ export function AdminContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: formData.title,
-          description: formData.description,
+          description: formData.fullText ? (formData.fullText.length > 150 ? formData.fullText.substring(0, 150) + "..." : formData.fullText) : "",
           type: formData.type,
           thumbnail,
           fullText: formData.fullText,
@@ -192,7 +194,55 @@ export function AdminContent() {
   };
 
   return (
-    <div className="p-6 pb-24 space-y-6 max-w-5xl mx-auto">
+    <div className="relative">
+
+      {/* Video Player Modal */}
+      <AnimatePresence>
+        {videoPlayer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+            onClick={() => setVideoPlayer(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-3xl rounded-[2rem] overflow-hidden bg-black border border-white/10 shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                <p className="text-white font-black text-sm uppercase tracking-widest line-clamp-1 flex-1 mr-4">{videoPlayer.title}</p>
+                <button onClick={() => setVideoPlayer(null)} className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              </div>
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                {videoPlayer.videoUrl && getYouTubeId(videoPlayer.videoUrl) ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${getYouTubeId(videoPlayer.videoUrl)}?autoplay=1`}
+                    className="absolute inset-0 w-full h-full"
+                    frameBorder="0"
+                    allow="autoplay; fullscreen"
+                    allowFullScreen
+                  />
+                ) : videoPlayer.videoUrl ? (
+                  <video
+                    src={videoPlayer.videoUrl}
+                    controls
+                    autoPlay
+                    className="absolute inset-0 w-full h-full object-contain"
+                  />
+                ) : null}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="p-6 pb-24 space-y-6 max-w-5xl mx-auto">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-4">
@@ -204,8 +254,8 @@ export function AdminContent() {
             <p className="text-[#3A0310]/70 dark:text-[#E8B4B8]/70 text-[10px] font-black uppercase tracking-widest">Vídeos, textos e podcasts</p>
           </div>
         </div>
-        <button onClick={handleCreateClick} className="bg-[#3A0310] hover:bg-[#5A0520] p-3 rounded-2xl border border-[#E8B4B8]/30 shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center gap-2 px-5 text-white text-xs font-black uppercase tracking-widest">
-          <PlusCircle className="w-5 h-5" /> Publicar
+        <button onClick={handleCreateClick} className="bg-[#3A0310] hover:bg-[#5A0520] p-3 rounded-2xl border border-[#E8B4B8]/30 shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center gap-2 px-5 text-xs font-black uppercase tracking-widest" style={{ color: 'white' }}>
+          <PlusCircle className="w-5 h-5" style={{ color: 'white' }} /> Publicar
         </button>
       </motion.div>
 
@@ -217,10 +267,10 @@ export function AdminContent() {
 
       {/* Filters */}
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 md:mx-0 md:px-0">
-        {["all", "video", "text", "podcast", "jindungo"].map((f) => (
+        {["all", "video", "text", "podcast", "jindungo", "forum"].map((f) => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${filter === f ? "bg-[#3A0310] text-white border-transparent shadow-lg" : "bg-white dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 hover:bg-neutral-50 dark:hover:bg-white/10"}`}>
-            {f === "all" && "Todos"}{f === "video" && "Vídeos"}{f === "text" && "Textos"}{f === "podcast" && "Áudios"}{f === "jindungo" && "Jindungo"}
+            {f === "all" && "Todos"}{f === "video" && "Vídeos"}{f === "text" && "Textos"}{f === "podcast" && "Áudios"}{f === "jindungo" && "Jindungo"}{f === "forum" && "Fórum"}
           </button>
         ))}
       </div>
@@ -237,24 +287,32 @@ export function AdminContent() {
               <motion.div key={item.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: index * 0.04 }}
                 className="bg-white dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-[1.5rem] overflow-hidden flex flex-col shadow-lg hover:shadow-xl transition-all group">
                 <div className="h-40 bg-neutral-100 dark:bg-[#0F0F0F] relative w-full overflow-hidden border-b border-neutral-100 dark:border-white/5">
-                  {item.type === "video" && item.videoUrl ? (
-                    getYouTubeId(item.videoUrl) ? (
-                      <iframe src={`https://www.youtube.com/embed/${getYouTubeId(item.videoUrl)}`} className="w-full h-full" frameBorder="0" allowFullScreen></iframe>
-                    ) : (
-                      <video src={item.videoUrl} controls className="w-full h-full object-cover"></video>
-                    )
-                  ) : thumbSrc(item) ? (
-                    <img src={thumbSrc(item)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90" />
+                  {thumbSrc(item) ? (
+                    <button type="button" onClick={() => item.type === "video" && item.videoUrl ? setVideoPlayer(item) : undefined} className={`block relative w-full h-full ${item.type === "video" ? "cursor-pointer" : "cursor-default"} group/link`}>
+                      <div className="absolute inset-0">
+                        <img src={thumbSrc(item)} alt="" className="w-full h-full object-cover opacity-40 blur-md scale-110" />
+                      </div>
+                      <img src={thumbSrc(item)} alt="" className="relative w-full h-full object-contain z-10 group-hover:scale-105 group-hover/link:scale-105 transition-transform duration-500 drop-shadow-xl" />
+                      {item.type === "video" && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                          <div className="w-12 h-12 bg-[#3A0310]/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl group-hover/link:scale-110 group-hover/link:bg-[#5A051A] transition-all">
+                             <Play className="w-5 h-5 ml-1" style={{ color: 'white' }} fill="currentColor" />
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ) : item.type === "video" && item.videoUrl ? (
+                    <video src={item.videoUrl} className="w-full h-full object-cover opacity-80"></video>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <ImageIcon className="w-10 h-10 text-neutral-300 dark:text-neutral-700" />
                     </div>
                   )}
                   {item.type !== "video" && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                   )}
-                  <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 text-[9px] font-black text-white tracking-widest pointer-events-none">
-                    {item.type.toUpperCase()}
+                  <div className="absolute z-20 top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 text-[9px] font-black uppercase tracking-widest pointer-events-none" style={{ color: 'white' }}>
+                    {item.type}
                   </div>
                 </div>
                 <div className="p-4 flex flex-col flex-1">
@@ -346,10 +404,10 @@ export function AdminContent() {
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 block">Tipo de Conteúdo</label>
                   <div className="flex gap-2 flex-wrap">
-                    {["video", "text", "podcast", "jindungo"].map((t) => (
+                    {["video", "text", "podcast", "jindungo", "forum"].map((t) => (
                       <button type="button" key={t} onClick={() => setFormData(d => ({ ...d, type: t }))}
                         className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${formData.type === t ? "bg-[#3A0310] text-white border-transparent" : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 hover:bg-neutral-200 dark:hover:bg-white/10"}`}>
-                        {t === "video" && "🎬 Vídeo"}{t === "text" && "📝 Texto"}{t === "podcast" && "🎙️ Podcast"}{t === "jindungo" && "🌶️ Jindungo"}
+                        {t === "video" && "🎬 Vídeo"}{t === "text" && "📝 Texto"}{t === "podcast" && "🎙️ Podcast"}{t === "jindungo" && "🌶️ Jindungo"}{t === "forum" && "💬 Fórum"}
                       </button>
                     ))}
                   </div>
@@ -363,13 +421,17 @@ export function AdminContent() {
                     className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 px-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 transition-colors" />
                 </div>
 
-                {/* Descrição */}
+                {/* Conteúdo completo */}
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 block">Descrição Curta *</label>
-                  <textarea value={formData.description} onChange={e => setFormData(d => ({ ...d, description: e.target.value }))} required rows={2}
-                    placeholder="Resumo breve para aparecer nos cartões..."
+                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 block">
+                    {formData.type === "video" ? "Descrição / Transcrição do Vídeo" : "Texto / Conteúdo Completo"}
+                  </label>
+                  <textarea value={formData.fullText} onChange={e => setFormData(d => ({ ...d, fullText: e.target.value }))} rows={6}
+                    placeholder={formData.type === "video" ? "Descreva o conteúdo do vídeo ou adicione a transcrição..." : "Escreva aqui o artigo completo..."}
                     className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 px-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 transition-colors resize-none" />
                 </div>
+
+
 
                 {/* Vídeo URL — só para tipo video */}
                 {formData.type === "video" && (
@@ -387,14 +449,19 @@ export function AdminContent() {
                       <div className="relative overflow-hidden shrink-0">
                         <input type="file" accept="video/*" onChange={(e) => handleFileUpload(e, 'video')}
                           className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                        <button type="button" disabled={uploadingVideo} className="bg-red-600 hover:bg-red-700 text-white rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest transition-colors disabled:opacity-50 h-full flex items-center justify-center min-w-[100px]">
-                          {uploadingVideo ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upload"}
+                        <button type="button" disabled={uploadingVideo} style={{ color: 'white' }} className="bg-[#3A0310] hover:bg-[#5A051A] !text-white rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest transition-colors disabled:opacity-50 h-full flex items-center justify-center min-w-[100px]">
+                          {uploadingVideo ? <Loader2 className="w-4 h-4 animate-spin !text-white" style={{ color: 'white' }} /> : "Upload"}
                         </button>
                       </div>
                     </div>
                     {formData.videoUrl && getYouTubeId(formData.videoUrl) && (
                       <div className="mt-3 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10">
-                        <img src={`https://img.youtube.com/vi/${getYouTubeId(formData.videoUrl)}/hqdefault.jpg`} alt="YouTube preview" className="w-full h-32 object-cover" />
+                        <div className="relative h-32 w-full overflow-hidden bg-black/5">
+                          <div className="absolute inset-0">
+                            <img src={`https://img.youtube.com/vi/${getYouTubeId(formData.videoUrl)}/hqdefault.jpg`} alt="" className="w-full h-full object-cover opacity-40 blur-md scale-110" />
+                          </div>
+                          <img src={`https://img.youtube.com/vi/${getYouTubeId(formData.videoUrl)}/hqdefault.jpg`} alt="YouTube preview" className="relative z-10 w-full h-full object-contain drop-shadow-xl" />
+                        </div>
                         <p className="text-[10px] text-center text-green-600 dark:text-green-400 font-black uppercase tracking-widest py-1.5 bg-green-50 dark:bg-green-500/10">✓ YouTube detectado — miniatura gerada automaticamente</p>
                       </div>
                     )}
@@ -414,33 +481,30 @@ export function AdminContent() {
                       <div className="relative overflow-hidden shrink-0">
                         <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'thumbnail')}
                           className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                        <button type="button" disabled={uploadingThumb} className="bg-[#3A0310] hover:bg-[#5A051A] text-white rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest transition-colors disabled:opacity-50 h-full flex items-center justify-center min-w-[100px]">
-                          {uploadingThumb ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upload"}
+                        <button type="button" disabled={uploadingThumb} style={{ color: 'white' }} className="bg-[#3A0310] hover:bg-[#5A051A] !text-white rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest transition-colors disabled:opacity-50 h-full flex items-center justify-center min-w-[100px]">
+                          {uploadingThumb ? <Loader2 className="w-4 h-4 animate-spin !text-white" style={{ color: 'white' }} /> : "Upload"}
                         </button>
                       </div>
                     </div>
                     {formData.thumbnail && (
-                      <img src={formData.thumbnail} alt="Pré-visualização" className="mt-3 h-24 w-full object-cover rounded-xl border border-neutral-200 dark:border-white/10" />
+                      <div className="relative mt-3 h-24 w-full rounded-xl overflow-hidden border border-neutral-200 dark:border-white/10 bg-black/5">
+                        <div className="absolute inset-0">
+                          <img src={formData.thumbnail} alt="" className="w-full h-full object-cover opacity-40 blur-md scale-110" />
+                        </div>
+                        <img src={formData.thumbnail} alt="Pré-visualização" className="relative z-10 h-full w-full object-contain drop-shadow-xl" />
+                      </div>
                     )}
                   </div>
                 )}
 
-                {/* Conteúdo completo */}
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 block">
-                    {formData.type === "video" ? "Descrição / Transcrição do Vídeo" : "Texto / Conteúdo Completo"}
-                  </label>
-                  <textarea value={formData.fullText} onChange={e => setFormData(d => ({ ...d, fullText: e.target.value }))} rows={6}
-                    placeholder={formData.type === "video" ? "Descreva o conteúdo do vídeo ou adicione a transcrição..." : "Escreva aqui o artigo completo..."}
-                    className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 px-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 transition-colors resize-none" />
-                </div>
+
 
                 {/* Botões */}
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setFormModal(false)} className="flex-1 py-3.5 rounded-2xl border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-neutral-300 font-black uppercase text-xs tracking-widest hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors">Cancelar</button>
-                  <button type="submit" disabled={saving || saveSuccess}
-                    className={`flex-1 py-3.5 rounded-2xl font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 ${saveSuccess ? "bg-green-500 text-white" : "bg-gradient-to-r from-[#3A0310] to-[#5A0520] text-white hover:opacity-90"} disabled:opacity-70`}>
-                    {saveSuccess ? <><Check className="w-4 h-4" /> Guardado!</> : saving ? <><Loader2 className="w-4 h-4 animate-spin" /> A Guardar...</> : formMode === "create" ? "Publicar Conteúdo" : "Guardar Alterações"}
+                  <button type="submit" disabled={saving || saveSuccess} style={{ color: 'white' }}
+                    className={`flex-1 py-3.5 rounded-2xl font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 ${saveSuccess ? "bg-green-500" : "bg-gradient-to-r from-[#3A0310] to-[#5A0520] hover:opacity-90"} disabled:opacity-70`}>
+                    {saveSuccess ? <><Check className="w-4 h-4" style={{ color: 'white' }} /> Guardado!</> : saving ? <><Loader2 className="w-4 h-4 animate-spin" style={{ color: 'white' }} /> A Guardar...</> : formMode === "create" ? "Publicar Conteúdo" : "Guardar Alterações"}
                   </button>
                 </div>
               </form>
@@ -448,6 +512,7 @@ export function AdminContent() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
     </div>
   );
 }

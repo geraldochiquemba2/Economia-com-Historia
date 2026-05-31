@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Users, Search, Ban, Mail, Loader2, AlertTriangle, Trash2, ShieldCheck } from "lucide-react";
+import { ImageModal } from "../../components/ImageModal";
 
 type UserItem = {
   id: string;
@@ -19,6 +20,7 @@ export function AdminUsers() {
   const [deleteTarget, setDeleteTarget] = useState<UserItem | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -113,7 +115,10 @@ export function AdminUsers() {
                 className="flex items-center p-4 bg-white dark:bg-white/5 rounded-[1.5rem] border-2 border-[#3A0310] dark:border-[#E8B4B8] hover:border-[#3A0310]/80 dark:hover:border-[#E8B4B8]/80 transition-all gap-4 group shadow-md hover:shadow-lg"
               >
                 {/* Avatar */}
-                <div className="w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-[1rem] flex items-center justify-center font-black text-lg force-white shadow-inner border border-[#E8B4B8]/20 shrink-0 overflow-hidden">
+                <div 
+                  className={`w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-[1rem] flex items-center justify-center font-black text-lg force-white shadow-inner border border-[#E8B4B8]/20 shrink-0 overflow-hidden ${user.avatar ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                  onClick={() => user.avatar && setSelectedImage(user.avatar)}
+                >
                   {user.avatar ? (
                     <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
@@ -203,6 +208,12 @@ export function AdminUsers() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ImageModal 
+        isOpen={!!selectedImage} 
+        onClose={() => setSelectedImage(null)} 
+        imageUrl={selectedImage || ''} 
+      />
     </div>
   );
 }
