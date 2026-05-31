@@ -89,7 +89,7 @@ export function Profile() {
                   <img src={avatar} alt={user.name} className="w-full h-full rounded-[1.5rem] object-cover" />
                 ) : (
                   <div className="w-full h-full rounded-[1.5rem] bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center">
-                    <span className="text-3xl font-black text-white">{user.name?.charAt(0).toUpperCase()}</span>
+                    <span className="text-3xl font-black force-white">{user.name?.charAt(0).toUpperCase()}</span>
                   </div>
                 )}
               </div>
