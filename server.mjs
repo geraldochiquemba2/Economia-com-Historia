@@ -67,6 +67,11 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Health check route for keep-alive
+app.get('/api/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Serve static files from the React frontend app
 app.use(express.static(path.join(__dirname, 'dist')));
 
@@ -76,4 +81,17 @@ app.get(/.*/, (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Servidor de API rodando na porta ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Servidor de API rodando na porta ${PORT}`);
+  
+  // Self-ping to keep Render free tier awake
+  const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+  if (RENDER_URL) {
+    console.log(`[Keep-Alive] Configurado para pingar ${RENDER_URL} a cada 14 minutos.`);
+    setInterval(() => {
+      fetch(`${RENDER_URL}/api/health`)
+        .then(res => console.log(`[Keep-Alive] Ping executado. Status: ${res.status}`))
+        .catch(err => console.error(`[Keep-Alive] Falha no ping:`, err.message));
+    }, 14 * 60 * 1000); // 14 minutos em milissegundos
+  }
+});
