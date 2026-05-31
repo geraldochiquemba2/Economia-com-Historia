@@ -23,6 +23,35 @@ const pool = new Pool({
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
+// Função para garantir que a BD tem as tabelas corretas (Auto-Migrate)
+async function initDB() {
+  try {
+    // 1. Garantir que a coluna profession existe na tabela User
+    await pool.query(`
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "profession" VARCHAR(255) DEFAULT 'Estudante';
+    `);
+
+    // 2. Garantir que a tabela Content existe
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "Content" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "type" VARCHAR(255) NOT NULL,
+        "title" VARCHAR(255) NOT NULL,
+        "description" TEXT NOT NULL,
+        "thumbnail" VARCHAR(255) NOT NULL,
+        "fullText" TEXT NOT NULL,
+        "videoUrl" VARCHAR(255),
+        "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    console.log('[DB] Base de Dados sincronizada com sucesso.');
+  } catch (err) {
+    console.error('[DB] Erro ao sincronizar Base de Dados:', err);
+  }
+}
+initDB();
+
 // Cadastro (Register)
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password, profession } = req.body;
