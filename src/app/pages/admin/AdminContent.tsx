@@ -47,6 +47,9 @@ export function AdminContent() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState("");
 
+  const [uploadingThumb, setUploadingThumb] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+
   const fetchContent = async () => {
     setLoading(true);
     try {
@@ -106,6 +109,38 @@ export function AdminContent() {
         thumbnail: ytThumb && !d.thumbnail ? ytThumb : d.thumbnail,
       };
     });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'thumbnail' | 'video') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (target === 'thumbnail') setUploadingThumb(true);
+    else setUploadingVideo(true);
+    setError("");
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: fd
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro no upload");
+
+      if (target === 'thumbnail') {
+        setFormData(d => ({ ...d, thumbnail: data.url }));
+      } else {
+        setFormData(d => ({ ...d, videoUrl: data.url }));
+      }
+    } catch (err: any) {
+      setError(err.message || "Erro no upload. Tente novamente.");
+    } finally {
+      if (target === 'thumbnail') setUploadingThumb(false);
+      else setUploadingVideo(false);
+    }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -340,13 +375,22 @@ export function AdminContent() {
                 {formData.type === "video" && (
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 flex items-center gap-1.5 block">
-                      <Youtube className="w-3.5 h-3.5 text-red-500" /> Link do Vídeo (YouTube ou direto)
+                      <Youtube className="w-3.5 h-3.5 text-red-500" /> Link do Vídeo ou Upload do seu Dispositivo
                     </label>
-                    <div className="relative">
-                      <Link2 className="absolute left-4 top-3.5 w-4 h-4 text-neutral-400" />
-                      <input type="url" value={formData.videoUrl || ""} onChange={e => handleVideoUrlChange(e.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 pl-10 pr-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-red-500 dark:focus:border-red-500/50 transition-colors" />
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Link2 className="absolute left-4 top-3.5 w-4 h-4 text-neutral-400" />
+                        <input type="url" value={formData.videoUrl || ""} onChange={e => handleVideoUrlChange(e.target.value)}
+                          placeholder="https://www.youtube.com/watch?v=..."
+                          className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 pl-10 pr-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-red-500 dark:focus:border-red-500/50 transition-colors" />
+                      </div>
+                      <div className="relative overflow-hidden shrink-0">
+                        <input type="file" accept="video/*" onChange={(e) => handleFileUpload(e, 'video')}
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                        <button type="button" disabled={uploadingVideo} className="bg-red-600 hover:bg-red-700 text-white rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest transition-colors disabled:opacity-50 h-full flex items-center justify-center min-w-[100px]">
+                          {uploadingVideo ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upload"}
+                        </button>
+                      </div>
                     </div>
                     {formData.videoUrl && getYouTubeId(formData.videoUrl) && (
                       <div className="mt-3 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10">
@@ -361,11 +405,20 @@ export function AdminContent() {
                 {formData.type !== "video" && (
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 flex items-center gap-1.5 block">
-                      <ImageIcon className="w-3.5 h-3.5" /> URL da Imagem de Capa
+                      <ImageIcon className="w-3.5 h-3.5" /> Imagem de Capa (URL ou Upload)
                     </label>
-                    <input type="url" value={formData.thumbnail} onChange={e => setFormData(d => ({ ...d, thumbnail: e.target.value }))}
-                      placeholder="https://exemplo.com/imagem.jpg"
-                      className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 px-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 transition-colors" />
+                    <div className="flex gap-2">
+                      <input type="url" value={formData.thumbnail} onChange={e => setFormData(d => ({ ...d, thumbnail: e.target.value }))}
+                        placeholder="https://exemplo.com/imagem.jpg"
+                        className="flex-1 w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 px-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 transition-colors" />
+                      <div className="relative overflow-hidden shrink-0">
+                        <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'thumbnail')}
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                        <button type="button" disabled={uploadingThumb} className="bg-[#3A0310] hover:bg-[#5A051A] text-white rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest transition-colors disabled:opacity-50 h-full flex items-center justify-center min-w-[100px]">
+                          {uploadingThumb ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upload"}
+                        </button>
+                      </div>
+                    </div>
                     {formData.thumbnail && (
                       <img src={formData.thumbnail} alt="Pré-visualização" className="mt-3 h-24 w-full object-cover rounded-xl border border-neutral-200 dark:border-white/10" />
                     )}
