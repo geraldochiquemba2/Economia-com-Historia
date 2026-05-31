@@ -60,15 +60,15 @@ export function AdminUsers() {
               
               <div className="flex-1 min-w-0">
                 <h3 className="font-black text-sm text-[#3A0310] dark:text-white uppercase tracking-tight break-words leading-tight">{user.name}</h3>
-                <p className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate mb-1.5">{user.email || "Sem email"}</p>
+                <p className="text-[10px] text-neutral-900 dark:text-neutral-400 font-bold truncate mb-1.5">{user.email || "Sem email"}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-[10px] font-black text-[#E8B4B8] dark:text-[#E8B4B8] uppercase tracking-widest bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 px-2 py-0.5 rounded-md">
+                  <span className="text-[10px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-widest bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 px-2 py-0.5 rounded-md">
                     {user.points} pts
                   </span>
-                  <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-300 uppercase tracking-widest bg-neutral-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
+                  <span className="text-[10px] font-black text-neutral-900 dark:text-neutral-300 uppercase tracking-widest bg-neutral-200 dark:bg-white/5 px-2 py-0.5 rounded-md">
                     {user.profession || "Estudante"}
                   </span>
-                  <span className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
+                  <span className="text-[10px] font-black text-neutral-900 dark:text-neutral-400 uppercase tracking-widest">
                     Plano Gratuito
                   </span>
                 </div>
