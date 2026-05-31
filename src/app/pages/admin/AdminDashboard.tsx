@@ -111,14 +111,14 @@ export function AdminDashboard() {
             <div className="flex flex-col h-full justify-between relative z-10">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner mb-4 ${idx === 0 ? "bg-white/10" : "bg-neutral-100 dark:bg-white/5"}`}>
                 {loading ? (
-                  <Loader2 className={`w-5 h-5 animate-spin ${idx === 0 ? "text-white" : "text-[#3A0310] dark:text-[#E8B4B8]"}`} />
+                  <Loader2 className={`w-5 h-5 animate-spin ${idx === 0 ? "force-white" : "text-[#3A0310] dark:text-[#E8B4B8]"}`} />
                 ) : (
-                  <stat.icon className={`w-5 h-5 ${idx === 0 ? "text-white" : "text-[#3A0310] dark:text-[#E8B4B8]"}`} />
+                  <stat.icon className={`w-5 h-5 ${idx === 0 ? "force-white" : "text-[#3A0310] dark:text-[#E8B4B8]"}`} />
                 )}
               </div>
               <div>
-                <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${idx === 0 ? "text-[#E8B4B8]" : "text-neutral-500 dark:text-neutral-400"}`}>{stat.label}</p>
-                <p className={`text-3xl font-black ${idx === 0 ? "text-white" : "text-[#3A0310] dark:text-white"}`}>
+                <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${idx === 0 ? "force-gold" : "text-neutral-500 dark:text-neutral-400"}`}>{stat.label}</p>
+                <p className={`text-3xl font-black ${idx === 0 ? "force-white" : "text-[#3A0310] dark:text-white"}`}>
                   {loading ? "—" : stat.value}
                 </p>
               </div>
