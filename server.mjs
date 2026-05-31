@@ -25,21 +25,24 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 // Cadastro (Register)
 app.post('/api/auth/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, profession } = req.body;
   try {
     const { rows } = await pool.query('SELECT * FROM "User" WHERE email = $1', [email]);
     if (rows.length > 0) return res.status(400).json({ error: 'Email já existe' });
 
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
+    
+    // Profissão por defeito caso não seja enviada
+    const userProfession = profession || 'Estudante';
 
     const result = await pool.query(
-      'INSERT INTO "User" (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
-      [name, email, hash, 'student']
+      'INSERT INTO "User" (name, email, password_hash, role, profession) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role, profession',
+      [name, email, hash, 'student', userProfession]
     );
 
     const user = result.rows[0];
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: user.id, role: user.role, profession: user.profession }, JWT_SECRET, { expiresIn: '1d' });
 
     res.json({ token, user });
   } catch (error) {

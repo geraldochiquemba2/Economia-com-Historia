@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { User, Lock, Mail, ArrowRight, Loader2 } from "lucide-react";
+import { User, Lock, Mail, ArrowRight, Loader2, Briefcase } from "lucide-react";
 
 export function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [profession, setProfession] = useState("Estudante");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function Register() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, profession }),
       });
       const data = await response.json();
 
@@ -92,6 +93,20 @@ export function Register() {
               required
               className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-bold tracking-widest text-xs uppercase force-white force-white-placeholder"
             />
+          </div>
+
+          <div className="relative">
+            <Briefcase className="absolute left-4 top-3.5 w-5 h-5 text-white/50 force-white-50" />
+            <select
+              value={profession}
+              onChange={(e) => setProfession(e.target.value)}
+              required
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-bold tracking-widest text-xs uppercase force-white appearance-none cursor-pointer"
+            >
+              <option value="Estudante" className="bg-[#0F0F0F] text-white">ESTUDANTE</option>
+              <option value="Docente" className="bg-[#0F0F0F] text-white">DOCENTE</option>
+              <option value="Trabalhador" className="bg-[#0F0F0F] text-white">TRABALHADOR</option>
+            </select>
           </div>
 
           <button 
