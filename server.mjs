@@ -33,10 +33,9 @@ async function uploadToTelegram(buffer, filename, mimetype) {
     return null;
   }).catch(() => null) || (class NativeForm {}))();
 
-  // Determinar método do Telegram com base no mime type
+  // Determinar método do Telegram com base no mime type (usamos sempre sendDocument para preservar a qualidade)
   let tgMethod = 'sendDocument';
-  if (mimetype.startsWith('image/')) tgMethod = 'sendPhoto';
-  else if (mimetype.startsWith('video/')) tgMethod = 'sendVideo';
+  if (mimetype.startsWith('video/')) tgMethod = 'sendVideo';
   else if (mimetype.startsWith('audio/')) tgMethod = 'sendAudio';
 
   // Montar FormData manualmente com boundaries
