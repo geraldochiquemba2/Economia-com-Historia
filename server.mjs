@@ -7,7 +7,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import fs from 'fs';
 
 dotenv.config();
 
@@ -18,23 +17,77 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuração do Multer para uploads locais
-const uploadsDir = path.join(__dirname, 'dist', 'uploads');
-if (!fs.existsSync(uploadsDir)){
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Multer em memória (sem guardar no disco — vai direto para o Telegram)
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadsDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, 'upload-' + uniqueSuffix + ext);
-  }
-});
-const upload = multer({ storage: storage });
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+// Helper: enviar ficheiro para o Telegram e devolver file_id
+async function uploadToTelegram(buffer, filename, mimetype) {
+  const { FormData, Blob } = await import('node:buffer').then(() => import('undici').catch(() => null)) || {};
+  
+  // Usar o FormData nativo do Node 18+
+  const form = new (await import('node:stream').then(() => {
+    const { Readable } = require('stream');
+    return null;
+  }).catch(() => null) || (class NativeForm {}))();
+
+  // Determinar método do Telegram com base no mime type
+  let tgMethod = 'sendDocument';
+  if (mimetype.startsWith('image/')) tgMethod = 'sendPhoto';
+  else if (mimetype.startsWith('video/')) tgMethod = 'sendVideo';
+  else if (mimetype.startsWith('audio/')) tgMethod = 'sendAudio';
+
+  // Montar FormData manualmente com boundaries
+  const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+  const CRLF = '\r\n';
+
+  const fieldPart = [
+    `--${boundary}`,
+    `Content-Disposition: form-data; name="chat_id"`,
+    '',
+    TELEGRAM_CHAT_ID,
+  ].join(CRLF);
+
+  const filePart = [
+    `--${boundary}`,
+    `Content-Disposition: form-data; name="${tgMethod === 'sendPhoto' ? 'photo' : tgMethod === 'sendVideo' ? 'video' : tgMethod === 'sendAudio' ? 'audio' : 'document'}"; filename="${filename}"`,
+    `Content-Type: ${mimetype}`,
+    '',
+    '',
+  ].join(CRLF);
+
+  const endPart = `${CRLF}--${boundary}--`;
+
+  const bodyParts = [
+    Buffer.from(fieldPart + CRLF),
+    Buffer.from(filePart),
+    buffer,
+    Buffer.from(endPart),
+  ];
+  const bodyBuffer = Buffer.concat(bodyParts);
+
+  const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${tgMethod}`, {
+    method: 'POST',
+    headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+    body: bodyBuffer,
+  });
+
+  const data = await response.json();
+  if (!data.ok) throw new Error(`Telegram error: ${data.description}`);
+
+  // Extrair file_id
+  const msg = data.result;
+  let fileId;
+  if (msg.photo) fileId = msg.photo[msg.photo.length - 1].file_id;
+  else if (msg.video) fileId = msg.video.file_id;
+  else if (msg.audio) fileId = msg.audio.file_id;
+  else if (msg.document) fileId = msg.document.file_id;
+  
+  if (!fileId) throw new Error('Não foi possível obter file_id do Telegram');
+  return fileId;
+}
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -72,13 +125,46 @@ async function initDB() {
 }
 initDB();
 
-// Rota para upload de ficheiros (Imagens e Vídeos)
-app.post('/api/upload', upload.single('file'), (req, res) => {
+// Rota para upload de ficheiros → Telegram Cloud Storage
+app.post('/api/upload', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Nenhum ficheiro enviado' });
   }
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({ url: fileUrl });
+  try {
+    const fileId = await uploadToTelegram(req.file.buffer, req.file.originalname, req.file.mimetype);
+    // Retornar URL proxy que o nosso servidor vai servir
+    const fileUrl = `/api/media/${fileId}`;
+    res.json({ url: fileUrl });
+  } catch (err) {
+    console.error('[Telegram Upload Error]', err);
+    res.status(500).json({ error: err.message || 'Erro ao enviar para o Telegram' });
+  }
+});
+
+// Rota proxy para servir ficheiros guardados no Telegram
+app.get('/api/media/:fileId', async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    // Pedir ao Telegram o link temporário do ficheiro
+    const infoRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`);
+    const info = await infoRes.json();
+    if (!info.ok) return res.status(404).json({ error: 'Ficheiro não encontrado' });
+
+    const filePath = info.result.file_path;
+    const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+    
+    // Fazer proxy do ficheiro
+    const fileRes = await fetch(fileUrl);
+    if (!fileRes.ok) return res.status(502).json({ error: 'Erro ao buscar ficheiro do Telegram' });
+
+    res.setHeader('Content-Type', fileRes.headers.get('content-type') || 'application/octet-stream');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    const { Readable } = await import('stream');
+    Readable.fromWeb(fileRes.body).pipe(res);
+  } catch (err) {
+    console.error('[Telegram Media Error]', err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
 });
 
 // Cadastro (Register)
