@@ -291,7 +291,7 @@ export function ForumDetail() {
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder={replyingTo ? "Sua resposta..." : "Adicionar pensamento..."}
-            className="flex-1 bg-transparent border-none text-sm text-white focus:outline-none placeholder-neutral-500"
+            className="flex-1 bg-transparent border-none text-sm text-white focus:outline-none placeholder-neutral-500 force-white force-white-placeholder"
           />
           <button
             type="submit"

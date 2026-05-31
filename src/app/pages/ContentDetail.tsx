@@ -212,14 +212,14 @@ export function ContentDetail() {
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Contribuir para o debate..." 
-            className="flex-1 bg-transparent border-none rounded-full px-5 py-3 text-sm focus:outline-none placeholder-neutral-500" 
+            className="flex-1 bg-transparent border-none rounded-full px-5 py-3 text-sm focus:outline-none placeholder-neutral-500 force-white force-white-placeholder" 
             style={{ color: '#ffffff' }}
           />
           <button 
             type="submit"
             disabled={!newComment.trim()}
-            className="bg-[#3A0310] text-[#E8B4B8] px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-[#5A051A] transition-all disabled:opacity-50 border border-[#E8B4B8]/20"
-            style={{ color: '#E8B4B8' }}
+            className="bg-[#3A0310] px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-[#5A051A] transition-all disabled:opacity-50 border border-[#E8B4B8]/20 force-white"
+            style={{ color: '#ffffff' }}
           >
             Enviar
           </button>
