@@ -67,7 +67,7 @@ export function Register() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-bold tracking-widest text-xs uppercase force-white force-white-placeholder"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-medium text-sm force-white force-white-placeholder"
             />
           </div>
 
@@ -79,7 +79,7 @@ export function Register() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-bold tracking-widest text-xs uppercase force-white force-white-placeholder"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-medium text-sm force-white force-white-placeholder"
             />
           </div>
 
@@ -91,7 +91,7 @@ export function Register() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-bold tracking-widest text-xs uppercase force-white force-white-placeholder"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-medium text-sm force-white force-white-placeholder"
             />
           </div>
 
@@ -101,7 +101,7 @@ export function Register() {
               value={profession}
               onChange={(e) => setProfession(e.target.value)}
               required
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-bold tracking-widest text-xs uppercase force-white appearance-none cursor-pointer"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-medium text-sm force-white appearance-none cursor-pointer"
             >
               <option value="Estudante" className="bg-[#0F0F0F] text-white">ESTUDANTE</option>
               <option value="Docente" className="bg-[#0F0F0F] text-white">DOCENTE</option>

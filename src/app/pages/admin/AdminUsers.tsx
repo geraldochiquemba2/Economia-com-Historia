@@ -89,7 +89,7 @@ export function AdminUsers() {
           placeholder="Pesquisar por nome ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-[#E8B4B8]/60 rounded-[1.5rem] shadow-md focus:ring-2 focus:ring-[#3A0310]/30 focus:border-[#3A0310] dark:focus:border-[#E8B4B8] transition-all text-neutral-800 dark:text-white placeholder-[#3A0310]/40 dark:placeholder-neutral-400 text-xs font-bold uppercase tracking-wider outline-none"
+          className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-[#E8B4B8]/60 rounded-[1.5rem] shadow-md focus:ring-2 focus:ring-[#3A0310]/30 focus:border-[#3A0310] dark:focus:border-[#E8B4B8] transition-all text-neutral-800 dark:text-white placeholder-[#3A0310]/40 dark:placeholder-neutral-400 text-sm font-medium outline-none"
         />
       </div>
 
