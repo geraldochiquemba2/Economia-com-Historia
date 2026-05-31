@@ -70,6 +70,107 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// -- API DE CONTEÚDO --
+
+// Listar conteúdos (GET)
+app.get('/api/content', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM "Content" ORDER BY "createdAt" DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar conteúdos' });
+  }
+});
+
+// Criar conteúdo (POST)
+app.post('/api/content', async (req, res) => {
+  const { title, description, type, thumbnail, fullText, videoUrl } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO "Content" (title, description, type, thumbnail, "fullText", "videoUrl", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *',
+      [title, description, type, thumbnail || '', fullText || '', videoUrl || null]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao criar conteúdo' });
+  }
+});
+
+// Atualizar conteúdo (PUT)
+app.put('/api/content/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, description, type, thumbnail, fullText, videoUrl } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE "Content" SET title = $1, description = $2, type = $3, thumbnail = $4, "fullText" = $5, "videoUrl" = $6, "updatedAt" = NOW() WHERE id = $7 RETURNING *',
+      [title, description, type, thumbnail || '', fullText || '', videoUrl || null, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao atualizar conteúdo' });
+  }
+});
+
+// Apagar conteúdo (DELETE)
+app.delete('/api/content/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM "Content" WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
+    res.json({ message: 'Conteúdo apagado com sucesso' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao apagar conteúdo' });
+  }
+});
+
+// -- API DE UTILIZADORES --
+
+// Listar utilizadores (GET)
+app.get('/api/users', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT id, name, email, role, profession, "createdAt" FROM "User" ORDER BY "createdAt" DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar utilizadores' });
+  }
+});
+
+// Apagar utilizador (DELETE)
+app.delete('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM "User" WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Utilizador não encontrado' });
+    res.json({ message: 'Utilizador removido com sucesso' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao remover utilizador' });
+  }
+});
+
+// -- API ESTATÍSTICAS DASHBOARD --
+app.get('/api/stats', async (req, res) => {
+  try {
+    const [usersRes, contentRes] = await Promise.all([
+      pool.query('SELECT COUNT(*) FROM "User"'),
+      pool.query('SELECT COUNT(*) FROM "Content"'),
+    ]);
+    res.json({
+      users: parseInt(usersRes.rows[0].count),
+      content: parseInt(contentRes.rows[0].count),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
 // Health check route for keep-alive
 app.get('/api/health', (req, res) => {
   res.status(200).send('OK');

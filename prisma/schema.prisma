@@ -17,3 +17,15 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model Content {
+  id          String   @id @default(uuid())
+  type        String   // "video", "text", "podcast", "jindungo"
+  title       String
+  description String
+  thumbnail   String
+  fullText    String
+  videoUrl    String?  // URL do YouTube ou outro vídeo
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
