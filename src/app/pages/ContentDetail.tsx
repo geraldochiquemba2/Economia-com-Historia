@@ -293,24 +293,32 @@ export function ContentDetail() {
 
                   {/* Nested Replies */}
                   {comment.replies && comment.replies.length > 0 && (
-                    <div className="mt-4 pl-4 md:pl-8 space-y-4 border-l-2 border-[#3A0310]/10 dark:border-white/10">
-                      {comment.replies.map((reply: any) => (
-                        <div key={reply.id} className="relative">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center text-[8px] font-black border border-white/10 uppercase" style={{ color: '#E8B4B8' }}>
-                                {reply.author.charAt(0)}
+                    <div className="mt-4 pt-4 relative">
+                      {/* Vertical line from parent down to the replies */}
+                      <div className="absolute left-[15px] top-0 bottom-6 w-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full" />
+                      
+                      <div className="space-y-4 pl-10 md:pl-12">
+                        {comment.replies.map((reply: any) => (
+                          <div key={reply.id} className="relative">
+                            {/* Horizontal curve connecting vertical line to the reply avatar */}
+                            <div className="absolute -left-6 top-3 w-4 h-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-r-full" />
+                            
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center text-[8px] font-black border border-white/10 uppercase z-10 relative shadow-sm" style={{ color: '#E8B4B8' }}>
+                                  {reply.author.charAt(0)}
+                                </div>
+                                <div>
+                                  <span className="font-bold text-neutral-800 dark:text-white text-[10px] block leading-none mb-0.5">{reply.author}</span>
+                                  <span className="text-[7px] text-neutral-500 dark:text-neutral-300 font-black uppercase tracking-widest">Académico</span>
+                                </div>
                               </div>
-                              <div>
-                                <span className="font-bold text-neutral-800 dark:text-white text-[10px] block leading-none mb-0.5">{reply.author}</span>
-                                <span className="text-[7px] text-neutral-500 dark:text-neutral-300 font-black uppercase tracking-widest">Académico</span>
-                              </div>
+                              <span className="text-[7px] font-black text-neutral-400 dark:text-neutral-300 uppercase tracking-widest">{reply.time}</span>
                             </div>
-                            <span className="text-[7px] font-black text-neutral-400 dark:text-neutral-300 uppercase tracking-widest">{reply.time}</span>
+                            <p className="text-xs text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic">"{reply.text}"</p>
                           </div>
-                          <p className="text-xs text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic">"{reply.text}"</p>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   )}
                 </motion.div>
