@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, MemoryRouter, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, PlayCircle, Heart, Share2, MessageCircle, CheckCircle2, Clock, Eye, Loader2, AlertCircle, CornerDownRight } from "lucide-react";
@@ -28,6 +28,7 @@ export function ContentDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [newComment, setNewComment] = useState("");
   const [commentsList, setCommentsList] = useState([
@@ -56,6 +57,11 @@ export function ContentDetail() {
       { id: Date.now(), author: "Eu", time: "Agora mesmo", text: newComment }
     ]);
     setNewComment("");
+  };
+
+  const handleReply = (author: string) => {
+    setNewComment(`@${author} `);
+    inputRef.current?.focus();
   };
 
   if (loading) {
@@ -263,7 +269,7 @@ export function ContentDetail() {
                   <p className="text-sm text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic">"{comment.text}"</p>
                   
                   <div className="mt-4 pt-4 border-t border-[#3A0310]/10 dark:border-white/10 flex justify-end">
-                    <button className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] hover:opacity-70 transition-opacity">
+                    <button onClick={() => handleReply(comment.author)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] hover:opacity-70 transition-opacity">
                       <CornerDownRight className="w-3.5 h-3.5" />
                       Responder
                     </button>
@@ -282,6 +288,7 @@ export function ContentDetail() {
           className="bg-black/80 backdrop-blur-2xl p-2 rounded-[2rem] border border-white/15 flex gap-2 shadow-2xl"
         >
           <input
+            ref={inputRef}
             type="text"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
