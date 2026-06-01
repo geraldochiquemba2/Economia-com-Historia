@@ -228,7 +228,6 @@ export function AdminDashboard() {
           </p>
         </div>
       </motion.div>
-      </div>
 
       {/* Avatar Lightbox Modal */}
       <AnimatePresence>
