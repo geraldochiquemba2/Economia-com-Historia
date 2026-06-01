@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Users, BookOpen, TrendingUp, AlertTriangle, ShieldAlert, Clock, ChevronRight, Loader2, RefreshCw, X } from "lucide-react";
 import { useNavigate } from "react-router";
+import { ImageModal } from "../../components/ImageModal";
 
 type Stats = {
   users: number;
@@ -228,39 +229,7 @@ export function AdminDashboard() {
           </p>
         </div>
       </motion.div>
-
-      {/* Avatar Lightbox Modal */}
-      <AnimatePresence>
-        {selectedAvatar && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedAvatar(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative max-w-sm w-full"
-            >
-              <button
-                onClick={() => setSelectedAvatar(null)}
-                className="absolute -top-3 -right-3 bg-white dark:bg-neutral-800 rounded-full p-1.5 shadow-lg z-10 hover:scale-110 transition-transform"
-              >
-                <X className="w-4 h-4 text-neutral-900 dark:text-white" />
-              </button>
-              <img
-                src={selectedAvatar}
-                alt="Foto de perfil"
-                className="w-full rounded-2xl object-cover shadow-2xl border-4 border-white dark:border-white/10"
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ImageModal src={selectedAvatar} onClose={() => setSelectedAvatar(null)} />
     </div>
   );
 }
