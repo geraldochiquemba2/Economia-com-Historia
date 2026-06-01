@@ -177,7 +177,9 @@ export function UserLayout() {
       </main>
 
       {/* Bottom Navigation for Mobile */}
-      <nav className="bg-white/90 dark:bg-[#0F0F0F]/90 backdrop-blur-xl border-t border-neutral-200 dark:border-white/5 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.5)] z-[60]">
+      <nav className={`backdrop-blur-xl border-t fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-[60] transition-all duration-300 ${
+        isLight ? "bg-[#1a0108]/95 border-[#3A0310]/40" : "bg-[#0F0F0F]/95 border-white/5"
+      }`}>
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -185,7 +187,7 @@ export function UserLayout() {
             end={item.exact}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
-                isActive ? "text-black dark:text-white" : "text-black dark:text-white opacity-60 hover:opacity-100"
+                isActive ? "text-white" : "text-white/60 hover:text-white"
               }`
             }
           >
@@ -211,7 +213,7 @@ export function UserLayout() {
                 {isActive && (
                   <motion.div
                     layoutId="bottom-nav-dot"
-                    className="absolute bottom-2 w-1.5 h-1.5 bg-black dark:bg-[#E8B4B8] rounded-full shadow-none"
+                    className="absolute bottom-2 w-1.5 h-1.5 bg-[#E8B4B8] rounded-full shadow-none"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -226,7 +228,7 @@ export function UserLayout() {
             to="/admin"
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
-                isActive ? "text-black dark:text-white" : "text-black dark:text-white opacity-60 hover:opacity-100"
+                isActive ? "text-[#E8B4B8]" : "text-white/60 hover:text-white"
               }`
             }
           >
@@ -237,7 +239,7 @@ export function UserLayout() {
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   className="relative"
                 >
-                  <ShieldAlert className={`w-6 h-6 mb-1 text-[#3A0310] dark:text-[#E8B4B8] ${isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
+                  <ShieldAlert className={`w-6 h-6 mb-1 text-[#E8B4B8] ${isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
                   {isActive && (
                     <motion.div
                       layoutId="nav-glow-admin"
@@ -245,7 +247,7 @@ export function UserLayout() {
                     />
                   )}
                 </motion.div>
-                <span className="text-[10px] uppercase tracking-widest font-black transition-all duration-300 mt-1 text-[#3A0310] dark:text-[#E8B4B8]">
+                <span className="text-[10px] uppercase tracking-widest font-black transition-all duration-300 mt-1 text-[#E8B4B8]">
                   Admin
                 </span>
                 {isActive && (
@@ -266,7 +268,7 @@ export function UserLayout() {
             to="/login"
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
-                isActive ? "text-[#3A0310] dark:text-[#E8B4B8]" : "text-black dark:text-white opacity-60 hover:opacity-100"
+                isActive ? "text-[#E8B4B8]" : "text-white/60 hover:text-white"
               }`
             }
           >
@@ -304,7 +306,7 @@ export function UserLayout() {
         {/* Theme Toggle inside bottom nav */}
         <button
           onClick={toggleTheme}
-          className="flex flex-col items-center justify-center w-full h-full text-black dark:text-white opacity-60 hover:opacity-100 transition-all duration-300"
+          className="flex flex-col items-center justify-center w-full h-full text-white/60 hover:text-white transition-all duration-300"
           aria-label="Alternar tema"
         >
           <motion.div
