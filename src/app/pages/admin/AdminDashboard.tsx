@@ -136,7 +136,7 @@ export function AdminDashboard() {
           <h2 className="text-sm font-black uppercase tracking-widest text-[#3A0310] dark:text-white flex items-center gap-2">
             <Users className="w-4 h-4" /> Utilizadores Recentes
           </h2>
-          <button onClick={() => navigate("/admin/users")} className="text-[9px] font-black uppercase tracking-widest text-neutral-500 dark:text-neutral-400 hover:text-[#3A0310] dark:hover:text-white transition-colors flex items-center gap-1">
+          <button onClick={() => navigate("/admin/users")} className="text-[9px] font-black uppercase tracking-widest text-neutral-900 dark:text-neutral-400 hover:text-[#3A0310] dark:hover:text-white transition-colors flex items-center gap-1">
             Ver todos <ChevronRight className="w-3 h-3" />
           </button>
         </div>
@@ -162,9 +162,9 @@ export function AdminDashboard() {
                       {u.profession || 'Estudante'}
                     </span>
                   </div>
-                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium truncate">{u.email}</p>
+                  <p className="text-[10px] text-neutral-900 dark:text-neutral-400 font-medium truncate">{u.email}</p>
                 </div>
-                <div className="flex items-center gap-1 text-[9px] text-neutral-400 font-black uppercase tracking-widest shrink-0">
+                <div className="flex items-center gap-1 text-[9px] text-neutral-900 dark:text-neutral-400 font-black uppercase tracking-widest shrink-0">
                   <Clock className="w-2.5 h-2.5" /> {timeAgo(u.createdAt)}
                 </div>
               </div>
