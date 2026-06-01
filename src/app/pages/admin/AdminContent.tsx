@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2, Play, Star } from "lucide-react";
+import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2, Play, Star, Award } from "lucide-react";
 
 type ContentItem = {
   id: string;
@@ -11,6 +11,7 @@ type ContentItem = {
   fullText: string;
   videoUrl?: string;
   featured?: boolean;
+  recommended?: boolean;
 };
 
 const EMPTY_FORM: ContentItem = {
@@ -97,6 +98,20 @@ export function AdminContent() {
       setItems(prev => prev.map(i => i.id === item.id ? { ...i, featured: !item.featured } : i));
     } catch {
       setError("Erro ao atualizar destaque.");
+    }
+  };
+
+  const handleRecommendToggle = async (item: ContentItem) => {
+    try {
+      const res = await fetch(`/api/content/${item.id}/recommend`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}` },
+        body: JSON.stringify({ recommended: !item.recommended }),
+      });
+      if (!res.ok) throw new Error();
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, recommended: !item.recommended } : i));
+    } catch {
+      setError("Erro ao atualizar recomendação.");
     }
   };
 
@@ -332,30 +347,49 @@ export function AdminContent() {
                     <div className="absolute top-2 left-2 z-30 flex items-center gap-1 bg-amber-400 text-black px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-lg">
                       <Star className="w-2.5 h-2.5 fill-black" /> Destaque
                     </div>
-                  )}</div>
+                  )}
+                  {/* Recommended Badge */}
+                  {item.recommended && (
+                    <div className="absolute top-2 right-2 z-30 flex items-center gap-1 bg-purple-500 text-white px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-lg">
+                      <Award className="w-2.5 h-2.5 text-white" /> Rec.
+                    </div>
+                  )}
+                </div>
                 <div className="p-4 flex flex-col flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-[#3A0310] dark:text-white font-black text-sm uppercase tracking-tight line-clamp-1">{item.title}</h3>
                     <span className="shrink-0 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border border-[#3A0310] dark:border-[#E8B4B8]">{item.type}</span>
                   </div>
                   <p className="text-neutral-600 dark:text-neutral-400 text-[10px] font-medium leading-relaxed line-clamp-2 flex-1">{item.description}</p>
-                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-neutral-100 dark:border-white/10">
+                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-neutral-100 dark:border-white/10 flex-wrap">
                     <button
                       onClick={() => handleFeatureToggle(item)}
                       title={item.featured ? "Remover destaque" : "Colocar em destaque"}
-                      className={`flex items-center justify-center gap-1 py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
+                      className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
                         item.featured
                           ? "bg-amber-400/20 text-amber-600 dark:text-amber-400 hover:bg-amber-400/30"
                           : "bg-neutral-100 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 hover:bg-amber-400/20 hover:text-amber-600"
                       }`}
                     >
-                      <Star className={`w-3.5 h-3.5 ${item.featured ? "fill-amber-500" : ""}`} />
-                      {item.featured ? "Destacado" : "Destacar"}
+                      <Star className={`w-3.5 h-3.5 shrink-0 ${item.featured ? "fill-amber-500" : ""}`} />
+                      {item.featured ? "Dest." : "Dest."}
                     </button>
-                    <button onClick={() => handleEditClick(item)} className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 rounded-xl hover:bg-[#3A0310]/10 transition-colors">
-                      <Edit3 className="w-3.5 h-3.5" /> Editar
+                    <button
+                      onClick={() => handleRecommendToggle(item)}
+                      title={item.recommended ? "Remover recomendação" : "Recomendar arquivo"}
+                      className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
+                        item.recommended
+                          ? "bg-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/30"
+                          : "bg-neutral-100 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 hover:bg-purple-500/20 hover:text-purple-600"
+                      }`}
+                    >
+                      <Award className="w-3.5 h-3.5 shrink-0" />
+                      {item.recommended ? "Rec." : "Rec."}
                     </button>
-                    <button onClick={() => handleDeleteClick(item)} className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                    <button onClick={() => handleEditClick(item)} title="Editar" className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 rounded-xl hover:bg-[#3A0310]/10 transition-colors">
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleDeleteClick(item)} title="Apagar" className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>

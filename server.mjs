@@ -259,11 +259,11 @@ app.get('/api/content/:id', async (req, res) => {
 
 // Criar conteúdo (POST)
 app.post('/api/content', async (req, res) => {
-  const { title, description, type, thumbnail, fullText, videoUrl, featured } = req.body;
+  const { title, description, type, thumbnail, fullText, videoUrl, featured, recommended } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO "Content" (title, description, type, thumbnail, "fullText", "videoUrl", featured, "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING *',
-      [title, description, type, thumbnail || '', fullText || '', videoUrl || null, featured || false]
+      'INSERT INTO "Content" (title, description, type, thumbnail, "fullText", "videoUrl", featured, recommended, "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *',
+      [title, description, type, thumbnail || '', fullText || '', videoUrl || null, featured || false, recommended || false]
     );
     res.json(result.rows[0]);
   } catch (error) {
@@ -275,11 +275,11 @@ app.post('/api/content', async (req, res) => {
 // Atualizar conteúdo (PUT)
 app.put('/api/content/:id', async (req, res) => {
   const { id } = req.params;
-  const { title, description, type, thumbnail, fullText, videoUrl, featured } = req.body;
+  const { title, description, type, thumbnail, fullText, videoUrl, featured, recommended } = req.body;
   try {
     const result = await pool.query(
-      'UPDATE "Content" SET title = $1, description = $2, type = $3, thumbnail = $4, "fullText" = $5, "videoUrl" = $6, featured = $7, "updatedAt" = NOW() WHERE id = $8 RETURNING *',
-      [title, description, type, thumbnail || '', fullText || '', videoUrl || null, featured !== undefined ? featured : false, id]
+      'UPDATE "Content" SET title = $1, description = $2, type = $3, thumbnail = $4, "fullText" = $5, "videoUrl" = $6, featured = $7, recommended = $8, "updatedAt" = NOW() WHERE id = $9 RETURNING *',
+      [title, description, type, thumbnail || '', fullText || '', videoUrl || null, featured !== undefined ? featured : false, recommended !== undefined ? recommended : false, id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
     res.json(result.rows[0]);
@@ -303,6 +303,23 @@ app.patch('/api/content/:id/feature', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao destacar conteúdo' });
+  }
+});
+
+// Recomendar conteúdo (PATCH)
+app.patch('/api/content/:id/recommend', async (req, res) => {
+  const { id } = req.params;
+  const { recommended } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE "Content" SET recommended = $1, "updatedAt" = NOW() WHERE id = $2 RETURNING *',
+      [recommended, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao recomendar conteúdo' });
   }
 });
 

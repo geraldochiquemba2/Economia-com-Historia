@@ -38,6 +38,7 @@ export function Home() {
   ];
 
   const [featuredThemes, setFeaturedThemes] = useState<any[]>([]);
+  const [recommendedThemes, setRecommendedThemes] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/content')
@@ -45,9 +46,10 @@ export function Home() {
       .then(data => {
         if (Array.isArray(data)) {
           setFeaturedThemes(data.filter(item => item.featured));
+          setRecommendedThemes(data.filter(item => item.recommended));
         }
       })
-      .catch(err => console.error("Error fetching featured content:", err));
+      .catch(err => console.error("Error fetching content:", err));
   }, []);
 
   return (
@@ -281,23 +283,20 @@ export function Home() {
         </section>
 
         {/* Recommended List */}
-        <section className="pb-12">
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#E8B4B8]" />
-              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Arquivos Recomendados</h2>
+        {recommendedThemes.length > 0 && (
+          <section className="pb-12">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-[#E8B4B8]" />
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter">Arquivos Recomendados</h2>
+              </div>
+              <Link to="/app/explore" className="text-[10px] font-black text-[#E8B4B8] uppercase tracking-widest flex items-center gap-1 group">
+                Explorar <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
-            <Link to="/app/explore" className="text-[10px] font-black text-[#E8B4B8] uppercase tracking-widest flex items-center gap-1 group">
-              Explorar <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-          
-          <div className="space-y-5 md:space-y-0 md:grid md:grid-cols-3 md:gap-6">
-            {[
-              { id: 1, title: "Mercados Africanos: Do Escambo ao Digital", category: "Economia Real", image: imgMarket },
-              { id: 2, title: "A Arte de Escrever a Economia", category: "Literatura", image: "https://images.unsplash.com/photo-1473186505569-9c61870c11f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" },
-              { id: 3, title: "Cidades do Futuro: Economia Urbana", category: "Atualidade", image: "https://images.unsplash.com/photo-1502228362178-086346ac6862?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" }
-            ].map((rec, index) => (
+            
+            <div className="space-y-5 md:space-y-0 md:grid md:grid-cols-3 md:gap-6">
+              {recommendedThemes.map((rec, index) => (
               <motion.div
                 key={rec.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -305,12 +304,12 @@ export function Home() {
                 transition={{ duration: 0.6, delay: 0.2 + (index * 0.1) }}
               >
                 <Link 
-                  to="/app/explore"
+                  to={`/app/explore/${rec.id}`}
                   className="flex bg-white dark:bg-white/5 rounded-[2rem] p-4 border-2 border-[#3A0310] dark:border-white/10 hover:bg-[#3A0310]/5 dark:hover:bg-white/10 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 transition-all duration-300 group shadow-lg overflow-hidden relative"
                 >
                   <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 border border-[#3A0310]/20 dark:border-white/10 shadow-xl">
                     <ImageWithFallback 
-                      src={rec.image} 
+                      src={rec.thumbnail || imgMarket} 
                       alt={rec.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
@@ -318,8 +317,8 @@ export function Home() {
                   </div>
                   
                   <div className="flex flex-col justify-center ml-5 flex-1">
-                    <span className="text-[9px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-[0.25em] mb-2 block">
-                      {rec.category}
+                    <span className="text-[9px] font-black text-[#E8B4B8] uppercase tracking-[0.2em] mb-1 block">
+                      {rec.type}
                     </span>
                     <h3 className="text-neutral-800 dark:text-white font-black text-sm leading-tight group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-2 uppercase tracking-tight">
                       {rec.title}
@@ -335,6 +334,7 @@ export function Home() {
             ))}
           </div>
         </section>
+        )}
         
       </main>
     </div>
