@@ -31,9 +31,10 @@ export function ContentDetail() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [newComment, setNewComment] = useState("");
-  const [commentsList, setCommentsList] = useState([
-    { id: 1, author: "João Pedro", time: "Há 2 horas", text: "Muito interessante! Não tinha ideia da magnitude dessa reforma." },
-    { id: 2, author: "Alice Fernando", time: "Há 5 horas", text: "Gostaria de ver mais conteúdos sobre o papel da mulher nesse contexto." }
+  const [replyingToId, setReplyingToId] = useState<number | null>(null);
+  const [commentsList, setCommentsList] = useState<any[]>([
+    { id: 1, author: "João Pedro", time: "Há 2 horas", text: "Muito interessante! Não tinha ideia da magnitude dessa reforma.", replies: [] },
+    { id: 2, author: "Alice Fernando", time: "Há 5 horas", text: "Gostaria de ver mais conteúdos sobre o papel da mulher nesse contexto.", replies: [] }
   ]);
 
   useEffect(() => {
@@ -52,14 +53,29 @@ export function ContentDetail() {
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    setCommentsList([
-      ...commentsList,
-      { id: Date.now(), author: "Eu", time: "Agora mesmo", text: newComment }
-    ]);
+
+    if (replyingToId !== null) {
+      setCommentsList(commentsList.map(c => {
+        if (c.id === replyingToId) {
+          return {
+            ...c,
+            replies: [...(c.replies || []), { id: Date.now(), author: "Eu", time: "Agora mesmo", text: newComment }]
+          };
+        }
+        return c;
+      }));
+      setReplyingToId(null);
+    } else {
+      setCommentsList([
+        ...commentsList,
+        { id: Date.now(), author: "Eu", time: "Agora mesmo", text: newComment, replies: [] }
+      ]);
+    }
     setNewComment("");
   };
 
-  const handleReply = (author: string) => {
+  const handleReply = (commentId: number, author: string) => {
+    setReplyingToId(commentId);
     setNewComment(`@${author} `);
     inputRef.current?.focus({ preventScroll: true });
   };
@@ -252,7 +268,7 @@ export function ContentDetail() {
                   key={comment.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-white dark:bg-white/5 p-6 rounded-[2rem] border border-[#3A0310]/25 dark:border-white/5 hover:border-[#3A0310]/60 transition-all relative overflow-hidden shadow-sm"
+                  className="bg-white dark:bg-white/5 p-6 rounded-[2rem] border border-[#3A0310] dark:border-[#E8B4B8]/30 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/60 transition-all relative overflow-hidden shadow-sm"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
@@ -269,11 +285,34 @@ export function ContentDetail() {
                   <p className="text-sm text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic">"{comment.text}"</p>
                   
                   <div className="mt-4 pt-4 border-t border-[#3A0310]/10 dark:border-white/10 flex justify-end">
-                    <button onClick={() => handleReply(comment.author)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] hover:opacity-70 transition-opacity">
+                    <button onClick={() => handleReply(comment.id, comment.author)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] hover:opacity-70 transition-opacity">
                       <CornerDownRight className="w-3.5 h-3.5" />
                       Responder
                     </button>
                   </div>
+
+                  {/* Nested Replies */}
+                  {comment.replies && comment.replies.length > 0 && (
+                    <div className="mt-4 pl-4 md:pl-8 space-y-4 border-l-2 border-[#3A0310]/10 dark:border-white/10">
+                      {comment.replies.map((reply: any) => (
+                        <div key={reply.id} className="relative">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center text-[8px] font-black border border-white/10 uppercase" style={{ color: '#E8B4B8' }}>
+                                {reply.author.charAt(0)}
+                              </div>
+                              <div>
+                                <span className="font-bold text-neutral-800 dark:text-white text-[10px] block leading-none mb-0.5">{reply.author}</span>
+                                <span className="text-[7px] text-neutral-500 dark:text-neutral-300 font-black uppercase tracking-widest">Académico</span>
+                              </div>
+                            </div>
+                            <span className="text-[7px] font-black text-neutral-400 dark:text-neutral-300 uppercase tracking-widest">{reply.time}</span>
+                          </div>
+                          <p className="text-xs text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic">"{reply.text}"</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
