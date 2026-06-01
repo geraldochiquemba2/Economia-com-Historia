@@ -229,7 +229,7 @@ export function AdminDashboard() {
           </p>
         </div>
       </motion.div>
-      <ImageModal src={selectedAvatar} onClose={() => setSelectedAvatar(null)} />
+      <ImageModal isOpen={!!selectedAvatar} imageUrl={selectedAvatar || ""} onClose={() => setSelectedAvatar(null)} />
     </div>
   );
 }
