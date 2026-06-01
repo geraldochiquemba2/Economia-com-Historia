@@ -20,6 +20,112 @@ function getYouTubeId(url: string) {
   return match ? match[1] : null;
 }
 
+// Recursive helper to insert a reply deeply in the tree
+function addReplyToTree(comments: any[], parentId: number, newReply: any): any[] {
+  return comments.map(comment => {
+    if (comment.id === parentId) {
+      return {
+        ...comment,
+        replies: [...(comment.replies || []), newReply]
+      };
+    }
+    if (comment.replies && comment.replies.length > 0) {
+      return {
+        ...comment,
+        replies: addReplyToTree(comment.replies, parentId, newReply)
+      };
+    }
+    return comment;
+  });
+}
+
+type CommentNodeProps = {
+  comment: any;
+  depth?: number;
+  handleReply: (id: number, author: string) => void;
+  expandedReplies: Record<number, number>;
+  onExpand: (id: number, total: number) => void;
+  onCollapse: (id: number) => void;
+};
+
+const CommentNode = ({ comment, depth = 0, handleReply, expandedReplies, onExpand, onCollapse }: CommentNodeProps) => {
+  const isTopLevel = depth === 0;
+  const visibleCount = expandedReplies[comment.id] || 2;
+  const totalReplies = comment.replies?.length || 0;
+  const remaining = totalReplies - visibleCount;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      className={isTopLevel ? "bg-white dark:bg-white/5 p-4 md:p-5 rounded-[2rem] border border-[#3A0310] dark:border-[#E8B4B8]/30 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/60 transition-all relative overflow-hidden shadow-sm" : "relative group/reply"}
+    >
+      {!isTopLevel && (
+        <div className="absolute -left-6 top-3 w-4 h-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-r-full" />
+      )}
+
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center gap-3">
+          <div className={`${isTopLevel ? 'w-8 h-8 rounded-xl text-[10px]' : 'w-6 h-6 rounded-lg text-[8px] z-10 relative shadow-sm'} bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center font-black border border-white/10 uppercase`} style={{ color: '#E8B4B8' }}>
+            {comment.author.charAt(0)}
+          </div>
+          <div>
+            <span className={`font-bold text-neutral-800 dark:text-white block leading-none ${isTopLevel ? 'text-xs mb-1' : 'text-[10px] mb-0.5'}`}>{comment.author}</span>
+            <span className={`text-neutral-500 dark:text-neutral-300 font-black uppercase tracking-widest ${isTopLevel ? 'text-[9px]' : 'text-[7px]'}`}>Académico</span>
+          </div>
+        </div>
+        <span className={`font-black text-neutral-400 dark:text-neutral-300 uppercase tracking-widest ${isTopLevel ? 'text-[9px]' : 'text-[7px]'}`}>{comment.time}</span>
+      </div>
+      
+      <p className={`text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic ${isTopLevel ? 'text-sm' : 'text-xs'}`}>"{comment.text}"</p>
+      
+      <div className={`mt-2 flex justify-end ${isTopLevel ? 'pt-3 border-t border-[#3A0310]/10 dark:border-white/10' : ''}`}>
+        <button onClick={() => handleReply(comment.id, comment.author)} className={`flex items-center gap-1 font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] transition-opacity ${isTopLevel ? 'opacity-70 hover:opacity-100 gap-1.5 text-[10px]' : 'text-[9px] opacity-70 hover:opacity-100'}`}>
+          <CornerDownRight className={isTopLevel ? 'w-3.5 h-3.5' : 'w-3 h-3'} />
+          Responder
+        </button>
+      </div>
+
+      {/* Nested Replies Container */}
+      {comment.replies && comment.replies.length > 0 && depth < 5 && (
+        <div className="mt-3 pt-3 relative">
+          <div className="absolute left-[15px] top-0 bottom-4 w-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full" />
+          
+          <div className="space-y-2 pl-10 md:pl-12">
+            {comment.replies.slice(0, visibleCount).map((reply: any) => (
+              <CommentNode 
+                key={reply.id} 
+                comment={reply} 
+                depth={depth + 1} 
+                handleReply={handleReply}
+                expandedReplies={expandedReplies}
+                onExpand={onExpand}
+                onCollapse={onCollapse}
+              />
+            ))}
+
+            {/* Pagination inside Nested Container */}
+            {totalReplies > 2 && (
+              <div className="pt-2 flex flex-col items-start gap-2 relative z-10">
+                {remaining > 0 && (
+                  <button onClick={() => onExpand(comment.id, totalReplies)} className="text-[9px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-widest hover:underline flex items-center gap-1">
+                    <CornerDownRight className="w-3 h-3" /> Ver mais {Math.min(remaining, 5)} {Math.min(remaining, 5) === 1 ? 'resposta' : 'respostas'}
+                  </button>
+                )}
+                {remaining === 0 && (
+                  <button onClick={() => onCollapse(comment.id)} className="text-[9px] font-black text-neutral-500 dark:text-neutral-400 uppercase tracking-widest hover:underline">
+                    Minimizar respostas
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 export function ContentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -60,15 +166,8 @@ export function ContentDetail() {
     if (!newComment.trim()) return;
 
     if (replyingToId !== null) {
-      setCommentsList(commentsList.map(c => {
-        if (c.id === replyingToId) {
-          return {
-            ...c,
-            replies: [...(c.replies || []), { id: Date.now(), author: "Eu", time: "Agora mesmo", text: newComment }]
-          };
-        }
-        return c;
-      }));
+      const newReply = { id: Date.now(), author: "Eu", time: "Agora mesmo", text: newComment, replies: [] };
+      setCommentsList(prev => addReplyToTree(prev, replyingToId, newReply));
       setReplyingToId(null);
     } else {
       setCommentsList([
@@ -278,95 +377,14 @@ export function ContentDetail() {
           <div className="space-y-4 mb-10">
             <AnimatePresence>
               {commentsList.map(comment => (
-                <motion.div
+                <CommentNode 
                   key={comment.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="bg-white dark:bg-white/5 p-4 md:p-5 rounded-[2rem] border border-[#3A0310] dark:border-[#E8B4B8]/30 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/60 transition-all relative overflow-hidden shadow-sm"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center text-[10px] font-black border border-white/10 uppercase" style={{ color: '#E8B4B8' }}>
-                        {comment.author.charAt(0)}
-                      </div>
-                      <div>
-                        <span className="font-bold text-neutral-800 dark:text-white text-xs block leading-none mb-1">{comment.author}</span>
-                        <span className="text-[9px] text-neutral-500 dark:text-neutral-300 font-black uppercase tracking-widest">Académico</span>
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-300 uppercase tracking-widest">{comment.time}</span>
-                  </div>
-                  <p className="text-sm text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic">"{comment.text}"</p>
-                  
-                  <div className="mt-3 pt-3 border-t border-[#3A0310]/10 dark:border-white/10 flex justify-end">
-                    <button onClick={() => handleReply(comment.id, comment.author)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] hover:opacity-70 transition-opacity">
-                      <CornerDownRight className="w-3.5 h-3.5" />
-                      Responder
-                    </button>
-                  </div>
-
-                  {/* Nested Replies */}
-                  {comment.replies && comment.replies.length > 0 && (
-                    <div className="mt-3 pt-3 relative">
-                      {/* Vertical line from parent down to the replies */}
-                      <div className="absolute left-[15px] top-0 bottom-4 w-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full" />
-                      
-                      <div className="space-y-2 pl-10 md:pl-12">
-                        {comment.replies.slice(0, getExpandedCount(comment.id)).map((reply: any) => (
-                          <div key={reply.id} className="relative group/reply">
-                            {/* Horizontal curve connecting vertical line to the reply avatar */}
-                            <div className="absolute -left-6 top-3 w-4 h-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-r-full" />
-                            
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center text-[8px] font-black border border-white/10 uppercase z-10 relative shadow-sm" style={{ color: '#E8B4B8' }}>
-                                  {reply.author.charAt(0)}
-                                </div>
-                                <div>
-                                  <span className="font-bold text-neutral-800 dark:text-white text-[10px] block leading-none mb-0.5">{reply.author}</span>
-                                  <span className="text-[7px] text-neutral-500 dark:text-neutral-300 font-black uppercase tracking-widest">Académico</span>
-                                </div>
-                              </div>
-                              <span className="text-[7px] font-black text-neutral-400 dark:text-neutral-300 uppercase tracking-widest">{reply.time}</span>
-                            </div>
-                            <p className="text-xs text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic">"{reply.text}"</p>
-
-                            <div className="mt-2 flex justify-end">
-                              <button onClick={() => handleReply(comment.id, reply.author)} className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] opacity-70 hover:opacity-100 transition-opacity">
-                                <CornerDownRight className="w-3 h-3" />
-                                Responder
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* Pagination Buttons */}
-                        {(() => {
-                          const visibleCount = getExpandedCount(comment.id);
-                          const total = comment.replies.length;
-                          const remaining = total - visibleCount;
-
-                          if (total <= 2) return null;
-
-                          return (
-                            <div className="pt-2 flex flex-col items-start gap-2 relative z-10">
-                              {remaining > 0 && (
-                                <button onClick={() => handleExpand(comment.id, total)} className="text-[9px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-widest hover:underline flex items-center gap-1">
-                                  <CornerDownRight className="w-3 h-3" /> Ver mais {Math.min(remaining, 5)} {Math.min(remaining, 5) === 1 ? 'resposta' : 'respostas'}
-                                </button>
-                              )}
-                              {remaining === 0 && (
-                                <button onClick={() => handleCollapse(comment.id)} className="text-[9px] font-black text-neutral-500 dark:text-neutral-400 uppercase tracking-widest hover:underline">
-                                  Minimizar respostas
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
+                  comment={comment}
+                  handleReply={handleReply}
+                  expandedReplies={expandedReplies}
+                  onExpand={handleExpand}
+                  onCollapse={handleCollapse}
+                />
               ))}
             </AnimatePresence>
           </div>
