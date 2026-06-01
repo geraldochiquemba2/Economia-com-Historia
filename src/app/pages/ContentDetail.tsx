@@ -61,7 +61,7 @@ export function ContentDetail() {
 
   const handleReply = (author: string) => {
     setNewComment(`@${author} `);
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   };
 
   if (loading) {
