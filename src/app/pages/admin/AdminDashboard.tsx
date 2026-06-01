@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { Users, BookOpen, TrendingUp, AlertTriangle, ShieldAlert, Clock, ChevronRight, Loader2, RefreshCw } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Users, BookOpen, TrendingUp, AlertTriangle, ShieldAlert, Clock, ChevronRight, Loader2, RefreshCw, X } from "lucide-react";
 import { useNavigate } from "react-router";
 
 type Stats = {
@@ -14,6 +14,7 @@ export function AdminDashboard() {
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [recentContent, setRecentContent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchData = async () => {
@@ -149,7 +150,12 @@ export function AdminDashboard() {
             recentUsers.map((u) => (
               <div key={u.id} className="flex items-center gap-3 bg-neutral-50 dark:bg-white/5 rounded-xl p-3 border border-neutral-100 dark:border-white/5">
                 {u.avatar ? (
-                  <img src={u.avatar} alt={u.name} className="w-12 h-12 rounded-xl object-cover shrink-0 border border-black/10 dark:border-white/10 shadow-sm" />
+                  <img
+                    src={u.avatar}
+                    alt={u.name}
+                    onClick={() => setSelectedAvatar(u.avatar)}
+                    className="w-12 h-12 rounded-xl object-cover shrink-0 border border-black/10 dark:border-white/10 shadow-sm cursor-pointer hover:scale-110 transition-transform"
+                  />
                 ) : (
                   <div className="w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-xl flex items-center justify-center font-black force-white text-lg shrink-0 border border-black/10 dark:border-white/10 shadow-sm">
                     {u.name.charAt(0)}
@@ -181,7 +187,7 @@ export function AdminDashboard() {
           <h2 className="text-sm font-black uppercase tracking-widest text-[#3A0310] dark:text-white flex items-center gap-2">
             <BookOpen className="w-4 h-4" /> Conteúdos Recentes
           </h2>
-          <button onClick={() => navigate("/admin/content")} className="text-[9px] font-black uppercase tracking-widest text-neutral-500 dark:text-neutral-400 hover:text-[#3A0310] dark:hover:text-white transition-colors flex items-center gap-1">
+          <button onClick={() => navigate("/admin/content")} className="text-[9px] font-black uppercase tracking-widest text-neutral-900 dark:text-neutral-400 hover:text-[#3A0310] dark:hover:text-white transition-colors flex items-center gap-1">
             Ver todos <ChevronRight className="w-3 h-3" />
           </button>
         </div>
@@ -200,7 +206,7 @@ export function AdminDashboard() {
                   <p className="text-xs text-neutral-900 dark:text-white font-black uppercase tracking-tight truncate">{c.title}</p>
                   <span className="text-[9px] bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] font-black uppercase tracking-widest px-1.5 py-0.5 rounded">{c.type}</span>
                 </div>
-                <div className="flex items-center gap-1 text-[9px] text-neutral-400 font-black uppercase tracking-widest shrink-0">
+                <div className="flex items-center gap-1 text-[9px] text-neutral-900 dark:text-neutral-400 font-black uppercase tracking-widest shrink-0">
                   <Clock className="w-2.5 h-2.5" /> {timeAgo(c.createdAt)}
                 </div>
               </div>
@@ -217,11 +223,45 @@ export function AdminDashboard() {
         </div>
         <div>
           <h3 className="text-[#3A0310] dark:text-[#E8B4B8] font-black text-xs uppercase tracking-widest mb-1">Aviso do Sistema</h3>
-          <p className="text-neutral-700 dark:text-white/80 text-xs font-medium leading-relaxed">
+          <p className="text-neutral-900 dark:text-white/80 text-xs font-medium leading-relaxed">
             Todos os conteúdos publicados ficam visíveis imediatamente para todos os utilizadores do site.
           </p>
         </div>
       </motion.div>
+      </div>
+
+      {/* Avatar Lightbox Modal */}
+      <AnimatePresence>
+        {selectedAvatar && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedAvatar(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-sm w-full"
+            >
+              <button
+                onClick={() => setSelectedAvatar(null)}
+                className="absolute -top-3 -right-3 bg-white dark:bg-neutral-800 rounded-full p-1.5 shadow-lg z-10 hover:scale-110 transition-transform"
+              >
+                <X className="w-4 h-4 text-neutral-900 dark:text-white" />
+              </button>
+              <img
+                src={selectedAvatar}
+                alt="Foto de perfil"
+                className="w-full rounded-2xl object-cover shadow-2xl border-4 border-white dark:border-white/10"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
