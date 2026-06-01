@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, MemoryRouter } from "react-router";
 import { motion } from "motion/react";
 import { 
@@ -37,24 +37,18 @@ export function Home() {
     { id: 4, name: "Impérios", icon: Award },
   ];
 
-  const featuredThemes = [
-    {
-      id: "theme1",
-      title: "Ouro e Impérios: A Moeda que Uniu Continentes",
-      subtitle: "Descubra como o ouro moldou as rotas comerciais africanas.",
-      image: imgCoins,
-      tag: "História",
-      link: "/app/explore/1"
-    },
-    {
-      id: "theme2",
-      title: "Revolução Industrial: O Motor da Economia Moderna",
-      subtitle: "Do vapor à inteligência artificial.",
-      image: imgIndustrial,
-      tag: "Evolução",
-      link: "/app/explore/2"
-    }
-  ];
+  const [featuredThemes, setFeaturedThemes] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/content')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setFeaturedThemes(data.filter(item => item.featured));
+        }
+      })
+      .catch(err => console.error("Error fetching featured content:", err));
+  }, []);
 
   return (
     <div className="bg-[#0F0F0F] min-h-screen pb-24 text-neutral-100 overflow-x-hidden selection:bg-[#3A0310] selection:text-white">
@@ -158,8 +152,9 @@ export function Home() {
         )}
 
         {/* Featured Themes */}
-        <section>
-          <div className="flex justify-between items-end mb-6">
+        {featuredThemes.length > 0 && (
+          <section>
+            <div className="flex justify-between items-end mb-6">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Coins className="w-4 h-4 text-[#E8B4B8]" />
@@ -178,9 +173,9 @@ export function Home() {
                 transition={{ duration: 0.8, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
                 className="flex-shrink-0 md:flex-shrink w-[85vw] md:w-auto max-w-[340px] md:max-w-none group"
               >
-                <Link to={theme.link} className="block relative h-96 rounded-[2.5rem] overflow-hidden border border-white/10 group-hover:border-[#3A0310]/50 transition-all duration-500 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]">
+                <Link to={`/app/explore/${theme.id}`} className="block relative h-96 rounded-[2.5rem] overflow-hidden border border-white/10 group-hover:border-[#3A0310]/50 transition-all duration-500 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]">
                   <ImageWithFallback 
-                    src={theme.image}
+                    src={theme.thumbnail || imgCoins}
                     alt={theme.title}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]"
                   />
@@ -189,7 +184,7 @@ export function Home() {
                   <div className="absolute inset-0 p-8 flex flex-col justify-end">
                     <div className="flex items-center gap-2 mb-4">
                       <span className="bg-[#3A0310] text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border border-[#E8B4B8]/20 shadow-2xl" style={{ color: '#E8B4B8' }}>
-                        {theme.tag}
+                        {theme.type}
                       </span>
                       <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                         <Gem className="w-3 h-3" style={{ color: '#ffffff' }} />
@@ -199,7 +194,7 @@ export function Home() {
                       {theme.title}
                     </h3>
                     <p className="text-sm font-medium line-clamp-2 mb-6" style={{ color: '#e5e5e5' }}>
-                      {theme.subtitle}
+                      {theme.description}
                     </p>
                     
                     <div className="flex items-center justify-between">
@@ -223,6 +218,7 @@ export function Home() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Quick Categories */}
         <section>
