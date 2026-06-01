@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { Lock, Mail, ArrowRight, Loader2 } from "lucide-react";
+import { Lock, Mail, ArrowRight, Loader2, ArrowLeft, Home } from "lucide-react";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -37,9 +37,22 @@ export function Login() {
   };
 
   return (
-    <div className="bg-[#0F0F0F] min-h-screen flex items-center justify-center p-6 text-neutral-100 selection:bg-[#3A0310]">
-      {/* Decorative background elements */}
-      <div className="fixed top-0 right-0 w-96 h-96 bg-[#3A0310] rounded-full blur-[150px] opacity-20 pointer-events-none" />
+    <div className="relative min-h-screen flex items-center justify-center p-6 text-neutral-100 overflow-hidden bg-[#0F0F0F] selection:bg-[#E8B4B8]/30">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=2070')] bg-cover bg-center opacity-[0.03] mix-blend-screen pointer-events-none"></div>
+      
+      {/* Decorative gradient blobs */}
+      <div className="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] bg-gradient-to-br from-[#3A0310] to-purple-900/40 rounded-full blur-[120px] opacity-40 pointer-events-none animate-pulse-slow" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[35rem] h-[35rem] bg-gradient-to-tr from-[#E8B4B8]/20 to-[#3A0310]/30 rounded-full blur-[100px] opacity-30 pointer-events-none" />
+
+      {/* Back to Home Button */}
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl text-white font-black uppercase tracking-widest text-[10px] transition-all duration-300 group shadow-2xl"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span className="hidden sm:inline">Voltar ao Início</span>
+      </Link>
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
