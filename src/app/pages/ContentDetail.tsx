@@ -89,21 +89,21 @@ export function ContentDetail() {
   return (
     <div className="bg-[#FDFBFB] dark:bg-[#0F0F0F] min-h-screen pb-24 text-neutral-800 dark:text-neutral-100 transition-all duration-300">
 
-      {/* Header Overlay */}
+      {/* Header Nav */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md md:max-w-5xl z-[60] p-6 flex items-center justify-between"
+        className="sticky top-0 w-full max-w-5xl mx-auto z-[60] p-4 flex items-center justify-between bg-[#FDFBFB] dark:bg-[#0F0F0F] border-b border-neutral-100 dark:border-white/5"
       >
-        <Link to="/app/explore" className="w-12 h-12 bg-black/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 text-white hover:bg-black/40 transition-all shadow-2xl">
-          <ArrowLeft className="w-6 h-6" style={{ color: '#ffffff' }} />
+        <Link to="/app/explore" className="w-10 h-10 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white hover:bg-neutral-50 dark:hover:bg-white/10 transition-all shadow-sm">
+          <ArrowLeft className="w-5 h-5" />
         </Link>
-        <div className="flex gap-3">
-          <button className="w-12 h-12 bg-black/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 text-white hover:bg-[#3A0310]/40 transition-all shadow-2xl group">
-            <Heart className="w-5 h-5 group-hover:fill-red-500 group-hover:text-red-500 transition-colors" style={{ color: '#ffffff' }} />
+        <div className="flex gap-2">
+          <button className="w-10 h-10 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white hover:bg-[#3A0310]/5 transition-all shadow-sm group">
+            <Heart className="w-4 h-4 group-hover:fill-red-500 group-hover:text-red-500 transition-colors" />
           </button>
-          <button className="w-12 h-12 bg-black/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 text-white hover:bg-black/40 transition-all shadow-2xl">
-            <Share2 className="w-5 h-5" style={{ color: '#ffffff' }} />
+          <button className="w-10 h-10 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white hover:bg-neutral-50 dark:hover:bg-white/10 transition-all shadow-sm">
+            <Share2 className="w-4 h-4" />
           </button>
         </div>
       </motion.div>
