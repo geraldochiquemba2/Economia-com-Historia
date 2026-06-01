@@ -442,7 +442,7 @@ export function AdminContent() {
                     <div className="flex gap-2">
                       <div className="relative flex-1">
                         <Link2 className="absolute left-4 top-3.5 w-4 h-4 text-neutral-400" />
-                        <input type="url" value={formData.videoUrl || ""} onChange={e => handleVideoUrlChange(e.target.value)}
+                        <input type="text" value={formData.videoUrl || ""} onChange={e => handleVideoUrlChange(e.target.value)}
                           placeholder="https://www.youtube.com/watch?v=..."
                           className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 pl-10 pr-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-red-500 dark:focus:border-red-500/50 transition-colors" />
                       </div>
@@ -475,7 +475,7 @@ export function AdminContent() {
                       <ImageIcon className="w-3.5 h-3.5" /> Imagem de Capa (URL ou Upload)
                     </label>
                     <div className="flex gap-2">
-                      <input type="url" value={formData.thumbnail} onChange={e => setFormData(d => ({ ...d, thumbnail: e.target.value }))}
+                      <input type="text" value={formData.thumbnail} onChange={e => setFormData(d => ({ ...d, thumbnail: e.target.value }))}
                         placeholder="https://exemplo.com/imagem.jpg"
                         className="flex-1 w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 px-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 transition-colors" />
                       <div className="relative overflow-hidden shrink-0">
