@@ -331,8 +331,8 @@ export function CommentSection({ title = "Discussão", placeholder = "Contribuir
         ) : (
           <div className="bg-black/80 backdrop-blur-2xl p-4 rounded-[2rem] border border-white/15 flex items-center justify-between gap-4 shadow-2xl">
             <div className="flex items-center gap-3">
-              <Lock className="w-5 h-5 text-[#E8B4B8] flex-shrink-0" />
-              <span className="text-sm text-neutral-300 font-medium">
+              <Lock className="w-5 h-5 flex-shrink-0" style={{ color: '#ffffff' }} />
+              <span className="text-sm font-medium" style={{ color: '#ffffff' }}>
                 Faz login para participar na discussão
               </span>
             </div>

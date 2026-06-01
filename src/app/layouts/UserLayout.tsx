@@ -87,7 +87,7 @@ export function UserLayout() {
             </span>
           </NavLink>
           
-          <nav className="flex items-center gap-1.5 lg:gap-2.5 overflow-hidden">
+          <nav className="flex items-center gap-1.5 lg:gap-2.5">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -139,21 +139,20 @@ export function UserLayout() {
             </div>
           )}
 
-            {/* Modo Claro Toggle Switch */}
-            <div className={`flex items-center gap-2 ml-2 lg:ml-4 border-l pl-4 lg:pl-6 transition-colors duration-300 ${
+            {/* Modo Claro/Escuro Toggle Switch */}
+            <div className={`flex items-center gap-2 ml-2 lg:ml-4 border-l pl-3 lg:pl-5 transition-colors duration-300 flex-shrink-0 ${
               isLight ? 'border-[#3A0310]/20' : 'border-white/10'
             }`}>
-              <Sun className={`w-4.5 h-4.5 transition-colors flex-shrink-0 ${isLight ? "text-[#3A0310]" : "text-neutral-400"}`} />
-              <span className={`text-[10px] lg:text-xs font-black uppercase tracking-widest transition-colors inline ${
-                isLight ? "text-[#3A0310]" : "text-neutral-400"
-              }`}>
-                Modo Claro
-              </span>
+              {isLight
+                ? <Sun className="w-4 h-4 flex-shrink-0 text-[#3A0310]" />
+                : <Moon className="w-4 h-4 flex-shrink-0 text-neutral-400" />
+              }
               <button
                 onClick={toggleTheme}
                 aria-label="Alternar tema"
+                title={isLight ? "Mudar para modo escuro" : "Mudar para modo claro"}
                 className={`w-10 h-5.5 rounded-full p-0.5 transition-all duration-300 focus:outline-none cursor-pointer relative shadow-inner flex-shrink-0 ${
-                  isLight ? "bg-[#3A0310]" : "bg-neutral-800"
+                  isLight ? "bg-[#3A0310]" : "bg-neutral-700"
                 }`}
               >
                 <div
