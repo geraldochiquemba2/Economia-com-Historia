@@ -38,10 +38,10 @@ export function Explore() {
   });
 
   const typeIcon = (type: string) => {
-    if (type === "video") return <PlayCircle className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1.5" style={{ color: "#E8B4B8" }} />;
-    if (type === "text") return <FileText className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1.5" style={{ color: "#E8B4B8" }} />;
-    if (type === "podcast") return <Mic className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1.5" style={{ color: "#E8B4B8" }} />;
-    if (type === "forum") return <MessageSquare className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1.5" style={{ color: "#E8B4B8" }} />;
+    if (type === "video") return <PlayCircle className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1.5" />;
+    if (type === "text") return <FileText className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1.5" />;
+    if (type === "podcast") return <Mic className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1.5" />;
+    if (type === "forum") return <MessageSquare className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1.5" />;
     if (type === "jindungo") return <span className="mr-0.5 md:mr-1.5">🔥</span>;
     return null;
   };
@@ -155,22 +155,19 @@ export function Explore() {
                       )}
                       <div className="absolute z-20 inset-0 bg-gradient-to-t from-neutral-900/80 dark:from-[#0F0F0F]/80 via-transparent to-transparent" />
 
-                      <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20">
-                        <span
-                          className="bg-black/70 backdrop-blur-md px-1.5 py-0.5 md:px-3.5 md:py-1.5 rounded-full text-[7px] md:text-[10px] font-black uppercase tracking-widest border border-white/10 flex items-center shadow-2xl"
-                          style={{ color: "#E8B4B8" }}
-                        >
-                          {typeIcon(content.type)}
-                          {typeLabel(content.type)}
-                        </span>
-                      </div>
+
                     </div>
 
                     <div className="p-3 md:p-6 flex flex-col justify-between grow">
                       <div>
-                        <h3 className="font-black text-neutral-800 dark:text-white text-xs md:text-lg mb-1 md:mb-2.5 group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2">
-                          {content.title}
-                        </h3>
+                        <div className="flex items-center gap-2 mb-1 md:mb-2.5 flex-wrap">
+                          <h3 className="font-black text-neutral-800 dark:text-white text-xs md:text-lg group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2">
+                            {content.title}
+                          </h3>
+                          <span className="shrink-0 flex items-center gap-0.5 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[7px] md:text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border border-red-500">
+                            {typeIcon(content.type)}{typeLabel(content.type)}
+                          </span>
+                        </div>
                         <p className="text-neutral-500 dark:text-white text-[8px] md:text-xs line-clamp-2 leading-relaxed font-medium">
                           {content.description}
                         </p>
