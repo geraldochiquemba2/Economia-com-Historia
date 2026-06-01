@@ -320,14 +320,14 @@ export function Home() {
                     <span className="text-[9px] font-black text-[#E8B4B8] uppercase tracking-[0.2em] mb-1 block">
                       {rec.type}
                     </span>
-                    <h3 className="text-neutral-800 dark:text-white font-black text-sm leading-tight group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-2 uppercase tracking-tight">
+                    <h3 className="text-[#3A0310] dark:text-white font-black text-sm leading-tight group-hover:text-[#5A051A] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-2 uppercase tracking-tight">
                       {rec.title}
                     </h3>
                     
-                    <div className="mt-3 flex items-center gap-1.5 opacity-55">
-                       <div className="w-1.5 h-1.5 rounded-full bg-[#3A0310] dark:bg-[#E8B4B8]" />
-                       <span className="text-[8px] font-black text-neutral-400 uppercase tracking-widest">Aceder ao Arquivo</span>
-                    </div>
+                     <div className="mt-3 flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#3A0310] dark:bg-[#E8B4B8]" />
+                        <span className="text-[8px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-widest">Aceder ao Arquivo</span>
+                     </div>
                   </div>
                 </Link>
               </motion.div>
