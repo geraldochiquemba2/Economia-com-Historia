@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, MemoryRouter, useNavigate } from "react-router";
-import { motion, AnimatePresence } from "motion/react";
-import { ArrowLeft, PlayCircle, Heart, Share2, MessageCircle, CheckCircle2, Clock, Eye, Loader2, AlertCircle, CornerDownRight } from "lucide-react";
+import { motion } from "motion/react";
+import { ArrowLeft, PlayCircle, Heart, Share2, CheckCircle2, Clock, Eye, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { CommentSection } from "../components/CommentSection";
 
 type ContentItem = {
   id: string;
@@ -20,118 +21,6 @@ function getYouTubeId(url: string) {
   return match ? match[1] : null;
 }
 
-// Recursive helper to insert a reply deeply in the tree
-function addReplyToTree(comments: any[], parentId: number, newReply: any): any[] {
-  return comments.map(comment => {
-    if (comment.id === parentId) {
-      return {
-        ...comment,
-        replies: [...(comment.replies || []), newReply]
-      };
-    }
-    if (comment.replies && comment.replies.length > 0) {
-      return {
-        ...comment,
-        replies: addReplyToTree(comment.replies, parentId, newReply)
-      };
-    }
-    return comment;
-  });
-}
-
-type CommentNodeProps = {
-  comment: any;
-  depth?: number;
-  parentId?: number;
-  handleReply: (id: number, author: string) => void;
-  expandedReplies: Record<number, number>;
-  onExpand: (id: number, total: number) => void;
-  onCollapse: (id: number) => void;
-};
-
-const CommentNode = ({ comment, depth = 0, parentId, handleReply, expandedReplies, onExpand, onCollapse }: CommentNodeProps) => {
-  const isTopLevel = depth === 0;
-  const visibleCount = expandedReplies[comment.id] || 2;
-  const totalReplies = comment.replies?.length || 0;
-  const remaining = totalReplies - visibleCount;
-
-  // If we are at the max depth (Level 3, depth >= 2), we append to our parent so we don't go deeper.
-  // Otherwise, we append to ourselves.
-  const threadId = depth >= 2 ? parentId : comment.id;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      className={isTopLevel ? "bg-white dark:bg-white/5 p-4 md:p-5 rounded-[2rem] border border-[#3A0310] dark:border-[#E8B4B8]/30 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/60 transition-all relative overflow-hidden shadow-sm" : "relative group/reply"}
-    >
-      {!isTopLevel && (
-        <div className="absolute -left-6 top-3 w-4 h-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-r-full" />
-      )}
-
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex items-center gap-3">
-          <div className={`${isTopLevel ? 'w-8 h-8 rounded-xl text-[10px]' : 'w-6 h-6 rounded-lg text-[8px] z-10 relative shadow-sm'} bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center font-black border border-white/10 uppercase`} style={{ color: '#E8B4B8' }}>
-            {comment.author.charAt(0)}
-          </div>
-          <div>
-            <span className={`font-bold text-neutral-800 dark:text-white block leading-none ${isTopLevel ? 'text-xs mb-1' : 'text-[10px] mb-0.5'}`}>{comment.author}</span>
-            <span className={`text-neutral-500 dark:text-neutral-300 font-black uppercase tracking-widest ${isTopLevel ? 'text-[9px]' : 'text-[7px]'}`}>Académico</span>
-          </div>
-        </div>
-        <span className={`font-black text-neutral-400 dark:text-neutral-300 uppercase tracking-widest ${isTopLevel ? 'text-[9px]' : 'text-[7px]'}`}>{comment.time}</span>
-      </div>
-      
-      <p className={`text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic ${isTopLevel ? 'text-sm' : 'text-xs'}`}>"{comment.text}"</p>
-      
-      <div className={`mt-2 flex justify-end ${isTopLevel ? 'pt-3 border-t border-[#3A0310]/10 dark:border-white/10' : ''}`}>
-        <button onClick={() => handleReply(threadId, comment.author)} className={`flex items-center gap-1 font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] transition-opacity ${isTopLevel ? 'opacity-70 hover:opacity-100 gap-1.5 text-[10px]' : 'text-[9px] opacity-70 hover:opacity-100'}`}>
-          <CornerDownRight className={isTopLevel ? 'w-3.5 h-3.5' : 'w-3 h-3'} />
-          Responder
-        </button>
-      </div>
-
-      {/* Nested Replies Container */}
-      {comment.replies && comment.replies.length > 0 && depth < 2 && (
-        <div className="mt-3 pt-3 relative">
-          <div className="absolute left-[15px] top-0 bottom-4 w-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full" />
-          
-          <div className="space-y-2 pl-10 md:pl-12">
-            {comment.replies.slice(0, visibleCount).map((reply: any) => (
-              <CommentNode 
-                key={reply.id} 
-                comment={reply} 
-                depth={depth + 1} 
-                parentId={threadId}
-                handleReply={handleReply}
-                expandedReplies={expandedReplies}
-                onExpand={onExpand}
-                onCollapse={onCollapse}
-              />
-            ))}
-
-            {/* Pagination inside Nested Container */}
-            {totalReplies > 2 && (
-              <div className="pt-2 flex flex-col items-start gap-2 relative z-10">
-                {remaining > 0 && (
-                  <button onClick={() => onExpand(comment.id, totalReplies)} className="text-[9px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-widest hover:underline flex items-center gap-1">
-                    <CornerDownRight className="w-3 h-3" /> Ver mais {Math.min(remaining, 5)} {Math.min(remaining, 5) === 1 ? 'resposta' : 'respostas'}
-                  </button>
-                )}
-                {remaining === 0 && (
-                  <button onClick={() => onCollapse(comment.id)} className="text-[9px] font-black text-neutral-500 dark:text-neutral-400 uppercase tracking-widest hover:underline">
-                    Minimizar respostas
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </motion.div>
-  );
-};
-
 export function ContentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -140,19 +29,6 @@ export function ContentDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const [newComment, setNewComment] = useState("");
-  const [replyingToId, setReplyingToId] = useState<number | null>(null);
-  const [expandedReplies, setExpandedReplies] = useState<Record<number, number>>({});
-  const [commentsList, setCommentsList] = useState<any[]>([
-    { id: 1, author: "João Pedro", time: "Há 2 horas", text: "Muito interessante! Não tinha ideia da magnitude dessa reforma.", replies: [
-      { id: 101, author: "Alice Fernando", time: "Há 1 hora", text: "Verdade!" },
-      { id: 102, author: "Eu", time: "Agora mesmo", text: "Concordo." },
-      { id: 103, author: "Maria", time: "Há 30 min", text: "Exato." }
-    ] },
-    { id: 2, author: "Alice Fernando", time: "Há 5 horas", text: "Gostaria de ver mais conteúdos sobre o papel da mulher nesse contexto.", replies: [] }
-  ]);
 
   useEffect(() => {
     if (!id) return;
@@ -166,38 +42,6 @@ export function ContentDetail() {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [id]);
-
-  const handleAddComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    if (replyingToId !== null) {
-      const newReply = { id: Date.now(), author: "Eu", time: "Agora mesmo", text: newComment, replies: [] };
-      setCommentsList(prev => addReplyToTree(prev, replyingToId, newReply));
-      setReplyingToId(null);
-    } else {
-      setCommentsList([
-        ...commentsList,
-        { id: Date.now(), author: "Eu", time: "Agora mesmo", text: newComment, replies: [] }
-      ]);
-    }
-    setNewComment("");
-  };
-
-  const handleReply = (commentId: number, author: string) => {
-    setReplyingToId(commentId);
-    setNewComment(`@${author} `);
-    inputRef.current?.focus({ preventScroll: true });
-  };
-
-  const getExpandedCount = (commentId: number) => expandedReplies[commentId] || 2;
-  const handleExpand = (commentId: number, total: number) => {
-    const current = getExpandedCount(commentId);
-    setExpandedReplies(prev => ({ ...prev, [commentId]: Math.min(current + 5, total) }));
-  };
-  const handleCollapse = (commentId: number) => {
-    setExpandedReplies(prev => ({ ...prev, [commentId]: 2 }));
-  };
 
   if (loading) {
     return (
@@ -373,55 +217,7 @@ export function ContentDetail() {
           <p className="mt-4 text-[9px] text-neutral-500 dark:text-white font-black uppercase tracking-[0.2em]">Clica para gravar este conhecimento</p>
         </motion.div>
 
-        {/* Comments */}
-        <section className="pt-12 border-t border-[#3A0310]/10 dark:border-white/5 pb-10">
-          <h3 className="text-xl font-black text-neutral-800 dark:text-white mb-8 flex items-center gap-3 uppercase tracking-tight">
-            <MessageCircle className="w-6 h-6 text-[#3A0310] dark:text-[#E8B4B8]" />
-            Discussão de Elite ({commentsList.length})
-          </h3>
-
-          <div className="space-y-4 mb-10">
-            <AnimatePresence>
-              {commentsList.map(comment => (
-                <CommentNode 
-                  key={comment.id}
-                  comment={comment}
-                  handleReply={handleReply}
-                  expandedReplies={expandedReplies}
-                  onExpand={handleExpand}
-                  onCollapse={handleCollapse}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        </section>
-      </div>
-
-      {/* Floating Comment Bar */}
-      <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[calc(100%-48px)] md:max-w-xl z-[60]">
-        <form
-          onSubmit={handleAddComment}
-          className="bg-black/80 backdrop-blur-2xl p-2 rounded-[2rem] border border-white/15 flex gap-2 shadow-2xl"
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Contribuir para o debate..."
-            className="flex-1 bg-transparent border-none rounded-full px-5 py-3 text-sm focus:outline-none force-white force-white-placeholder"
-            style={{ color: '#ffffff' }}
-          />
-          <button
-            type="submit"
-            disabled={!newComment.trim()}
-            className="bg-[#3A0310] px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-[#5A051A] transition-all disabled:opacity-50 border border-[#E8B4B8]/20"
-            style={{ color: '#ffffff' }}
-          >
-            Enviar
-          </button>
-        </form>
-      </div>
+        <CommentSection title="Discussão de Elite" placeholder="Contribuir para o debate..." />
     </div>
   );
 }

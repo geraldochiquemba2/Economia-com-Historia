@@ -220,6 +220,46 @@ export function UserLayout() {
           </NavLink>
         ))}
 
+        {/* Admin Panel Nav Item — shown only for admins */}
+        {user && user.role === 'admin' && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
+                isActive ? "text-black dark:text-white" : "text-black dark:text-white opacity-60 hover:opacity-100"
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <motion.div
+                  animate={isActive ? { scale: 1.1, y: -4 } : { scale: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="relative"
+                >
+                  <ShieldAlert className={`w-6 h-6 mb-1 text-[#3A0310] dark:text-[#E8B4B8] ${isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
+                  {isActive && (
+                    <motion.div
+                      layoutId="nav-glow-admin"
+                      className="absolute -inset-2 bg-[#3A0310]/20 dark:bg-[#3A0310] rounded-full blur-md opacity-50 dark:opacity-30 -z-10"
+                    />
+                  )}
+                </motion.div>
+                <span className="text-[10px] uppercase tracking-widest font-black transition-all duration-300 mt-1 text-[#3A0310] dark:text-[#E8B4B8]">
+                  Admin
+                </span>
+                {isActive && (
+                  <motion.div
+                    layoutId="bottom-nav-dot-admin"
+                    className="absolute bottom-2 w-1.5 h-1.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full"
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </>
+            )}
+          </NavLink>
+        )}
+
         {/* Theme Toggle inside bottom nav */}
         <button
           onClick={toggleTheme}
@@ -240,15 +280,7 @@ export function UserLayout() {
       
 
 
-      {/* Admin Quick Access (Floating) - HIDDEN ON PC */}
-      {user && user.role === 'admin' && (
-        <NavLink 
-          to="/admin" 
-          className="fixed bottom-24 right-6 w-12 h-12 bg-[#3A0310] rounded-full flex md:hidden items-center justify-center shadow-2xl border border-[#E8B4B8]/20 z-50 text-white active:scale-95 transition-transform"
-        >
-          <ShieldAlert className="w-5 h-5" />
-        </NavLink>
-      )}
+
     </div>
   );
 }
