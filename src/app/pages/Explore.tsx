@@ -164,11 +164,11 @@ export function Explore() {
                           <h3 className="font-black text-neutral-800 dark:text-white text-xs md:text-lg group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2">
                             {content.title}
                           </h3>
-                          <span className="shrink-0 flex items-center gap-0.5 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[7px] md:text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border border-red-500">
+                          <span className="shrink-0 flex items-center gap-0.5 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[7px] md:text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border border-[#3A0310] dark:border-[#E8B4B8]">
                             {typeIcon(content.type)}{typeLabel(content.type)}
                           </span>
                         </div>
-                        <p className="text-neutral-500 dark:text-white text-[8px] md:text-xs line-clamp-2 leading-relaxed font-medium">
+                        <p className="text-neutral-900 dark:text-white text-[8px] md:text-xs line-clamp-2 leading-relaxed font-medium">
                           {content.description}
                         </p>
                       </div>
@@ -178,7 +178,7 @@ export function Explore() {
                           <div className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-[#3A0310]/5 dark:bg-[#3A0310] flex items-center justify-center border border-[#3A0310]/10 dark:border-[#E8B4B8]/20 shrink-0">
                             <Compass className="w-2.5 h-2.5 md:w-4 md:h-4 text-[#3A0310] dark:text-[#E8B4B8]" />
                           </div>
-                          <span className="text-[6px] md:text-[9px] font-black text-neutral-400 dark:text-white uppercase tracking-widest leading-tight">Nível: 3</span>
+                          <span className="text-[6px] md:text-[9px] font-black text-neutral-900 dark:text-white uppercase tracking-widest leading-tight">Nível: 3</span>
                         </div>
                         <div className="flex items-center text-[#3A0310] dark:text-[#E8B4B8] font-black text-[6px] md:text-[9px] uppercase tracking-widest gap-0.5 md:gap-1 group-hover:gap-1.5 md:group-hover:gap-2.5 transition-all whitespace-nowrap">
                           Aceder <ArrowLeft className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 rotate-180" />

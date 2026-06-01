@@ -316,7 +316,7 @@ export function AdminContent() {
                 <div className="p-4 flex flex-col flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-[#3A0310] dark:text-white font-black text-sm uppercase tracking-tight line-clamp-1">{item.title}</h3>
-                    <span className="shrink-0 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border border-red-500">{item.type}</span>
+                    <span className="shrink-0 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border border-[#3A0310] dark:border-[#E8B4B8]">{item.type}</span>
                   </div>
                   <p className="text-neutral-600 dark:text-neutral-400 text-[10px] font-medium leading-relaxed line-clamp-2 flex-1">{item.description}</p>
                   <div className="flex items-center gap-2 mt-4 pt-4 border-t border-neutral-100 dark:border-white/10">
