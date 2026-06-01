@@ -268,9 +268,9 @@ export function ContentDetail() {
                   key={comment.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-white dark:bg-white/5 p-6 rounded-[2rem] border border-[#3A0310] dark:border-[#E8B4B8]/30 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/60 transition-all relative overflow-hidden shadow-sm"
+                  className="bg-white dark:bg-white/5 p-4 md:p-5 rounded-[2rem] border border-[#3A0310] dark:border-[#E8B4B8]/30 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/60 transition-all relative overflow-hidden shadow-sm"
                 >
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center text-[10px] font-black border border-white/10 uppercase" style={{ color: '#E8B4B8' }}>
                         {comment.author.charAt(0)}
@@ -284,7 +284,7 @@ export function ContentDetail() {
                   </div>
                   <p className="text-sm text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic">"{comment.text}"</p>
                   
-                  <div className="mt-4 pt-4 border-t border-[#3A0310]/10 dark:border-white/10 flex justify-end">
+                  <div className="mt-3 pt-3 border-t border-[#3A0310]/10 dark:border-white/10 flex justify-end">
                     <button onClick={() => handleReply(comment.id, comment.author)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] hover:opacity-70 transition-opacity">
                       <CornerDownRight className="w-3.5 h-3.5" />
                       Responder
@@ -293,11 +293,11 @@ export function ContentDetail() {
 
                   {/* Nested Replies */}
                   {comment.replies && comment.replies.length > 0 && (
-                    <div className="mt-4 pt-4 relative">
+                    <div className="mt-3 pt-3 relative">
                       {/* Vertical line from parent down to the replies */}
-                      <div className="absolute left-[15px] top-0 bottom-6 w-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full" />
+                      <div className="absolute left-[15px] top-0 bottom-4 w-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full" />
                       
-                      <div className="space-y-4 pl-10 md:pl-12">
+                      <div className="space-y-2 pl-10 md:pl-12">
                         {comment.replies.map((reply: any) => (
                           <div key={reply.id} className="relative">
                             {/* Horizontal curve connecting vertical line to the reply avatar */}
