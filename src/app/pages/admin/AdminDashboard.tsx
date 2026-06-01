@@ -148,9 +148,13 @@ export function AdminDashboard() {
           ) : (
             recentUsers.map((u) => (
               <div key={u.id} className="flex items-center gap-3 bg-neutral-50 dark:bg-white/5 rounded-xl p-3 border border-neutral-100 dark:border-white/5">
-                <div className="w-9 h-9 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-xl flex items-center justify-center font-black force-white text-sm shrink-0">
-                  {u.name.charAt(0)}
-                </div>
+                {u.avatar ? (
+                  <img src={u.avatar} alt={u.name} className="w-9 h-9 rounded-xl object-cover shrink-0" />
+                ) : (
+                  <div className="w-9 h-9 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-xl flex items-center justify-center font-black force-white text-sm shrink-0">
+                    {u.name.charAt(0)}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-neutral-900 dark:text-white font-black uppercase tracking-tight truncate">{u.name}</p>
                   <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium truncate">{u.email}</p>
