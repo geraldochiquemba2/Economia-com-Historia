@@ -32,8 +32,13 @@ export function ContentDetail() {
 
   const [newComment, setNewComment] = useState("");
   const [replyingToId, setReplyingToId] = useState<number | null>(null);
+  const [expandedReplies, setExpandedReplies] = useState<Record<number, number>>({});
   const [commentsList, setCommentsList] = useState<any[]>([
-    { id: 1, author: "João Pedro", time: "Há 2 horas", text: "Muito interessante! Não tinha ideia da magnitude dessa reforma.", replies: [] },
+    { id: 1, author: "João Pedro", time: "Há 2 horas", text: "Muito interessante! Não tinha ideia da magnitude dessa reforma.", replies: [
+      { id: 101, author: "Alice Fernando", time: "Há 1 hora", text: "Verdade!" },
+      { id: 102, author: "Eu", time: "Agora mesmo", text: "Concordo." },
+      { id: 103, author: "Maria", time: "Há 30 min", text: "Exato." }
+    ] },
     { id: 2, author: "Alice Fernando", time: "Há 5 horas", text: "Gostaria de ver mais conteúdos sobre o papel da mulher nesse contexto.", replies: [] }
   ]);
 
@@ -78,6 +83,15 @@ export function ContentDetail() {
     setReplyingToId(commentId);
     setNewComment(`@${author} `);
     inputRef.current?.focus({ preventScroll: true });
+  };
+
+  const getExpandedCount = (commentId: number) => expandedReplies[commentId] || 2;
+  const handleExpand = (commentId: number, total: number) => {
+    const current = getExpandedCount(commentId);
+    setExpandedReplies(prev => ({ ...prev, [commentId]: Math.min(current + 5, total) }));
+  };
+  const handleCollapse = (commentId: number) => {
+    setExpandedReplies(prev => ({ ...prev, [commentId]: 2 }));
   };
 
   if (loading) {
@@ -298,8 +312,8 @@ export function ContentDetail() {
                       <div className="absolute left-[15px] top-0 bottom-4 w-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full" />
                       
                       <div className="space-y-2 pl-10 md:pl-12">
-                        {comment.replies.map((reply: any) => (
-                          <div key={reply.id} className="relative">
+                        {comment.replies.slice(0, getExpandedCount(comment.id)).map((reply: any) => (
+                          <div key={reply.id} className="relative group/reply">
                             {/* Horizontal curve connecting vertical line to the reply avatar */}
                             <div className="absolute -left-6 top-3 w-4 h-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-r-full" />
                             
@@ -316,8 +330,39 @@ export function ContentDetail() {
                               <span className="text-[7px] font-black text-neutral-400 dark:text-neutral-300 uppercase tracking-widest">{reply.time}</span>
                             </div>
                             <p className="text-xs text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic">"{reply.text}"</p>
+
+                            <div className="mt-2 flex justify-end">
+                              <button onClick={() => handleReply(comment.id, reply.author)} className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] opacity-70 hover:opacity-100 transition-opacity">
+                                <CornerDownRight className="w-3 h-3" />
+                                Responder
+                              </button>
+                            </div>
                           </div>
                         ))}
+
+                        {/* Pagination Buttons */}
+                        {(() => {
+                          const visibleCount = getExpandedCount(comment.id);
+                          const total = comment.replies.length;
+                          const remaining = total - visibleCount;
+
+                          if (total <= 2) return null;
+
+                          return (
+                            <div className="pt-2 flex flex-col items-start gap-2 relative z-10">
+                              {remaining > 0 && (
+                                <button onClick={() => handleExpand(comment.id, total)} className="text-[9px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-widest hover:underline flex items-center gap-1">
+                                  <CornerDownRight className="w-3 h-3" /> Ver mais {Math.min(remaining, 5)} {Math.min(remaining, 5) === 1 ? 'resposta' : 'respostas'}
+                                </button>
+                              )}
+                              {remaining === 0 && (
+                                <button onClick={() => handleCollapse(comment.id)} className="text-[9px] font-black text-neutral-500 dark:text-neutral-400 uppercase tracking-widest hover:underline">
+                                  Minimizar respostas
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}
