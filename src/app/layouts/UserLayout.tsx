@@ -260,6 +260,47 @@ export function UserLayout() {
           </NavLink>
         )}
 
+        {/* Login Nav Item for Unauthenticated Users */}
+        {!token && (
+          <NavLink
+            to="/login"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
+                isActive ? "text-[#3A0310] dark:text-[#E8B4B8]" : "text-black dark:text-white opacity-60 hover:opacity-100"
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <motion.div
+                  animate={isActive ? { scale: 1.1, y: -4 } : { scale: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="relative"
+                >
+                  <User className={`w-6 h-6 mb-1 ${isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
+                  {isActive && (
+                    <motion.div 
+                       layoutId="nav-glow-login"
+                      className="absolute -inset-2 bg-neutral-200 dark:bg-[#3A0310] rounded-full blur-md opacity-50 dark:opacity-30 -z-10"
+                    />
+                  )}
+                </motion.div>
+                <span className="text-[10px] uppercase tracking-widest font-black transition-all duration-300 mt-1">
+                  Login
+                </span>
+                
+                {isActive && (
+                  <motion.div
+                    layoutId="bottom-nav-dot-login"
+                    className="absolute bottom-2 w-1.5 h-1.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full shadow-none"
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </>
+            )}
+          </NavLink>
+        )}
+
         {/* Theme Toggle inside bottom nav */}
         <button
           onClick={toggleTheme}
