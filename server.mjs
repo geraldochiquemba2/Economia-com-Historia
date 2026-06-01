@@ -117,6 +117,13 @@ async function initDB() {
         "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    // 2b. Garantir que as colunas featured e recommended existem
+    await pool.query(`
+      ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "featured" BOOLEAN DEFAULT FALSE;
+    `);
+    await pool.query(`
+      ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "recommended" BOOLEAN DEFAULT FALSE;
+    `);
     // 3. Garantir que a coluna avatar existe na tabela User
     await pool.query(`
       ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "avatar" VARCHAR(512);
