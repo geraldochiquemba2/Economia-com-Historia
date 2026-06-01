@@ -55,8 +55,9 @@ const CommentNode = ({ comment, depth = 0, parentId, handleReply, expandedReplie
   const totalReplies = comment.replies?.length || 0;
   const remaining = totalReplies - visibleCount;
 
-  // For replies, the actual thread owner is parentId. For top level, it's comment.id.
-  const threadId = parentId || comment.id;
+  // If we are at the max depth (Level 3, depth >= 2), we append to our parent so we don't go deeper.
+  // Otherwise, we append to ourselves.
+  const threadId = depth >= 2 ? parentId : comment.id;
 
   return (
     <motion.div
@@ -91,7 +92,7 @@ const CommentNode = ({ comment, depth = 0, parentId, handleReply, expandedReplie
       </div>
 
       {/* Nested Replies Container */}
-      {comment.replies && comment.replies.length > 0 && depth < 1 && (
+      {comment.replies && comment.replies.length > 0 && depth < 2 && (
         <div className="mt-3 pt-3 relative">
           <div className="absolute left-[15px] top-0 bottom-4 w-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full" />
           
