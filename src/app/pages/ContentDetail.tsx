@@ -42,17 +42,21 @@ function addReplyToTree(comments: any[], parentId: number, newReply: any): any[]
 type CommentNodeProps = {
   comment: any;
   depth?: number;
+  parentId?: number;
   handleReply: (id: number, author: string) => void;
   expandedReplies: Record<number, number>;
   onExpand: (id: number, total: number) => void;
   onCollapse: (id: number) => void;
 };
 
-const CommentNode = ({ comment, depth = 0, handleReply, expandedReplies, onExpand, onCollapse }: CommentNodeProps) => {
+const CommentNode = ({ comment, depth = 0, parentId, handleReply, expandedReplies, onExpand, onCollapse }: CommentNodeProps) => {
   const isTopLevel = depth === 0;
   const visibleCount = expandedReplies[comment.id] || 2;
   const totalReplies = comment.replies?.length || 0;
   const remaining = totalReplies - visibleCount;
+
+  // For replies, the actual thread owner is parentId. For top level, it's comment.id.
+  const threadId = parentId || comment.id;
 
   return (
     <motion.div
@@ -80,14 +84,14 @@ const CommentNode = ({ comment, depth = 0, handleReply, expandedReplies, onExpan
       <p className={`text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed italic ${isTopLevel ? 'text-sm' : 'text-xs'}`}>"{comment.text}"</p>
       
       <div className={`mt-2 flex justify-end ${isTopLevel ? 'pt-3 border-t border-[#3A0310]/10 dark:border-white/10' : ''}`}>
-        <button onClick={() => handleReply(comment.id, comment.author)} className={`flex items-center gap-1 font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] transition-opacity ${isTopLevel ? 'opacity-70 hover:opacity-100 gap-1.5 text-[10px]' : 'text-[9px] opacity-70 hover:opacity-100'}`}>
+        <button onClick={() => handleReply(threadId, comment.author)} className={`flex items-center gap-1 font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] transition-opacity ${isTopLevel ? 'opacity-70 hover:opacity-100 gap-1.5 text-[10px]' : 'text-[9px] opacity-70 hover:opacity-100'}`}>
           <CornerDownRight className={isTopLevel ? 'w-3.5 h-3.5' : 'w-3 h-3'} />
           Responder
         </button>
       </div>
 
       {/* Nested Replies Container */}
-      {comment.replies && comment.replies.length > 0 && depth < 5 && (
+      {comment.replies && comment.replies.length > 0 && depth < 1 && (
         <div className="mt-3 pt-3 relative">
           <div className="absolute left-[15px] top-0 bottom-4 w-0.5 bg-[#3A0310] dark:bg-[#E8B4B8] rounded-full" />
           
@@ -97,6 +101,7 @@ const CommentNode = ({ comment, depth = 0, handleReply, expandedReplies, onExpan
                 key={reply.id} 
                 comment={reply} 
                 depth={depth + 1} 
+                parentId={threadId}
                 handleReply={handleReply}
                 expandedReplies={expandedReplies}
                 onExpand={onExpand}
