@@ -149,14 +149,19 @@ export function AdminDashboard() {
             recentUsers.map((u) => (
               <div key={u.id} className="flex items-center gap-3 bg-neutral-50 dark:bg-white/5 rounded-xl p-3 border border-neutral-100 dark:border-white/5">
                 {u.avatar ? (
-                  <img src={u.avatar} alt={u.name} className="w-9 h-9 rounded-xl object-cover shrink-0" />
+                  <img src={u.avatar} alt={u.name} className="w-12 h-12 rounded-xl object-cover shrink-0 border border-black/10 dark:border-white/10 shadow-sm" />
                 ) : (
-                  <div className="w-9 h-9 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-xl flex items-center justify-center font-black force-white text-sm shrink-0">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#3A0310] to-[#5A051A] rounded-xl flex items-center justify-center font-black force-white text-lg shrink-0 border border-black/10 dark:border-white/10 shadow-sm">
                     {u.name.charAt(0)}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-neutral-900 dark:text-white font-black uppercase tracking-tight truncate">{u.name}</p>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-sm text-neutral-900 dark:text-white font-black uppercase tracking-tight truncate">{u.name}</p>
+                    <span className="px-2 py-0.5 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] rounded-md text-[8px] font-black uppercase tracking-widest">
+                      {u.profession || 'Estudante'}
+                    </span>
+                  </div>
                   <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium truncate">{u.email}</p>
                 </div>
                 <div className="flex items-center gap-1 text-[9px] text-neutral-400 font-black uppercase tracking-widest shrink-0">
