@@ -218,6 +218,7 @@ export function ContentDetail() {
         </motion.div>
 
         <CommentSection title="Discussão de Elite" placeholder="Contribuir para o debate..." />
+      </div>
     </div>
   );
 }
