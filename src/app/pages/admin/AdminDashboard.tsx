@@ -6,10 +6,11 @@ import { useNavigate } from "react-router";
 type Stats = {
   users: number;
   content: number;
+  debates: number;
 };
 
 export function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>({ users: 0, content: 0 });
+  const [stats, setStats] = useState<Stats>({ users: 0, content: 0, debates: 0 });
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [recentContent, setRecentContent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +57,7 @@ export function AdminDashboard() {
     },
     {
       label: "Debates Ativos",
-      value: 3,
+      value: stats.debates,
       icon: TrendingUp,
       highlight: false,
       action: () => {},

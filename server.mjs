@@ -331,13 +331,15 @@ app.delete('/api/users/:id', async (req, res) => {
 // -- API ESTATÍSTICAS DASHBOARD --
 app.get('/api/stats', async (req, res) => {
   try {
-    const [usersRes, contentRes] = await Promise.all([
+    const [usersRes, contentRes, debatesRes] = await Promise.all([
       pool.query('SELECT COUNT(*) FROM "User"'),
-      pool.query('SELECT COUNT(*) FROM "Content"'),
+      pool.query('SELECT COUNT(*) FROM "Content" WHERE type != \'forum\''),
+      pool.query('SELECT COUNT(*) FROM "Content" WHERE type = \'forum\''),
     ]);
     res.json({
       users: parseInt(usersRes.rows[0].count),
       content: parseInt(contentRes.rows[0].count),
+      debates: parseInt(debatesRes.rows[0].count),
     });
   } catch (error) {
     console.error(error);
