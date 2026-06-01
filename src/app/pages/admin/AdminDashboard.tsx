@@ -29,7 +29,7 @@ export function AdminDashboard() {
       const contentData = await contentRes.json();
 
       setStats(statsData);
-      setRecentUsers(Array.isArray(usersData) ? usersData.slice(0, 3) : []);
+      setRecentUsers(Array.isArray(usersData) ? usersData.filter((u: any) => u.role !== 'admin').slice(0, 3) : []);
       setRecentContent(Array.isArray(contentData) ? contentData.slice(0, 3) : []);
     } catch {
       // Silent fail — show zeros
