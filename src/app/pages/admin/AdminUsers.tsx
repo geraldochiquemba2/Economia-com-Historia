@@ -216,11 +216,12 @@ export function AdminUsers() {
                   <button
                     onClick={() => handleEliteAction(req.id, req.userId, 'approve')}
                     disabled={processingRequest === req.id}
-                    className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white font-black text-[10px] uppercase tracking-widest px-3 py-2 rounded-xl transition-all active:scale-95 disabled:opacity-60"
+                    className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 font-black text-[10px] uppercase tracking-widest px-3 py-2 rounded-xl transition-all active:scale-95 disabled:opacity-60"
+                    style={{ color: "#ffffff" }}
                   >
                     {processingRequest === req.id
-                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      : <Crown className="w-3.5 h-3.5" />}
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: "#ffffff" }} />
+                      : <Crown className="w-3.5 h-3.5" style={{ color: "#ffffff", stroke: "#ffffff" }} />}
                     Aprovar
                   </button>
                   <button
