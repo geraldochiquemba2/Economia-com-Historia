@@ -1,49 +1,61 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, MemoryRouter } from "react-router";
 import { motion } from "motion/react";
-import { MessageSquare, PlusCircle, Search, Clock, ThumbsUp, ArrowLeft, TrendingUp, Users } from "lucide-react";
-import { forumTopics } from "../data/mockData";
+import { MessageSquare, PlusCircle, Search, Clock, ThumbsUp, ThumbsDown, ArrowLeft, Users, Loader2 } from "lucide-react";
 
 export function Forum() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"recent" | "oldest" | "popular">("recent");
+  const [topics, setTopics] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
   const isAdmin = user?.role === 'admin';
 
+  // Buscar tópicos de fórum da API (type=forum)
+  useEffect(() => {
+    setLoading(true);
+    fetch('/api/content')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setTopics(data.filter((t: any) => t.type === 'forum'));
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
   const filteredAndSortedTopics = useMemo(() => {
-    let result = forumTopics.filter((t) =>
+    let result = topics.filter((t) =>
       t.title.toLowerCase().includes(search.toLowerCase())
     );
 
-    // Sorting logic
     if (filter === "popular") {
-      result = [...result].sort((a, b) => b.comments - a.comments);
+      result = [...result].sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
     } else if (filter === "oldest") {
-      const dateWeight: Record<string, number> = {
-        "Hoje": 0,
-        "Ontem": 1,
-        "2 dias atrás": 2
-      };
-      result = [...result].sort((a, b) => (dateWeight[b.date] || 0) - (dateWeight[a.date] || 0));
+      result = [...result].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     } else {
-      const dateWeight: Record<string, number> = {
-        "Hoje": 0,
-        "Ontem": 1,
-        "2 dias atrás": 2
-      };
-      result = [...result].sort((a, b) => (dateWeight[a.date] || 0) - (dateWeight[b.date] || 0));
+      result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
     return result;
-  }, [search, filter]);
+  }, [search, filter, topics]);
+
+  function timeAgo(dateStr: string) {
+    if (!dateStr) return '';
+    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+    if (diff < 3600) return `há ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`;
+    return `há ${Math.floor(diff / 86400)} dia${Math.floor(diff / 86400) === 1 ? '' : 's'}`;
+  }
 
   return (
     <div className="min-h-screen pb-16 transition-colors duration-300 md:max-w-3xl md:mx-auto">
-      {/* Header - Themed Glassmorphic Banner with Historic Background Image */}
+      {/* Header */}
       <header className="px-6 pt-6 pb-5 sticky top-0 z-50 md:relative md:top-auto border-b md:border border-[#3A0310]/10 dark:border-white/5 bg-gradient-to-br from-white/95 to-neutral-50/95 dark:from-[#0F0F0F]/95 dark:to-[#1A1A1A]/95 backdrop-blur-xl md:rounded-[2rem] md:mt-6 md:p-6 md:px-8 shadow-2xl transition-all duration-300 relative overflow-hidden">
         
-        {/* Academic Library Background Image Overlay */}
         <div className="absolute inset-0 z-0 opacity-10 dark:opacity-[0.08] grayscale mix-blend-overlay pointer-events-none">
           <img 
             src="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" 
@@ -65,13 +77,15 @@ export function Forum() {
               </div>
             </div>
             {isAdmin && (
-              <button className="bg-[#3A0310] force-white p-2.5 rounded-xl shadow-md hover:bg-[#5A051A] transition-all border border-[#E8B4B8]/20 group active:scale-95">
+              <Link
+                to="/app/admin"
+                className="bg-[#3A0310] force-white p-2.5 rounded-xl shadow-md hover:bg-[#5A051A] transition-all border border-[#E8B4B8]/20 group active:scale-95"
+              >
                 <PlusCircle className="w-5 h-5 force-gold group-hover:scale-110 transition-transform" />
-              </button>
+              </Link>
             )}
           </div>
 
-          {/* Themed Search Bar & Filters Side-by-Side on PC */}
           <div className="flex flex-col md:flex-row gap-3 items-stretch">
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
@@ -107,9 +121,14 @@ export function Forum() {
         </div>
       </header>
 
-      {/* Forums debate items - Highly Compacted Cards */}
+      {/* Forum list */}
       <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {filteredAndSortedTopics.map((topic, index) => (
+        {loading ? (
+          <div className="col-span-3 flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="w-8 h-8 text-[#3A0310] dark:text-[#E8B4B8] animate-spin" />
+            <p className="text-xs font-black uppercase tracking-widest text-neutral-400">A carregar debates...</p>
+          </div>
+        ) : filteredAndSortedTopics.map((topic, index) => (
           <motion.div
             key={topic.id}
             initial={{ opacity: 0, y: 15 }}
@@ -129,22 +148,26 @@ export function Forum() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center text-[10px] font-black force-gold border border-white/10 shadow-md">
-                    {topic.author.charAt(0)}
+                    {(topic.author || 'A').charAt(0)}
                   </div>
                   <div>
-                    <p className="text-neutral-800 dark:text-white text-xs font-bold leading-none mb-0.5">{topic.author}</p>
-                    <p className="text-neutral-400 dark:text-white text-[8px] font-black uppercase tracking-widest">Académico Nível 2</p>
+                    <p className="text-neutral-800 dark:text-white text-xs font-bold leading-none mb-0.5">{topic.author || 'Autor'}</p>
+                    <p className="text-neutral-400 dark:text-white text-[8px] font-black uppercase tracking-widest">Académico</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 text-neutral-400 dark:text-white text-[8px] font-bold uppercase tracking-widest">
-                  <span className="flex items-center gap-1 bg-neutral-100 dark:bg-black/40 px-2 py-0.5 rounded-lg border border-neutral-200 dark:border-white/5">
+                <div className="flex items-center gap-2 text-neutral-400 dark:text-white text-[8px] font-bold uppercase tracking-widest flex-wrap mt-2">
+                  <span className="flex items-center gap-1 bg-neutral-100 dark:bg-black/40 px-2 py-0.5 rounded-lg border border-neutral-200 dark:border-white/5" title="Data">
                     <Clock className="w-3 h-3 text-[#3A0310] dark:text-white" /> 
-                    {topic.date}
+                    {timeAgo(topic.createdAt)}
                   </span>
-                  <span className="flex items-center gap-1 bg-neutral-100 dark:bg-black/40 px-2 py-0.5 rounded-lg border border-neutral-200 dark:border-white/5 group-hover:text-[#3A0310] dark:group-hover:text-white transition-colors">
-                    <MessageSquare className="w-3 h-3 text-[#3A0310] dark:text-white" /> 
-                    {topic.comments}
+                  <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-lg border border-blue-100 dark:border-blue-800/30 text-blue-600 dark:text-blue-400" title="Gostos">
+                    <ThumbsUp className="w-3 h-3" /> 
+                    {topic.likes?.length || 0}
+                  </span>
+                  <span className="flex items-center gap-1 bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 px-2 py-0.5 rounded-lg border border-[#3A0310]/10 dark:border-[#E8B4B8]/20 text-[#3A0310] dark:text-[#E8B4B8]" title="Discussões">
+                    <MessageSquare className="w-3 h-3" /> 
+                    {topic.commentCount || 0}
                   </span>
                 </div>
               </div>
@@ -152,10 +175,11 @@ export function Forum() {
           </motion.div>
         ))}
 
-        {filteredAndSortedTopics.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-neutral-400 dark:text-neutral-600">
+        {!loading && filteredAndSortedTopics.length === 0 && (
+          <div className="col-span-3 flex flex-col items-center justify-center py-20 text-neutral-400 dark:text-neutral-600">
             <MessageSquare className="w-16 h-16 mb-4 opacity-15" />
             <p className="font-bold uppercase tracking-widest text-xs">O silêncio reina por aqui...</p>
+            {isAdmin && <p className="text-[10px] mt-2 opacity-60">Cria um novo tópico no painel Admin → Conteúdo</p>}
           </div>
         )}
       </div>

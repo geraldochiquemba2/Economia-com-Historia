@@ -117,17 +117,94 @@ async function initDB() {
         "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
-    // 2b. Garantir que as colunas featured e recommended existem
+    // 2b. Garantir que as colunas featured, recommended, likes e dislikes existem
     await pool.query(`
       ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "featured" BOOLEAN DEFAULT FALSE;
     `);
     await pool.query(`
       ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "recommended" BOOLEAN DEFAULT FALSE;
     `);
+    await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "likes" TEXT[] DEFAULT '{}';`);
+    await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "dislikes" TEXT[] DEFAULT '{}';`);
+    await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "author" VARCHAR(255) DEFAULT 'Autor Desconhecido';`);
+
     // 3. Garantir que a coluna avatar existe na tabela User
     await pool.query(`
       ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "avatar" VARCHAR(512);
     `);
+
+    // 4. Criar tabela de Comentários
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "Comment" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "contentId" VARCHAR(512) NOT NULL,
+        "userId" UUID REFERENCES "User"(id) ON DELETE SET NULL,
+        "author" VARCHAR(255) NOT NULL,
+        "avatar" VARCHAR(512),
+        "text" TEXT NOT NULL,
+        "parentId" UUID REFERENCES "Comment"(id) ON DELETE CASCADE,
+        "isDeleted" BOOLEAN DEFAULT FALSE,
+        "isHidden" BOOLEAN DEFAULT FALSE,
+        "moderatorNote" TEXT,
+        "editedAt" TIMESTAMP,
+        "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    // 4b. Garantir colunas de moderação existem (para tabelas antigas)
+    await pool.query(`ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "isDeleted" BOOLEAN DEFAULT FALSE;`);
+    await pool.query(`ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "isHidden" BOOLEAN DEFAULT FALSE;`);
+    await pool.query(`ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "moderatorNote" TEXT;`);
+    await pool.query(`ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "editedAt" TIMESTAMP;`);
+    await pool.query(`ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "likes" TEXT[] DEFAULT '{}';`);
+    await pool.query(`ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "dislikes" TEXT[] DEFAULT '{}';`);
+    // 4c. Garantir que o timestamp tem fuso horário para evitar bugs no navegador (-1 hora)
+    await pool.query(`ALTER TABLE "Comment" ALTER COLUMN "createdAt" TYPE TIMESTAMPTZ USING "createdAt" AT TIME ZONE 'UTC';`);
+
+    // 5. Tabela de Estudos Concluídos
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "CompletedStudy" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "userId" UUID REFERENCES "User"(id) ON DELETE CASCADE,
+        "contentId" VARCHAR(512) NOT NULL,
+        "completedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE("userId", "contentId")
+      );
+    `);
+
+    // 6. Criar tabela de Estudos Concluídos (Progresso)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "CompletedStudy" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "userId" UUID REFERENCES "User"(id) ON DELETE CASCADE,
+        "contentId" VARCHAR(512) NOT NULL,
+        "completedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        UNIQUE("userId", "contentId")
+      );
+    `);
+
+    // 7. Criar tabela de Conteúdos Guardados (Favoritos)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "SavedContent" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "userId" UUID REFERENCES "User"(id) ON DELETE CASCADE,
+        "contentId" VARCHAR(512) NOT NULL,
+        "savedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        UNIQUE("userId", "contentId")
+      );
+    `);
+
+    // 8. Tabela de pedidos de Elite
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "EliteRequest" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "userId" UUID REFERENCES "User"(id) ON DELETE CASCADE,
+        "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
+        "requestedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "reviewedAt" TIMESTAMPTZ,
+        UNIQUE("userId")
+      );
+    `);
+
     console.log('[DB] Base de Dados sincronizada com sucesso.');
   } catch (err) {
     console.error('[DB] Erro ao sincronizar Base de Dados:', err);
@@ -238,6 +315,340 @@ app.put('/api/users/:id/avatar', upload.single('file'), async (req, res) => {
   }
 });
 
+// Obter estatísticas do utilizador (XP, Temas, Ranking)
+app.get('/api/users/:id/stats', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // XP: 15 pontos por cada comentário
+    const xpQuery = await pool.query('SELECT count(*) as total_comments FROM "Comment" WHERE "userId" = $1 AND "isDeleted" = FALSE', [id]);
+    const totalComments = parseInt(xpQuery.rows[0].total_comments);
+    const xp = totalComments * 15;
+    
+    // Temas: número de tópicos distintos (contentId) comentados
+    const temasQuery = await pool.query('SELECT count(distinct "contentId") as total_temas FROM "Comment" WHERE "userId" = $1 AND "isDeleted" = FALSE', [id]);
+    const temas = parseInt(temasQuery.rows[0].total_temas);
+
+    // Ranking: posição do utilizador baseada no número total de comentários
+    const rankingQuery = await pool.query(`
+      SELECT "userId", count(*) as total
+      FROM "Comment" 
+      WHERE "isDeleted" = FALSE AND "userId" IS NOT NULL
+      GROUP BY "userId"
+      ORDER BY total DESC
+    `);
+    
+    let rank = '-';
+    const rows = rankingQuery.rows;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].userId === id) {
+        rank = i + 1;
+        break;
+      }
+    }
+    
+    res.json({ xp, temas, rank });
+  } catch (error) {
+    console.error('[User Stats Error]', error);
+    res.status(500).json({ error: 'Erro ao obter estatísticas' });
+  }
+});
+
+// Adicionar um estudo concluído
+app.post('/api/users/:id/completed', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { contentId } = req.body;
+    if (!contentId) return res.status(400).json({ error: 'contentId é obrigatório' });
+    
+    // Inserir ignorando duplicados (ON CONFLICT DO NOTHING)
+    await pool.query(
+      `INSERT INTO "CompletedStudy" ("userId", "contentId") VALUES ($1, $2) ON CONFLICT ("userId", "contentId") DO NOTHING`,
+      [id, contentId]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Completed Study POST Error]', error);
+    res.status(500).json({ error: 'Erro ao registar estudo' });
+  }
+});
+
+// Listar estudos concluídos de um utilizador
+app.get('/api/users/:id/completed', async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Tenta fazer JOIN com Content. Como contentId é VARCHAR e Content.id é UUID, fazemos cast.
+    const { rows } = await pool.query(`
+      SELECT cs."contentId", cs."completedAt", c.title, c.type, c.thumbnail
+      FROM "CompletedStudy" cs
+      LEFT JOIN "Content" c ON c.id::text = cs."contentId"
+      WHERE cs."userId" = $1
+      ORDER BY cs."completedAt" DESC
+    `, [id]);
+    res.json(rows);
+  } catch (error) {
+    console.error('[Completed Study GET Error]', error);
+    res.status(500).json({ error: 'Erro ao carregar estudos concluídos' });
+  }
+});
+
+// Pesquisar utilizadores (para menções)
+app.get('/api/users/search', async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.length < 1) return res.json([]);
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, name, avatar FROM "User" WHERE name ILIKE $1 OR email ILIKE $1 LIMIT 5',
+      [`%${q}%`]
+    );
+    // Limpar os espaços do nome para o display de menção (ex: GeraldoChiquemba)
+    const formattedRows = rows.map(r => ({
+      ...r,
+      mentionName: (r.name || r.email || '').replace(/\s+/g, '')
+    }));
+    res.json(formattedRows);
+  } catch (error) {
+    console.error('[Search Users Error]', error);
+    res.status(500).json({ error: 'Erro ao pesquisar utilizadores' });
+  }
+});
+
+// -- API DE CONTEÚDOS GUARDADOS (FAVORITOS) --
+
+// Listar conteúdos guardados de um utilizador
+app.get('/api/users/:id/saved', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await pool.query(`
+      SELECT sc."contentId", sc."savedAt", c.title, c.type, c.thumbnail, c.author, c."createdAt" as date
+      FROM "SavedContent" sc
+      JOIN "Content" c ON c.id::text = sc."contentId"
+      WHERE sc."userId" = $1
+      ORDER BY sc."savedAt" DESC
+    `, [id]);
+    
+    // Formatar para o frontend (que mistura conteúdos e tópicos de fórum)
+    const formatted = rows.map(r => ({
+      id: r.contentId,
+      title: r.title,
+      type: r.type,
+      thumbnail: r.thumbnail,
+      author: r.author,
+      date: r.date,
+      savedAt: r.savedAt
+    }));
+    
+    res.json(formatted);
+  } catch (error) {
+    console.error('[Saved Content GET Error]', error);
+    res.status(500).json({ error: 'Erro ao carregar guardados' });
+  }
+});
+
+// Adicionar um conteúdo aos guardados
+app.post('/api/users/:id/saved', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { contentId } = req.body;
+    if (!contentId) return res.status(400).json({ error: 'contentId é obrigatório' });
+    
+    await pool.query(
+      `INSERT INTO "SavedContent" ("userId", "contentId") VALUES ($1, $2) ON CONFLICT ("userId", "contentId") DO NOTHING`,
+      [id, contentId]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Saved Content POST Error]', error);
+    res.status(500).json({ error: 'Erro ao guardar conteúdo' });
+  }
+});
+
+// Remover um conteúdo dos guardados
+app.delete('/api/users/:id/saved/:contentId', async (req, res) => {
+  try {
+    const { id, contentId } = req.params;
+    await pool.query(
+      `DELETE FROM "SavedContent" WHERE "userId" = $1 AND "contentId" = $2`,
+      [id, contentId]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Saved Content DELETE Error]', error);
+    res.status(500).json({ error: 'Erro ao remover conteúdo guardado' });
+  }
+});
+
+// -- API DE COMENTÁRIOS --
+
+// Middleware para verificar token JWT (opcional, não bloqueia se não tiver)
+function authMiddleware(req, res, next) {
+  const auth = req.headers.authorization;
+  if (auth && auth.startsWith('Bearer ')) {
+    try {
+      req.user = jwt.verify(auth.slice(7), JWT_SECRET);
+    } catch {}
+  }
+  next();
+}
+
+// Listar comentários de um conteúdo
+app.get('/api/comments/:contentId', async (req, res) => {
+  const { contentId } = req.params;
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM "Comment" WHERE "contentId" = $1 AND "isDeleted" = FALSE ORDER BY "createdAt" ASC',
+      [contentId]
+    );
+    // Montar árvore de comentários
+    const map = {};
+    const roots = [];
+    rows.forEach(c => { map[c.id] = { ...c, replies: [] }; });
+    rows.forEach(c => {
+      if (c.parentId && map[c.parentId]) {
+        map[c.parentId].replies.push(map[c.id]);
+      } else {
+        roots.push(map[c.id]);
+      }
+    });
+    res.json(roots);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar comentários' });
+  }
+});
+
+// Editar comentário (próprio utilizador)
+app.patch('/api/comments/:id/edit', authMiddleware, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
+  const { id } = req.params;
+  const { text } = req.body;
+  if (!text || !text.trim()) return res.status(400).json({ error: 'Texto obrigatório' });
+  try {
+    const { rows } = await pool.query('SELECT * FROM "Comment" WHERE id = $1', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Comentário não encontrado' });
+    const comment = rows[0];
+    // Apenas o próprio ou admin pode editar
+    if (comment.userId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Sem permissão' });
+    }
+    const result = await pool.query(
+      'UPDATE "Comment" SET text = $1, "editedAt" = NOW() WHERE id = $2 RETURNING *',
+      [text.trim(), id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao editar comentário' });
+  }
+});
+
+// Eliminar comentário (soft-delete - próprio utilizador)
+app.patch('/api/comments/:id/delete', authMiddleware, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
+  const { id } = req.params;
+  try {
+    const { rows } = await pool.query('SELECT * FROM "Comment" WHERE id = $1', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Comentário não encontrado' });
+    const comment = rows[0];
+    if (comment.userId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Sem permissão' });
+    }
+    await pool.query('UPDATE "Comment" SET "isDeleted" = TRUE WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao eliminar comentário' });
+  }
+});
+
+// Ocultar / mostrar comentário (admin)
+app.patch('/api/comments/:id/hide', authMiddleware, async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'Apenas admins' });
+  const { id } = req.params;
+  const { hide, moderatorNote } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE "Comment" SET "isHidden" = $1, "moderatorNote" = $2 WHERE id = $3 RETURNING *',
+      [hide !== false, moderatorNote || null, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Comentário não encontrado' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao ocultar comentário' });
+  }
+});
+
+// Gostar ou Desgostar de um comentário
+app.post('/api/comments/:id/react', authMiddleware, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
+  const { id } = req.params;
+  const { type } = req.body; // 'like' ou 'dislike'
+  const userId = req.user.id;
+
+  if (type !== 'like' && type !== 'dislike') return res.status(400).json({ error: 'Tipo inválido' });
+
+  try {
+    // Obter comentário atual
+    const { rows } = await pool.query('SELECT likes, dislikes FROM "Comment" WHERE id = $1', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Comentário não encontrado' });
+
+    let likes = rows[0].likes || [];
+    let dislikes = rows[0].dislikes || [];
+
+    if (type === 'like') {
+      if (likes.includes(userId)) {
+        likes = likes.filter(uid => uid !== userId); // Remover like (toggle)
+      } else {
+        likes.push(userId); // Adicionar like
+        dislikes = dislikes.filter(uid => uid !== userId); // Garantir que não está nos dislikes
+      }
+    } else {
+      if (dislikes.includes(userId)) {
+        dislikes = dislikes.filter(uid => uid !== userId); // Remover dislike (toggle)
+      } else {
+        dislikes.push(userId); // Adicionar dislike
+        likes = likes.filter(uid => uid !== userId); // Garantir que não está nos likes
+      }
+    }
+
+    const result = await pool.query(
+      'UPDATE "Comment" SET likes = $1, dislikes = $2 WHERE id = $3 RETURNING *',
+      [likes, dislikes, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao registar reação' });
+  }
+});
+
+// Criar comentário
+app.post('/api/comments', authMiddleware, async (req, res) => {
+  const { contentId, text, parentId } = req.body;
+  if (!contentId || !text) return res.status(400).json({ error: 'contentId e text são obrigatórios' });
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
+
+  try {
+    // Buscar dados do utilizador
+    const { rows } = await pool.query('SELECT id, name, email, role, avatar FROM "User" WHERE id = $1', [req.user.id]);
+    if (rows.length === 0) return res.status(401).json({ error: 'Utilizador não encontrado' });
+    const user = rows[0];
+    const author = user.name || user.email || 'Anónimo';
+    const avatar = user.avatar || null;
+
+    const result = await pool.query(
+      'INSERT INTO "Comment" ("contentId", "userId", "author", "avatar", "text", "parentId") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [contentId, user.id, author, avatar, text, parentId || null]
+    );
+    res.json({ ...result.rows[0], replies: [] });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao criar comentário' });
+  }
+});
+
 // -- API DE CONTEÚDO --
 
 // Listar conteúdos (GET)
@@ -330,6 +741,50 @@ app.patch('/api/content/:id/recommend', async (req, res) => {
   }
 });
 
+// Gostar ou Desgostar de um conteúdo
+app.post('/api/content/:id/react', authMiddleware, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
+  const { id } = req.params;
+  const { type } = req.body; // 'like' ou 'dislike'
+  const userId = req.user.id;
+
+  if (type !== 'like' && type !== 'dislike') return res.status(400).json({ error: 'Tipo inválido' });
+
+  try {
+    const { rows } = await pool.query('SELECT likes, dislikes FROM "Content" WHERE id = $1', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
+
+    let likes = rows[0].likes || [];
+    let dislikes = rows[0].dislikes || [];
+
+    if (type === 'like') {
+      if (likes.includes(userId)) {
+        likes = likes.filter(uid => uid !== userId); // toggle
+      } else {
+        likes.push(userId);
+        dislikes = dislikes.filter(uid => uid !== userId);
+      }
+    } else {
+      if (dislikes.includes(userId)) {
+        dislikes = dislikes.filter(uid => uid !== userId);
+      } else {
+        dislikes.push(userId);
+        likes = likes.filter(uid => uid !== userId);
+      }
+    }
+
+    const result = await pool.query(
+      'UPDATE "Content" SET likes = $1, dislikes = $2, "updatedAt" = NOW() WHERE id = $3 RETURNING *',
+      [likes, dislikes, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao registar reação' });
+  }
+});
+
 // Apagar conteúdo (DELETE)
 app.delete('/api/content/:id', async (req, res) => {
   const { id } = req.params;
@@ -356,6 +811,19 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+// Buscar utilizador por ID (GET)
+app.get('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { rows } = await pool.query('SELECT id, name, email, role, profession, avatar, "createdAt" FROM "User" WHERE id = $1', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Utilizador não encontrado' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar utilizador' });
+  }
+});
+
 // Apagar utilizador (DELETE)
 app.delete('/api/users/:id', async (req, res) => {
   const { id } = req.params;
@@ -366,6 +834,97 @@ app.delete('/api/users/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao remover utilizador' });
+  }
+});
+
+// Update user role (Admin panel)
+app.patch('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+  try {
+    const result = await pool.query('UPDATE "User" SET role = $1 WHERE id = $2 RETURNING id, role', [role, id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Utilizador não encontrado' });
+    // Se promovido para elite, marcar o pedido como aprovado
+    if (role === 'elite') {
+      await pool.query(
+        'UPDATE "EliteRequest" SET status = $1, "reviewedAt" = NOW() WHERE "userId" = $2',
+        ['approved', id]
+      );
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao atualizar utilizador' });
+  }
+});
+
+// -- ELITE REQUESTS --
+
+// Utilizador submete pedido de Elite
+app.post('/api/elite-requests', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'userId é obrigatório' });
+  try {
+    await pool.query(
+      'INSERT INTO "EliteRequest" ("userId", status) VALUES ($1, $2) ON CONFLICT ("userId") DO UPDATE SET status = $2, "requestedAt" = NOW()',
+      [userId, 'pending']
+    );
+    res.json({ success: true, status: 'pending' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao submeter pedido' });
+  }
+});
+
+// Buscar status do pedido de um utilizador
+app.get('/api/elite-requests/user/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const { rows } = await pool.query('SELECT * FROM "EliteRequest" WHERE "userId" = $1', [userId]);
+    if (rows.length === 0) return res.json({ status: null });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar pedido' });
+  }
+});
+
+// Admin lista todos os pedidos pendentes
+app.get('/api/elite-requests', async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT er.*, u.name, u.email, u.avatar
+      FROM "EliteRequest" er
+      JOIN "User" u ON u.id = er."userId"
+      ORDER BY er."requestedAt" DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao listar pedidos' });
+  }
+});
+
+// Admin aprova ou rejeita um pedido
+app.patch('/api/elite-requests/:id', async (req, res) => {
+  const { id } = req.params;
+  const { action } = req.body; // 'approve' ou 'reject'
+  try {
+    const { rows } = await pool.query('SELECT * FROM "EliteRequest" WHERE id = $1', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Pedido não encontrado' });
+    const request = rows[0];
+    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    await pool.query(
+      'UPDATE "EliteRequest" SET status = $1, "reviewedAt" = NOW() WHERE id = $2',
+      [newStatus, id]
+    );
+    if (action === 'approve') {
+      await pool.query('UPDATE "User" SET role = $1 WHERE id = $2', ['elite', request.userId]);
+    }
+    res.json({ success: true, status: newStatus });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao processar pedido' });
   }
 });
 

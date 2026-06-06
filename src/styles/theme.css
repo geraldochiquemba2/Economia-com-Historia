@@ -316,10 +316,12 @@ html.light .bg-white\/5.border-white\/5 {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
 }
 
+html.light .force-white,
 .force-white {
   color: #ffffff !important;
 }
 
+html.light .force-gold,
 .force-gold {
   color: #E8B4B8 !important;
 }

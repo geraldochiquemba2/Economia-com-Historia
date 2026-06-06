@@ -41,7 +41,7 @@ export function Register() {
   return (
     <div className="relative min-h-screen flex items-center justify-center p-6 text-neutral-100 overflow-hidden bg-[#0F0F0F] selection:bg-[#E8B4B8]/30">
       {/* Background Image with Overlay */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=2070')] bg-cover bg-center opacity-[0.03] mix-blend-screen pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/9/96/Bank_note_of_50_Angolan_kwanzas.jpg')] bg-cover bg-center opacity-20 pointer-events-none"></div>
       
       {/* Decorative gradient blobs */}
       <div className="absolute top-[-10%] left-[-5%] w-[40rem] h-[40rem] bg-gradient-to-bl from-[#3A0310] to-purple-900/40 rounded-full blur-[120px] opacity-40 pointer-events-none animate-pulse-slow" />

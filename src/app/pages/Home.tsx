@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Link, MemoryRouter } from "react-router";
+import { Link, MemoryRouter, useNavigate } from "react-router";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 import { 
   Bell, 
   Search, 
@@ -25,6 +26,7 @@ const imgLuxury = "https://images.unsplash.com/photo-1528459105426-b9548367069b?
 const imgProfile = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 
 export function Home() {
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
@@ -166,16 +168,36 @@ export function Home() {
             </div>
           </div>
           
-          <div className="flex md:grid md:grid-cols-2 gap-6 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-6 px-6 md:mx-0 md:px-0 hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex gap-6 overflow-x-auto pb-6 -mx-6 px-6">
             {featuredThemes.map((theme, index) => (
               <motion.div
                 key={theme.id}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                className="flex-shrink-0 md:flex-shrink w-[85vw] md:w-auto max-w-[340px] md:max-w-none group"
+                className="flex-shrink-0 w-[85vw] max-w-[340px] group"
               >
-                <Link to={`/app/explore/${theme.id}`} className="block relative h-96 rounded-[2.5rem] overflow-hidden border border-white/10 group-hover:border-[#3A0310]/50 transition-all duration-500 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]">
+                <Link 
+                  to={`/app/explore/${theme.id}`} 
+                  onClick={(e) => {
+                    if (theme.type === 'jindungo') {
+                      const userStr = localStorage.getItem('user');
+                      if (!userStr) {
+                        e.preventDefault();
+                        toast?.error('Acesso Restrito', { description: 'Faça login para ter acesso ao conteúdo jindungo.' });
+                        navigate('/app/explore?filter=jindungo');
+                      } else {
+                        const user = JSON.parse(userStr);
+                        if (user.role !== 'elite' && user.role !== 'admin') {
+                          e.preventDefault();
+                          toast?.error('Acesso Bloqueado', { description: 'Você precisa ser membro elite para ler este conteúdo.' });
+                          navigate('/app/explore?filter=jindungo');
+                        }
+                      }
+                    }
+                  }}
+                  className="block relative h-96 rounded-[2.5rem] overflow-hidden border border-white/10 group-hover:border-[#3A0310]/50 transition-all duration-500 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]"
+                >
                   <ImageWithFallback 
                     src={theme.thumbnail || imgCoins}
                     alt={theme.title}
@@ -186,7 +208,7 @@ export function Home() {
                   <div className="absolute inset-0 p-8 flex flex-col justify-end">
                     <div className="flex items-center gap-2 mb-4">
                       <span className="bg-[#3A0310] text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border border-[#E8B4B8]/20 shadow-2xl" style={{ color: '#E8B4B8' }}>
-                        {theme.type}
+                        {({ jindungo: "Texto com Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[theme.type] || theme.type)}
                       </span>
                       <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                         <Gem className="w-3 h-3" style={{ color: '#ffffff' }} />
@@ -201,14 +223,7 @@ export function Home() {
                     
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="flex -space-x-2">
-                          {[1, 2, 3].map((i) => (
-                            <div key={i} className="w-7 h-7 rounded-full border-2 border-black bg-neutral-800 shadow-xl overflow-hidden">
-                              <ImageWithFallback src={`https://i.pravatar.cc/50?u=${i}`} className="w-full h-full object-cover grayscale" />
-                            </div>
-                          ))}
-                        </div>
-                        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#a3a3a3' }}>+1.2k Alunos</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-black/40 rounded-md border border-white/10" style={{ color: '#a3a3a3' }}>Ver Discussões</span>
                       </div>
                       <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-[#3A0310] group-hover:border-[#E8B4B8]/30 transition-all duration-300 shadow-2xl">
                         <Play className="w-4 h-4 ml-0.5" fill="currentColor" style={{ color: '#ffffff' }} />
@@ -270,14 +285,7 @@ export function Home() {
             </div>
 
             <div className="mt-6 flex items-center gap-3">
-              <div className="flex -space-x-3">
-                 {[1, 2, 3].map(i => (
-                   <div key={i} className="w-8 h-8 rounded-full border-2 border-[#3A0310] bg-neutral-800 shadow-xl overflow-hidden ring-1 ring-white/10">
-                     <ImageWithFallback src={`https://i.pravatar.cc/100?u=user${i}`} className="w-full h-full object-cover grayscale" />
-                   </div>
-                 ))}
-              </div>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: '#E8B4B8' }}>Ana, João e +1.2k Ativos</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: '#E8B4B8' }}>Junta-te aos líderes do conhecimento</span>
             </div>
           </Link>
         </section>
@@ -295,16 +303,34 @@ export function Home() {
               </Link>
             </div>
             
-            <div className="space-y-5 md:space-y-0 md:grid md:grid-cols-3 md:gap-6">
+            <div className="flex gap-6 overflow-x-auto pb-6 -mx-6 px-6">
               {recommendedThemes.map((rec, index) => (
               <motion.div
                 key={rec.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 + (index * 0.1) }}
+                className="flex-shrink-0 w-[85vw] max-w-[340px]"
               >
                 <Link 
                   to={`/app/explore/${rec.id}`}
+                  onClick={(e) => {
+                    if (rec.type === 'jindungo') {
+                      const userStr = localStorage.getItem('user');
+                      if (!userStr) {
+                        e.preventDefault();
+                        toast?.error('Acesso Restrito', { description: 'Faça login para ter acesso ao conteúdo jindungo.' });
+                        navigate('/app/explore?filter=jindungo');
+                      } else {
+                        const user = JSON.parse(userStr);
+                        if (user.role !== 'elite' && user.role !== 'admin') {
+                          e.preventDefault();
+                          toast?.error('Acesso Bloqueado', { description: 'Você precisa ser membro elite para ler este conteúdo.' });
+                          navigate('/app/explore?filter=jindungo');
+                        }
+                      }
+                    }
+                  }}
                   className="flex bg-white dark:bg-white/5 rounded-[2rem] p-4 border-2 border-[#3A0310] dark:border-white/10 hover:bg-[#3A0310]/5 dark:hover:bg-white/10 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 transition-all duration-300 group shadow-lg overflow-hidden relative"
                 >
                   <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 border border-[#3A0310]/20 dark:border-white/10 shadow-xl">
@@ -313,12 +339,11 @@ export function Home() {
                       alt={rec.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
-                    <div className="absolute inset-0 bg-black/30 group-hover:bg-transparent transition-colors"></div>
                   </div>
                   
                   <div className="flex flex-col justify-center ml-5 flex-1">
                     <span className="text-[9px] font-black text-[#E8B4B8] uppercase tracking-[0.2em] mb-1 block">
-                      {rec.type}
+                      {({ jindungo: "Texto com Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[rec.type] || rec.type)}
                     </span>
                     <h3 className="text-[#3A0310] dark:text-white font-black text-sm leading-tight group-hover:text-[#5A051A] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-2 uppercase tracking-tight">
                       {rec.title}

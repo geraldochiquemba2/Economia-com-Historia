@@ -300,7 +300,7 @@ export function AdminContent() {
         {["all", "video", "text", "podcast", "jindungo", "forum"].map((f) => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${filter === f ? "bg-[#3A0310] text-white border-transparent shadow-lg" : "bg-white dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 hover:bg-neutral-50 dark:hover:bg-white/10"}`}>
-            {f === "all" && "Todos"}{f === "video" && "Vídeos"}{f === "text" && "Textos"}{f === "podcast" && "Áudios"}{f === "jindungo" && "Jindungo"}{f === "forum" && "Fórum"}
+            {f === "all" && "Todos"}{f === "video" && "Vídeo"}{f === "text" && "Texto"}{f === "podcast" && "Áudio"}{f === "jindungo" && "Texto com Jindungo"}{f === "forum" && "Fórum"}
           </button>
         ))}
       </div>
@@ -358,7 +358,7 @@ export function AdminContent() {
                 <div className="p-4 flex flex-col flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-[#3A0310] dark:text-white font-black text-sm uppercase tracking-tight line-clamp-1">{item.title}</h3>
-                    <span className="shrink-0 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border border-[#3A0310] dark:border-[#E8B4B8]">{item.type}</span>
+                    <span className="shrink-0 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border border-[#3A0310] dark:border-[#E8B4B8]">{({ jindungo: "Texto com Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[item.type] || item.type)}</span>
                   </div>
                   <p className="text-neutral-600 dark:text-neutral-400 text-[10px] font-medium leading-relaxed line-clamp-2 flex-1">{item.description}</p>
                   <div className="flex items-center gap-2 mt-4 pt-4 border-t border-neutral-100 dark:border-white/10 flex-wrap">
@@ -474,7 +474,7 @@ export function AdminContent() {
                     {["video", "text", "podcast", "jindungo", "forum"].map((t) => (
                       <button type="button" key={t} onClick={() => setFormData(d => ({ ...d, type: t }))}
                         className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${formData.type === t ? "bg-[#3A0310] text-white border-transparent" : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 hover:bg-neutral-200 dark:hover:bg-white/10"}`}>
-                        {t === "video" && "🎬 Vídeo"}{t === "text" && "📝 Texto"}{t === "podcast" && "🎙️ Podcast"}{t === "jindungo" && "🌶️ Jindungo"}{t === "forum" && "💬 Fórum"}
+                        {t === "video" && "🎬 Vídeo"}{t === "text" && "📝 Texto"}{t === "podcast" && "🎙️ Podcast"}{t === "jindungo" && "🌶️ Texto com Jindungo"}{t === "forum" && "💬 Fórum"}
                       </button>
                     ))}
                   </div>

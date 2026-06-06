@@ -205,7 +205,7 @@ export function AdminDashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-neutral-900 dark:text-white font-black uppercase tracking-tight truncate">{c.title}</p>
-                  <span className="text-[9px] bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] font-black uppercase tracking-widest px-1.5 py-0.5 rounded">{c.type}</span>
+                  <span className="text-[9px] bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] font-black uppercase tracking-widest px-1.5 py-0.5 rounded">{({ jindungo: "Texto com Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[c.type] || c.type)}</span>
                 </div>
                 <div className="flex items-center gap-1 text-[9px] text-neutral-900 dark:text-neutral-400 font-black uppercase tracking-widest shrink-0">
                   <Clock className="w-2.5 h-2.5" /> {timeAgo(c.createdAt)}

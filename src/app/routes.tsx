@@ -12,6 +12,8 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 
 import { ForumDetail } from "./pages/ForumDetail";
+import { CompletedStudies } from "./pages/CompletedStudies";
+import { SavedDebates } from "./pages/SavedDebates";
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
@@ -48,6 +50,8 @@ export const router = createBrowserRouter([
       { path: "forum/:id", Component: ForumDetail },
       { path: "comments", Component: ForumDetail },
       { path: "profile", Component: Profile },
+      { path: "completed", Component: CompletedStudies },
+      { path: "saved", Component: SavedDebates },
     ],
   },
   {

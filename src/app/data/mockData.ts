@@ -184,11 +184,8 @@ export const quizQuestions = [
   }
 ];
 
-export const forumTopics = [
-  { id: "t1", title: "Exportação de petróleo", author: "Carlos", comments: 12, date: "Hoje" },
-  { id: "t2", title: "Inflação e o custo de vida", author: "Maria", comments: 34, date: "Ontem" },
-  { id: "t3", title: "Empreendedorismo jovem", author: "Ana", comments: 8, date: "2 dias atrás" },
-];
+export const forumTopics: any[] = [];
+
 
 export const rankingData = [
   { id: "1", name: "Mário Alberto Silva", userName: "Luanda", points: 4500, profession: "Docente", email: "mario.silva@email.com", role: "admin" },

@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, MemoryRouter } from "react-router";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   User, 
@@ -16,23 +17,91 @@ import {
   Award,
   Camera,
   Loader2,
-  Bookmark
+  Bookmark,
+  BookOpen,
+  Edit2,
+  Check,
+  X
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { ImageModal } from "../components/ImageModal";
 
 export function Profile() {
   const navigate = useNavigate();
-  const [subscribed, setSubscribed] = useState(false);
   const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : { name: "Estudante", role: "student" };
+  const storedUser = userStr ? JSON.parse(userStr) : { name: "Estudante", role: "student" };
+  const [user, setUser] = useState(storedUser);
 
-  const [avatar, setAvatar] = useState<string | null>(user.avatar || null);
+  const [avatar, setAvatar] = useState<string | null>(storedUser.avatar || null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<any[]>([]);
+  const [stats, setStats] = useState({ xp: 0, temas: 0, rank: '-' });
+  const [completedStudies, setCompletedStudies] = useState<any[]>([]);
+
+  const [profileName, setProfileName] = useState(storedUser.name || "Estudante");
+  const [profileTitle, setProfileTitle] = useState(storedUser.customTitle || (storedUser.role === 'admin' ? 'Administrador' : 'Académico Ilustre'));
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [tempName, setTempName] = useState(profileName);
+  const [tempTitle, setTempTitle] = useState(profileTitle);
+
+  // Buscar role actualizado do servidor (actualização feita pelo admin)
+  useEffect(() => {
+    if (!storedUser.id) return;
+    fetch(`/api/users/${storedUser.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && data.role) {
+          const updatedUser = { ...storedUser, role: data.role };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+      })
+      .catch(() => {});
+  }, [storedUser.id]);
+
+  // Estado do pedido de Elite
+  const [eliteRequest, setEliteRequest] = useState<{ status: string | null }>({ status: null });
+  const [requestingElite, setRequestingElite] = useState(false);
+
+  useEffect(() => {
+    if (!storedUser.id) return;
+    fetch(`/api/elite-requests/user/${storedUser.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setEliteRequest(data); })
+      .catch(() => {});
+  }, [storedUser.id]);
+
+  const handleEliteRequest = async () => {
+    if (!storedUser.id || requestingElite) return;
+    setRequestingElite(true);
+    try {
+      const res = await fetch('/api/elite-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: storedUser.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEliteRequest({ status: 'pending' });
+        toast.success('Pedido enviado!', { description: 'O teu pedido de Elite foi enviado. Aguarda a aprovação do admin.' });
+      }
+    } catch {
+      toast.error('Erro ao enviar pedido. Tenta novamente.');
+    } finally {
+      setRequestingElite(false);
+    }
+  };
+
+  const handleSaveProfile = () => {
+    setProfileName(tempName);
+    setProfileTitle(tempTitle);
+    const updatedUser = { ...user, name: tempName, customTitle: tempTitle };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setIsEditingProfile(false);
+  };
 
   React.useEffect(() => {
     try {
@@ -42,27 +111,73 @@ export function Profile() {
     }
   }, []);
 
+  React.useEffect(() => {
+    if (!user.id) return;
+    fetch(`/api/users/${user.id}/stats`)
+      .then(res => res.json())
+      .then(data => { if (!data.error) setStats(data); })
+      .catch(console.error);
+    
+    fetch(`/api/users/${user.id}/completed`)
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setCompletedStudies(data); })
+      .catch(console.error);
+  }, [user.id]);
+
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingAvatar(true);
     setAvatarError("");
-    const fd = new FormData();
-    fd.append("file", file);
+
+    // Converter para base64 imediatamente (fallback local)
+    const toBase64 = (f: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+
     try {
-      const res = await fetch(`/api/users/${user.id}/avatar`, { method: "PUT", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erro ao carregar foto");
-      setAvatar(data.avatar);
-      // Actualizar localStorage
-      const updatedUser = { ...user, avatar: data.avatar };
+      // Tentar API com timeout de 8 segundos
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const fd = new FormData();
+      fd.append("file", file);
+
+      let avatarUrl: string | null = null;
+      try {
+        const res = await fetch(`/api/users/${user.id}/avatar`, {
+          method: "PUT",
+          body: fd,
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (res.ok) {
+          const data = await res.json();
+          avatarUrl = data.avatar;
+        }
+      } catch {
+        clearTimeout(timeout);
+        // API falhou ou expirou — usar base64 local
+      }
+
+      // Se API não devolveu URL válida, usar base64
+      if (!avatarUrl) {
+        avatarUrl = await toBase64(file);
+      }
+
+      setAvatar(avatarUrl);
+      const updatedUser = { ...user, avatar: avatarUrl };
       localStorage.setItem("user", JSON.stringify(updatedUser));
     } catch (err: any) {
-      setAvatarError(err.message);
+      setAvatarError("Erro ao carregar foto. Tenta novamente.");
     } finally {
       setUploadingAvatar(false);
     }
   };
+
 
   const options = [
     { icon: User, label: "Perfil Académico" },
@@ -118,29 +233,95 @@ export function Profile() {
               </button>
             </div>
             {avatarError && <p className="text-red-400 text-[10px] font-bold mb-2 text-center">{avatarError}</p>}
-            
-            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-0.5 text-center md:text-left force-white">{user.name}</h2>
-            <p className="font-bold text-[9px] uppercase tracking-[0.2em] text-center md:text-left force-gold">{user.role === 'admin' ? 'Administrador' : 'Académico Ilustre • Nível 4'}</p>
+            <div className="flex flex-col items-center md:items-start w-full relative">
+              {isEditingProfile ? (
+                <div className="w-full flex flex-col items-center md:items-start gap-2 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+                  <input
+                    type="text"
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    placeholder="O seu nome"
+                    className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2 force-white font-black uppercase tracking-tighter text-center md:text-left focus:outline-none focus:border-[#E8B4B8]/50"
+                  />
+                  <input
+                    type="text"
+                    value={tempTitle}
+                    onChange={(e) => setTempTitle(e.target.value)}
+                    placeholder="O seu título"
+                    className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2 force-gold font-bold text-[10px] uppercase tracking-[0.2em] text-center md:text-left focus:outline-none focus:border-[#E8B4B8]/50"
+                  />
+                  <div className="flex gap-2 mt-2 w-full justify-center md:justify-start">
+                    <button
+                      onClick={handleSaveProfile}
+                      className="bg-green-500/20 text-green-400 p-2 rounded-xl hover:bg-green-500/30 transition-colors"
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setTempName(profileName);
+                        setTempTitle(profileTitle);
+                        setIsEditingProfile(false);
+                      }}
+                      className="bg-red-500/20 text-red-400 p-2 rounded-xl hover:bg-red-500/30 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="group relative flex flex-col items-center md:items-start max-w-full">
+                  <div className="flex items-center gap-3 justify-center md:justify-start w-full">
+                    <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-0.5 text-center md:text-left force-white">
+                      {profileName}
+                    </h2>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <button
+                        onClick={() => setIsEditingProfile(true)}
+                        className="p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 force-white transition-all shadow-lg active:scale-95 flex-shrink-0"
+                        title="Editar Perfil"
+                      >
+                        <Edit2 className="w-3 h-3 md:w-3.5 md:h-3.5 force-white" />
+                      </button>
+                      <span className="text-[7px] font-black uppercase tracking-wider force-white opacity-60 whitespace-nowrap">Editar perfil</span>
+                    </div>
+                  </div>
+                  <p className="font-bold text-[9px] uppercase tracking-[0.2em] text-center md:text-left force-gold">
+                    {profileTitle}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Profile Stats Grid Column */}
           <div className="w-full md:col-span-7">
-            <div className="grid grid-cols-3 gap-3 md:gap-4">
-              <div className="bg-[#3A0310]/30 backdrop-blur-md border-2 p-3 md:p-4 rounded-2xl flex flex-col items-center shadow-lg transition-colors hover:bg-white/5" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
-                <Star className="w-4 h-4 text-amber-500 mb-1.5 fill-amber-500" />
-                <span className="font-black text-base md:text-lg force-white">2.450</span>
-                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest force-gold">XP Total</span>
-              </div>
-              <div className="bg-[#3A0310]/30 backdrop-blur-md border-2 p-3 md:p-4 rounded-2xl flex flex-col items-center shadow-lg transition-colors hover:bg-white/5" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
-                <History className="w-4 h-4 force-gold mb-1.5" />
-                <span className="font-black text-base md:text-lg force-white">12</span>
-                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest force-gold">Temas</span>
-              </div>
-              <div className="bg-[#3A0310]/30 backdrop-blur-md border-2 p-3 md:p-4 rounded-2xl flex flex-col items-center shadow-lg transition-colors hover:bg-white/5" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
-                <Award className="w-4 h-4 force-white mb-1.5" />
-                <span className="font-black text-base md:text-lg force-white">#4</span>
-                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest force-gold">Ranking</span>
-              </div>
+            <div className={`grid gap-3 ${stats.rank !== '-' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              {stats.rank !== '-' && (
+                <div className="bg-[#3A0310]/30 backdrop-blur-md border-2 p-3 md:p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg transition-colors hover:bg-white/5" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
+                  <Award className="w-4 h-4 force-white mb-1.5" />
+                  <span className="font-black text-base md:text-lg force-white">#{stats.rank}</span>
+                  <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest force-gold">Ranking</span>
+                </div>
+              )}
+
+              <button
+                onClick={() => navigate('/app/completed')}
+                className="bg-[#3A0310]/30 backdrop-blur-md border-2 p-3 md:p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg transition-colors hover:bg-white/5 active:scale-[0.97] group text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
+              >
+                <BookOpen className="w-4 h-4 force-white mb-1.5 group-hover:-translate-y-0.5 transition-transform" />
+                <span className="font-black text-[8px] md:text-[9px] uppercase tracking-widest force-white leading-tight mb-0.5">Estudos Concluídos</span>
+                <span className="text-[8px] font-medium force-white opacity-60">{completedStudies.length} concluídos</span>
+              </button>
+
+              <button
+                onClick={() => navigate('/app/saved')}
+                className="bg-[#3A0310]/30 backdrop-blur-md border-2 p-3 md:p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg transition-colors hover:bg-white/5 active:scale-[0.97] group text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
+              >
+                <Bookmark className="w-4 h-4 force-white mb-1.5 group-hover:-translate-y-0.5 transition-transform" />
+                <span className="font-black text-[8px] md:text-[9px] uppercase tracking-widest force-white leading-tight mb-0.5">Guardados</span>
+                <span className="text-[8px] font-medium force-white opacity-60">{favorites.length} guardados</span>
+              </button>
             </div>
           </div>
 
@@ -162,7 +343,7 @@ export function Profile() {
             <div className="absolute top-0 left-0 w-full h-1 bg-[#3A0310]"></div>
             
             <AnimatePresence mode="wait">
-              {!subscribed ? (
+              {user.role !== 'elite' && user.role !== 'admin' ? (
                 <motion.div 
                    key="free-plan"
                    initial={{ opacity: 0 }}
@@ -177,22 +358,44 @@ export function Profile() {
                       </span>
                       <h3 className="text-xl font-black uppercase tracking-tight force-white">Membro Base</h3>
                     </div>
-                    <div className="bg-white/10 force-white text-[8px] font-black px-2.5 py-1 rounded-full border border-white/10 uppercase tracking-widest">
-                      Gratuito
-                    </div>
                   </div>
                   
                   <p className="text-xs md:text-sm mb-6 leading-relaxed font-medium force-white opacity-90">
                     Desbloqueia o arquivo completo e os círculos de debate exclusivos fazendo upgrade para a elite.
                   </p>
                   
-                  <button 
-                    onClick={() => setSubscribed(true)}
-                    className="w-full bg-[#3A0310] force-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-[#5A051A] transition-all active:scale-[0.98] flex justify-center items-center group/btn border border-[#E8B4B8]/20"
-                  >
-                    <Crown className="w-4 h-4 mr-2 group-hover/btn:-translate-y-0.5 group-hover/btn:text-amber-500 transition-all force-gold" /> 
-                    Ascender à Elite
-                  </button>
+                  {eliteRequest.status === 'pending' ? (
+                    <div className="w-full bg-amber-500/10 border border-amber-500/40 py-4 rounded-xl flex justify-center items-center gap-2">
+                      <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                      <span className="font-black text-xs uppercase tracking-widest text-amber-400">Pedido Pendente</span>
+                    </div>
+                  ) : eliteRequest.status === 'rejected' ? (
+                    <div className="space-y-3">
+                      <div className="w-full bg-red-500/10 border border-red-500/30 py-3 rounded-xl flex justify-center items-center gap-2">
+                        <X className="w-4 h-4 text-red-400" />
+                        <span className="font-black text-xs uppercase tracking-widest text-red-400">Pedido Rejeitado</span>
+                      </div>
+                      <button
+                        onClick={handleEliteRequest}
+                        disabled={requestingElite}
+                        className="w-full bg-[#3A0310] force-white py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-[#5A051A] transition-all active:scale-[0.98] flex justify-center items-center gap-2 border border-[#E8B4B8]/20 disabled:opacity-60"
+                      >
+                        {requestingElite ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crown className="w-4 h-4 force-gold" />}
+                        Tentar Novamente
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleEliteRequest}
+                      disabled={requestingElite}
+                      className="w-full bg-[#3A0310] force-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-[#5A051A] transition-all active:scale-[0.98] flex justify-center items-center group/btn border border-[#E8B4B8]/20 disabled:opacity-60"
+                    >
+                      {requestingElite
+                        ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        : <Crown className="w-4 h-4 mr-2 group-hover/btn:-translate-y-0.5 group-hover/btn:text-amber-500 transition-all force-gold" />}
+                      Ascender à Elite
+                    </button>
+                  )}
                 </motion.div>
               ) : (
                  <motion.div 
@@ -260,37 +463,6 @@ export function Profile() {
 
         {/* Right Column: Menu Options */}
         <div className="md:col-span-6 space-y-6 w-full">
-          
-          <div className="space-y-3">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.3em] px-2 text-neutral-400 dark:text-neutral-500">Debates Guardados ({favorites.length})</h3>
-            <div className="bg-white dark:bg-white/5 rounded-[2rem] border border-neutral-100 dark:border-white/5 overflow-hidden divide-y divide-neutral-100 dark:divide-white/5 shadow-xl">
-              {favorites.length === 0 ? (
-                <div className="p-6 text-center text-xs text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-widest">
-                  Nenhum debate guardado
-                </div>
-              ) : (
-                favorites.map((fav, index) => (
-                  <button 
-                    key={fav.id || index}
-                    onClick={() => navigate(`/app/forum/${fav.id}`)}
-                    className="w-full flex items-center justify-between p-4.5 md:p-5 hover:bg-neutral-50 dark:hover:bg-white/[0.03] transition-all group active:bg-neutral-100 dark:active:bg-white/[0.05]"
-                  >
-                    <div className="flex items-center gap-4 text-left">
-                      <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-[#3A0310]/15 dark:group-hover:bg-[#E8B4B8]/20 transition-all">
-                        <Bookmark className="w-4 h-4 text-[#3A0310] dark:text-[#E8B4B8]" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs md:text-sm font-bold text-neutral-800 dark:text-white uppercase tracking-tight group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-1">{fav.title}</h4>
-                        <p className="text-[9px] text-neutral-400 dark:text-neutral-500 font-black uppercase tracking-widest mt-0.5">{fav.author} • {fav.date}</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-neutral-400 flex-shrink-0 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-
           <div className="space-y-3">
             <h3 className="text-[9px] font-black uppercase tracking-[0.3em] px-2 text-neutral-400 dark:text-neutral-500">Configurações de Arquivo</h3>
             <div className="bg-white dark:bg-white/5 rounded-[2rem] border border-neutral-100 dark:border-white/5 overflow-hidden divide-y divide-neutral-100 dark:divide-white/5 shadow-xl">
@@ -312,6 +484,8 @@ export function Profile() {
         </div>
       </div>
       </div>
+
+
 
       <ImageModal 
         isOpen={!!selectedImage} 
