@@ -367,7 +367,7 @@ export function Profile() {
                   {eliteRequest.status === 'pending' ? (
                     <div className="w-full bg-amber-500/10 border border-amber-500/40 py-4 rounded-xl flex justify-center items-center gap-2">
                       <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
-                      <span className="font-black text-xs uppercase tracking-widest text-amber-400">Pedido Pendente</span>
+                      <span className="font-black text-xs uppercase tracking-widest text-amber-400">Pedido Pendente para Elite</span>
                     </div>
                   ) : eliteRequest.status === 'rejected' ? (
                     <div className="space-y-3">
