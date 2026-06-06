@@ -14,7 +14,8 @@ import {
   Coins,
   Gem,
   Trophy,
-  Sparkles
+  Sparkles,
+  Lightbulb
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
@@ -41,6 +42,7 @@ export function Home() {
 
   const [featuredThemes, setFeaturedThemes] = useState<any[]>([]);
   const [recommendedThemes, setRecommendedThemes] = useState<any[]>([]);
+  const [activeTrivia, setActiveTrivia] = useState<any>(null);
 
   useEffect(() => {
     fetch('/api/content')
@@ -52,6 +54,13 @@ export function Home() {
         }
       })
       .catch(err => console.error("Error fetching content:", err));
+
+    fetch('/api/trivia/active')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.id) setActiveTrivia(data);
+      })
+      .catch(err => console.error("Error fetching trivia:", err));
   }, []);
 
   return (
@@ -151,6 +160,33 @@ export function Home() {
               <Link to="/register" className="flex-1 md:flex-none text-center bg-white text-[#3A0310] hover:bg-neutral-200 px-6 py-3.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-colors shadow-xl" style={{ color: '#3A0310' }}>
                 Cadastrar
               </Link>
+            </div>
+          </motion.section>
+        )}
+
+        {/* Trivia / Sabias que */}
+        {activeTrivia && (
+          <motion.section
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="relative overflow-hidden rounded-[2.5rem] border border-amber-500/30 shadow-2xl group"
+          >
+            <div className="absolute inset-0 bg-[#0F0F0F]">
+              <img src={activeTrivia.imageUrl} alt="" className="w-full h-full object-cover opacity-30 group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#3A0310]/95 via-[#3A0310]/80 to-transparent md:to-black/50" />
+            </div>
+            <div className="relative p-8 md:p-10 flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center shadow-lg">
+                    <Lightbulb className="w-4 h-4 text-[#3A0310]" />
+                  </div>
+                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-[0.3em]">Curiosidade</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-4 leading-tight">{activeTrivia.title}</h2>
+                <p className="text-sm md:text-base text-neutral-200 font-medium leading-relaxed max-w-2xl drop-shadow-md">{activeTrivia.fact}</p>
+              </div>
             </div>
           </motion.section>
         )}

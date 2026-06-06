@@ -22,7 +22,7 @@ const PLANS = [
 
 function getPlanLabel(plan?: string, role?: string) {
   if (role === "admin") return PLANS[2];
-  if (plan === "elite") return PLANS[1];
+  if (plan === "elite" || role === "elite") return PLANS[1];
   return PLANS[0]; // base por defeito
 }
 
@@ -318,7 +318,7 @@ export function AdminUsers() {
                                 className="w-full flex items-center justify-between px-3 py-2.5 text-left text-[10px] font-black uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors text-neutral-800 dark:text-white"
                               >
                                 <span className={`px-2 py-0.5 rounded-md ${plan.color}`}>{plan.label}</span>
-                                {((user.plan === plan.value) || (!user.plan && plan.value === "base") || (isAdmin && plan.value === "admin")) && (
+                                {getPlanLabel(user.plan, user.role).value === plan.value && (
                                   <Check className="w-3.5 h-3.5 text-[#3A0310] dark:text-[#E8B4B8]" />
                                 )}
                               </button>

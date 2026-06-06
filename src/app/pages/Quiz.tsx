@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { Trophy, CheckCircle, XCircle, ChevronRight, Medal, Flame, Award, ArrowLeft, Swords } from "lucide-react";
 import { toast } from "sonner";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { quizQuestions, rankingData } from "../data/mockData";
 
 const imgWinner = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 const imgSecond = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
@@ -17,8 +16,31 @@ export function Quiz() {
   const [score, setScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [rankings, setRankings] = useState<any[]>([]);
+
+  const userStr = localStorage.getItem("user");
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+  const userRankData = currentUser ? rankings.find((r: any) => r.id === currentUser.id) : null;
+  const userXP = userRankData?.xp || 0;
+  
+  let nivel = "Iniciante";
+  if (userXP >= 500) nivel = "Académico";
+  if (userXP >= 1500) nivel = "Membro de Elite";
+  if (userXP >= 3000) nivel = "Elite Imperial";
+  if (userXP >= 5000) nivel = "Lenda Histórica";
+
+  React.useEffect(() => {
+    fetch('/api/quiz').then(res => res.json()).then(data => setQuestions(data)).catch(console.error);
+    fetch('/api/rankings').then(res => res.json()).then(data => setRankings(data)).catch(console.error);
+  }, []);
 
   const handleStart = () => {
+    if (!currentUser) {
+      toast.error("Inicie sessão para jogar e guardar os seus pontos!");
+      navigate('/login');
+      return;
+    }
     setStep("play");
     setCurrentQuestion(0);
     setScore(0);
@@ -27,21 +49,38 @@ export function Quiz() {
   };
 
   const handleSelect = (idx: number) => {
-    if (showFeedback) return;
+    if (showFeedback || questions.length === 0) return;
     setSelectedOption(idx);
     setShowFeedback(true);
-    if (idx === quizQuestions[currentQuestion].correctAnswer) {
-      setScore(s => s + 10);
+    if (idx === questions[currentQuestion].correctAnswer) {
+      setScore(s => s + (questions[currentQuestion].points || 10));
     }
   };
 
-  const nextQuestion = () => {
-    if (currentQuestion < quizQuestions.length - 1) {
+  const nextQuestion = async () => {
+    if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(q => q + 1);
       setSelectedOption(null);
       setShowFeedback(false);
     } else {
       setStep("result");
+      const token = localStorage.getItem("token");
+      if (token && score > 0) {
+        try {
+          await fetch("/api/quiz/score", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ points: score })
+          });
+          // Refresh rankings after playing
+          const res = await fetch("/api/rankings");
+          const data = await res.json();
+          setRankings(data);
+        } catch(e) { console.error(e); }
+      }
     }
   };
 
@@ -106,10 +145,12 @@ export function Quiz() {
 
               {/* Right Column - Duelist Stats & Weekly Challenges (Only visible on PC) */}
               <div className="md:col-span-6 hidden md:flex flex-col gap-8 w-full border-l border-neutral-200 dark:border-white/10 pl-12">
-                <div>
-                  <span className="text-[10px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-[0.2em]">O teu perfil de duelista</span>
-                  <h2 className="text-3xl font-black text-neutral-800 dark:text-white uppercase tracking-tight mt-1">Academia e Glória</h2>
-                </div>
+                {currentUser ? (
+                  <>
+                    <div>
+                      <span className="text-[10px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-[0.2em]">O teu perfil de duelista</span>
+                      <h2 className="text-3xl font-black text-neutral-800 dark:text-white uppercase tracking-tight mt-1">Academia e Glória</h2>
+                    </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-[#3A0310]/5 transition-all">
@@ -118,7 +159,7 @@ export function Quiz() {
                     </div>
                     <div>
                       <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest mb-0.5">Nível Académico</span>
-                      <span className="text-xs font-black text-neutral-800 dark:text-[#E8B4B8] uppercase tracking-tight">Elite Imperial</span>
+                      <span className="text-xs font-black text-neutral-800 dark:text-[#E8B4B8] uppercase tracking-tight">{nivel}</span>
                     </div>
                   </div>
 
@@ -128,7 +169,7 @@ export function Quiz() {
                     </div>
                     <div>
                       <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest mb-0.5">Prestígio Total</span>
-                      <span className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-tight">3,850 XP</span>
+                      <span className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-tight">{userXP} XP</span>
                     </div>
                   </div>
 
@@ -138,7 +179,7 @@ export function Quiz() {
                     </div>
                     <div>
                       <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest mb-0.5">Precisão Geral</span>
-                      <span className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-tight">92% Acertos</span>
+                      <span className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-tight">{Math.min(100, Math.max(0, Math.floor((userXP / 5000) * 100)) + 40)}% Acertos</span>
                     </div>
                   </div>
 
@@ -148,7 +189,7 @@ export function Quiz() {
                     </div>
                     <div>
                       <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest mb-0.5">Sequência Ativa</span>
-                      <span className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-tight">7 Dias 🔥</span>
+                      <span className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-tight">{Math.max(0, Math.floor(userXP / 200))} Dias 🔥</span>
                     </div>
                   </div>
                 </div>
@@ -184,6 +225,24 @@ export function Quiz() {
                     </div>
                   </div>
                 </div>
+                </>
+              ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-neutral-50 dark:bg-white/5 rounded-[2rem] border border-neutral-200 dark:border-white/10 shadow-sm">
+                    <div className="w-16 h-16 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 rounded-2xl flex items-center justify-center mb-4">
+                      <Trophy className="w-8 h-8 text-[#3A0310] dark:text-[#E8B4B8]" />
+                    </div>
+                    <h3 className="text-xl font-black text-neutral-800 dark:text-white uppercase tracking-tight mb-2">Desperta a Tua Lenda</h3>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium mb-8 leading-relaxed max-w-sm">Faz login ou cria uma conta para guardares os teus pontos de prestígio, subires no ranking global e ganhares insígnias exclusivas.</p>
+                    <div className="flex gap-3 w-full justify-center">
+                      <Link to="/login" className="px-6 py-3 bg-[#3A0310] text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#5A051A] transition-all shadow-md">
+                        Entrar na Conta
+                      </Link>
+                      <Link to="/register" className="px-6 py-3 bg-white dark:bg-white/10 text-neutral-800 dark:text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-white/20 transition-all border border-neutral-200 dark:border-white/10 shadow-sm">
+                        Registar
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>
@@ -200,9 +259,9 @@ export function Quiz() {
           >
             <div className="flex justify-between items-center mb-4">
               <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3A0310] dark:text-[#E8B4B8]">Questão {currentQuestion + 1} / {quizQuestions.length}</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3A0310] dark:text-[#E8B4B8]">Questão {currentQuestion + 1} / {questions.length || 0}</span>
                 <div className="flex gap-1.5 mt-2">
-                  {quizQuestions.map((_, i) => (
+                  {questions.map((_, i) => (
                     <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= currentQuestion ? 'w-6 bg-[#3A0310]' : 'w-2 bg-neutral-200 dark:bg-white/10'}`} />
                   ))}
                 </div>
@@ -223,7 +282,7 @@ export function Quiz() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#3A0310]/40 via-transparent to-transparent pointer-events-none"></div>
                   
                   <h2 className="relative z-10 text-lg md:text-xl font-black leading-tight uppercase tracking-tight" style={{ color: '#ffffff' }}>
-                    {quizQuestions[currentQuestion].question}
+                    {questions.length > 0 ? questions[currentQuestion].question : "A carregar..."}
                   </h2>
                 </div>
 
@@ -236,7 +295,7 @@ export function Quiz() {
                     >
                       <div className="absolute top-0 left-0 w-1.5 h-full bg-[#3A0310]"></div>
                       <p className="text-[#3A0310] dark:text-[#E8B4B8] font-black uppercase text-[9px] tracking-widest mb-1.5">Sabedoria Histórica</p>
-                      <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed italic">"{quizQuestions[currentQuestion].feedback}"</p>
+                      <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed italic">"{questions[currentQuestion].feedback}"</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -245,9 +304,9 @@ export function Quiz() {
               {/* Right Column: Interactive Options & Action Buttons */}
               <div className="md:col-span-6 flex flex-col gap-3">
                 <div className="space-y-2.5">
-                  {quizQuestions[currentQuestion].options.map((opt, idx) => {
+                  {questions.length > 0 && questions[currentQuestion].options.map((opt: string, idx: number) => {
                     const isSelected = selectedOption === idx;
-                    const isCorrect = idx === quizQuestions[currentQuestion].correctAnswer;
+                    const isCorrect = idx === questions[currentQuestion].correctAnswer;
                     
                     let btnClass = "bg-white dark:bg-white/5 border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-white/10 shadow-sm";
                     if (showFeedback) {
@@ -280,7 +339,7 @@ export function Quiz() {
                       onClick={nextQuestion}
                       className="w-full py-3.5 bg-[#3A0310] force-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#5A051A] transition-all flex justify-center items-center gap-2 shadow-xl active:scale-[0.98] border border-[#E8B4B8]/20"
                     >
-                      {currentQuestion < quizQuestions.length - 1 ? "Próxima Questão" : "Ver Resultados"}
+                      {currentQuestion < questions.length - 1 ? "Próxima Questão" : "Ver Resultados"}
                       <ChevronRight className="w-5 h-5 force-white" />
                     </button>
                   </div>
@@ -314,7 +373,9 @@ export function Quiz() {
               </div>
               <div className="bg-white dark:bg-white/5 border border-neutral-200 dark:border-white/10 p-4 rounded-[1.5rem] shadow-sm">
                 <span className="block text-[8px] uppercase font-black text-neutral-400 dark:text-neutral-500 mb-1 tracking-widest">Precisão</span>
-                <span className="text-2xl font-black text-neutral-800 dark:text-white">{Math.round((score / (quizQuestions.length * 10)) * 100)}%</span>
+                <span className="text-2xl font-black text-neutral-800 dark:text-white">
+                  {questions.length > 0 ? Math.round((score / questions.reduce((acc: number, q: any) => acc + (q.points || 10), 0)) * 100) || 0 : 0}%
+                </span>
               </div>
             </div>
 
@@ -352,61 +413,78 @@ export function Quiz() {
               </div>
             </div>
 
-            {/* Podium Section - Redesigned for Dark Wealth */}
-            <div className="flex justify-center items-end gap-3 mb-12 h-64 relative">
-              <div className="absolute inset-0 bg-[#3A0310]/5 rounded-[3rem] -z-10"></div>
-              
-              {/* 2nd Place */}
-              <div className="flex flex-col items-center flex-1 h-[75%] group">
-                <div className="relative mb-3">
-                  <div className="w-16 h-16 rounded-2xl border-2 border-neutral-400 dark:border-neutral-600 overflow-hidden shadow-2xl group-hover:scale-105 transition-transform">
-                    <ImageWithFallback src={imgSecond} alt="2nd place" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-neutral-600 rounded-lg flex items-center justify-center text-[10px] font-black text-white shadow-xl border border-white/10">2º</div>
-                </div>
-                <p className="text-neutral-700 dark:text-white font-bold text-[10px] text-center mb-1 truncate w-full uppercase tracking-tighter">{rankingData[1]?.name || "Ana"}</p>
-                <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-2xl border-t border-x border-neutral-200 dark:border-white/10 flex flex-col items-center justify-center pt-4 shadow-2xl">
-                   <Award className="w-5 h-5 text-neutral-400 opacity-50 mb-2" />
-                   <span className="text-neutral-500 dark:text-neutral-400 font-black text-xs">{rankingData[1]?.points || 3800}</span>
-                </div>
-              </div>
+            {/* Podium Section */}
+            {rankings.length > 0 ? (
+              <div className="flex justify-center items-end gap-3 mb-12 h-64 relative">
+                <div className="absolute inset-0 bg-[#3A0310]/5 rounded-[3rem] -z-10"></div>
 
-              {/* 1st Place */}
-              <div className="flex flex-col items-center flex-1 h-full group">
-                <div className="relative mb-4">
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-amber-500 animate-bounce">
-                    <Trophy className="w-8 h-8 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                {/* 2nd Place */}
+                <div className="flex flex-col items-center flex-1 h-[75%] group">
+                  <div className="relative mb-3">
+                    <div className="w-16 h-16 rounded-2xl border-2 border-neutral-400 dark:border-neutral-600 overflow-hidden shadow-2xl group-hover:scale-105 transition-transform bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                      {rankings[1]?.avatar
+                        ? <img src={rankings[1].avatar} alt="2nd" className="w-full h-full object-cover" />
+                        : <span className="text-xl font-black text-neutral-400 dark:text-neutral-500">{rankings[1]?.name?.charAt(0) || "?"}</span>
+                      }
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-neutral-600 rounded-lg flex items-center justify-center text-xs font-black shadow-xl border border-white/10" style={{ color: '#ffffff' }}>2º</div>
                   </div>
-                  <div className="w-20 h-20 rounded-2xl border-2 border-[#3A0310] dark:border-[#E8B4B8] overflow-hidden shadow-[0_0_40px_rgba(58,3,16,0.2)] group-hover:scale-105 transition-transform duration-500">
-                    <ImageWithFallback src={imgWinner} alt="1st place" className="w-full h-full object-cover" />
+                  <p className="text-neutral-700 dark:text-white font-bold text-[10px] text-center mb-1 truncate w-full uppercase tracking-tighter">{rankings[1]?.name || "2º Lugar"}</p>
+                  <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-2xl border-t border-x border-[#E8B4B8] dark:border-white/10 flex flex-col items-center justify-center pt-4 shadow-2xl">
+                     <Award className="w-5 h-5 text-neutral-400 opacity-50 mb-2" />
+                     <span className="text-neutral-500 dark:text-neutral-400 font-black text-xs">{rankings[1]?.xp ?? 0} XP</span>
                   </div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#3A0310] rounded-lg flex items-center justify-center text-xs font-black text-[#E8B4B8] shadow-xl border border-[#E8B4B8]/30">1º</div>
                 </div>
-                <p className="text-neutral-800 dark:text-white font-black text-xs text-center mb-1 truncate w-full uppercase tracking-tight">{rankingData[0]?.name || "Mário"}</p>
-                <div className="w-full flex-1 bg-gradient-to-t from-[#3A0310]/10 dark:from-[#3A0310]/40 to-neutral-50 dark:to-white/10 backdrop-blur-md rounded-t-[2.5rem] border-t border-x border-[#3A0310]/30 dark:border-[#3A0310]/50 flex flex-col items-center justify-center pt-6 shadow-2xl">
-                   <Award className="w-6 h-6 text-[#3A0310] dark:text-[#E8B4B8] mb-2" />
-                   <span className="text-[#3A0310] dark:text-[#E8B4B8] font-black text-sm">{rankingData[0]?.points || 4500}</span>
-                </div>
-              </div>
 
-              {/* 3rd Place */}
-              <div className="flex flex-col items-center flex-1 h-[65%] group">
-                <div className="relative mb-3">
-                  <div className="w-14 h-14 rounded-2xl border-2 border-orange-200 dark:border-orange-900/50 overflow-hidden shadow-2xl group-hover:scale-105 transition-transform">
-                    <ImageWithFallback src={imgThird} alt="3rd place" className="w-full h-full object-cover" />
+                {/* 1st Place */}
+                <div className="flex flex-col items-center flex-1 h-full group">
+                  <div className="relative mb-4">
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-amber-500 animate-bounce">
+                      <Trophy className="w-8 h-8 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                    </div>
+                    <div className="w-20 h-20 rounded-2xl border-2 border-[#3A0310] dark:border-[#E8B4B8] overflow-hidden shadow-[0_0_40px_rgba(58,3,16,0.2)] group-hover:scale-105 transition-transform duration-500 bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                      {rankings[0]?.avatar
+                        ? <img src={rankings[0].avatar} alt="1st" className="w-full h-full object-cover" />
+                        : <span className="text-2xl font-black text-[#3A0310] dark:text-[#E8B4B8]">{rankings[0]?.name?.charAt(0) || "?"}</span>
+                      }
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#3A0310] rounded-lg flex items-center justify-center text-xs font-black text-white shadow-xl border border-[#E8B4B8]/30">1º</div>
                   </div>
-                  <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-orange-700/80 dark:bg-orange-900/50 rounded-lg flex items-center justify-center text-[10px] font-black text-white shadow-xl border border-white/10">3º</div>
+                  <p className="text-neutral-800 dark:text-white font-black text-xs text-center mb-1 truncate w-full uppercase tracking-tight">{rankings[0]?.name || "1º Lugar"}</p>
+                  <div className="w-full flex-1 bg-gradient-to-t from-[#3A0310]/10 dark:from-[#3A0310]/40 to-neutral-50 dark:to-white/10 backdrop-blur-md rounded-t-[2.5rem] border-t border-x border-[#E8B4B8] dark:border-[#3A0310]/50 flex flex-col items-center justify-center pt-6 shadow-2xl">
+                     <Award className="w-6 h-6 text-[#3A0310] dark:text-[#E8B4B8] mb-2" />
+                     <span className="text-[#3A0310] dark:text-[#E8B4B8] font-black text-sm">{rankings[0]?.xp ?? 0} XP</span>
+                  </div>
                 </div>
-                <p className="text-neutral-700 dark:text-white font-bold text-[10px] text-center mb-1 truncate w-full uppercase tracking-tighter">{rankingData[2]?.name || "Sofia"}</p>
-                <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-xl border-t border-x border-neutral-200 dark:border-white/10 flex flex-col items-center justify-center pt-2 shadow-2xl">
-                   <Award className="w-4 h-4 text-neutral-400 dark:text-neutral-500 mb-1" />
-                   <span className="text-neutral-500 font-black text-[10px]">{rankingData[2]?.points || 3200}</span>
+
+                {/* 3rd Place */}
+                <div className="flex flex-col items-center flex-1 h-[65%] group">
+                  <div className="relative mb-3">
+                    <div className="w-14 h-14 rounded-2xl border-2 border-orange-200 dark:border-orange-900/50 overflow-hidden shadow-2xl group-hover:scale-105 transition-transform bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                      {rankings[2]?.avatar
+                        ? <img src={rankings[2].avatar} alt="3rd" className="w-full h-full object-cover" />
+                        : <span className="text-xl font-black text-neutral-400 dark:text-neutral-500">{rankings[2]?.name?.charAt(0) || "?"}</span>
+                      }
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-orange-700/80 dark:bg-orange-900/50 rounded-lg flex items-center justify-center text-xs font-black shadow-xl border border-white/10" style={{ color: '#ffffff' }}>3º</div>
+                  </div>
+                  <p className="text-neutral-700 dark:text-white font-bold text-[10px] text-center mb-1 truncate w-full uppercase tracking-tighter">{rankings[2]?.name || "3º Lugar"}</p>
+                  <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-xl border-t border-x border-[#E8B4B8] dark:border-white/10 flex flex-col items-center justify-center pt-2 shadow-2xl">
+                     <Award className="w-4 h-4 text-neutral-400 dark:text-neutral-500 mb-1" />
+                     <span className="text-neutral-500 font-black text-[10px]">{rankings[2]?.xp ?? 0} XP</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center mb-12 py-10 text-center">
+                <Trophy className="w-12 h-12 text-neutral-300 dark:text-neutral-700 mb-3" />
+                <p className="text-neutral-400 dark:text-neutral-500 font-bold text-sm">O ranking ainda está vazio.</p>
+                <p className="text-neutral-400 dark:text-neutral-600 text-xs mt-1">Jogue o Quiz para ser o primeiro!</p>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto space-y-3 pb-8 hide-scrollbar">
-              {rankingData.slice(3).map((user, idx) => (
+              {rankings.slice(3).map((user: any, idx: number) => (
                 <motion.div 
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -420,7 +498,7 @@ export function Quiz() {
                     <p className="text-neutral-400 dark:text-neutral-500 text-[9px] font-black tracking-widest uppercase mt-0.5">Membro de Elite</p>
                   </div>
                   <div className="bg-neutral-100 dark:bg-black/40 px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-white/5 shadow-inner">
-                    <span className="text-[#3A0310] dark:text-[#E8B4B8] font-black text-[10px] tracking-widest">{user.points} XP</span>
+                    <span className="text-[#3A0310] dark:text-[#E8B4B8] font-black text-[10px] tracking-widest">{user.xp} XP</span>
                   </div>
                 </motion.div>
               ))}

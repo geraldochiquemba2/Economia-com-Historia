@@ -381,11 +381,15 @@ export function Explore() {
                         if (!userStr) {
                           e.preventDefault();
                           toast.error('Acesso Restrito', { description: 'Faça login para ter acesso ao conteúdo jindungo.' });
+                          navigate('/app/explore?filter=jindungo');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
                         } else {
                           const user = JSON.parse(userStr);
                           if (user.role !== 'elite' && user.role !== 'admin') {
                             e.preventDefault();
                             toast.error('Acesso Bloqueado', { description: 'Você precisa ser membro elite para ler este conteúdo.' });
+                            navigate('/app/explore?filter=jindungo');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
                           }
                         }
                       }

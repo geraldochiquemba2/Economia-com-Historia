@@ -21,7 +21,8 @@ import {
   BookOpen,
   Edit2,
   Check,
-  X
+  X,
+  ChevronDown
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { ImageModal } from "../components/ImageModal";
@@ -41,11 +42,18 @@ export function Profile() {
   const [stats, setStats] = useState({ xp: 0, temas: 0, rank: '-' });
   const [completedStudies, setCompletedStudies] = useState<any[]>([]);
 
+  const PROFESSIONS = [
+    { value: 'Estudante', label: 'Estudante' },
+    { value: 'Docente', label: 'Docente' },
+    { value: 'Trabalhador', label: 'Trabalhador' },
+  ];
+
   const [profileName, setProfileName] = useState(storedUser.name || "Estudante");
-  const [profileTitle, setProfileTitle] = useState(storedUser.customTitle || (storedUser.role === 'admin' ? 'Administrador' : 'Académico Ilustre'));
+  const [profileProfession, setProfileProfession] = useState(storedUser.profession || 'Estudante');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempName, setTempName] = useState(profileName);
-  const [tempTitle, setTempTitle] = useState(profileTitle);
+  const [tempProfession, setTempProfession] = useState(profileProfession);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Buscar role actualizado do servidor (actualização feita pelo admin)
   useEffect(() => {
@@ -118,12 +126,28 @@ export function Profile() {
     }
   };
 
-  const handleSaveProfile = () => {
-    setProfileName(tempName);
-    setProfileTitle(tempTitle);
-    const updatedUser = { ...user, name: tempName, customTitle: tempTitle };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setIsEditingProfile(false);
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const res = await fetch(`/api/users/${storedUser.id}/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: tempName, profession: tempProfession }),
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      setProfileName(updated.name || tempName);
+      setProfileProfession(updated.profession || tempProfession);
+      const updatedUser = { ...user, name: updated.name || tempName, profession: updated.profession || tempProfession };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setIsEditingProfile(false);
+      toast.success('Perfil atualizado!');
+    } catch {
+      toast.error('Erro ao guardar. Tente novamente.');
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   React.useEffect(() => {
@@ -203,10 +227,8 @@ export function Profile() {
 
 
   const options = [
-    { icon: User, label: "Perfil Académico" },
     { icon: Bell, label: "Alertas de Prestígio" },
     { icon: Shield, label: "Segurança de Conta" },
-    { icon: HelpCircle, label: "Arquivo de Suporte" },
   ];
 
   return (
@@ -266,24 +288,31 @@ export function Profile() {
                     placeholder="O seu nome"
                     className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2 force-white font-black uppercase tracking-tighter text-center md:text-left focus:outline-none focus:border-[#E8B4B8]/50"
                   />
-                  <input
-                    type="text"
-                    value={tempTitle}
-                    onChange={(e) => setTempTitle(e.target.value)}
-                    placeholder="O seu título"
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2 force-gold font-bold text-[10px] uppercase tracking-[0.2em] text-center md:text-left focus:outline-none focus:border-[#E8B4B8]/50"
-                  />
+                  <div className="relative w-full">
+                    <select
+                      value={tempProfession}
+                      onChange={(e) => setTempProfession(e.target.value)}
+                      className="w-full appearance-none bg-black/20 border border-white/10 rounded-xl px-3 py-2 force-gold font-bold text-[10px] uppercase tracking-[0.2em] text-center md:text-left focus:outline-none focus:border-[#E8B4B8]/50 cursor-pointer pr-8"
+                      style={{ color: '#E8B4B8' }}
+                    >
+                      {PROFESSIONS.map(p => (
+                        <option key={p.value} value={p.value} style={{ background: '#1A0A0D', color: '#E8B4B8' }}>{p.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: '#E8B4B8' }} />
+                  </div>
                   <div className="flex gap-2 mt-2 w-full justify-center md:justify-start">
                     <button
                       onClick={handleSaveProfile}
-                      className="bg-green-500/20 text-green-400 p-2 rounded-xl hover:bg-green-500/30 transition-colors"
+                      disabled={savingProfile}
+                      className="bg-green-500/20 text-green-400 p-2 rounded-xl hover:bg-green-500/30 transition-colors disabled:opacity-50"
                     >
-                      <Check className="w-4 h-4" />
+                      {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     </button>
                     <button
                       onClick={() => {
                         setTempName(profileName);
-                        setTempTitle(profileTitle);
+                        setTempProfession(profileProfession);
                         setIsEditingProfile(false);
                       }}
                       className="bg-red-500/20 text-red-400 p-2 rounded-xl hover:bg-red-500/30 transition-colors"
@@ -309,9 +338,16 @@ export function Profile() {
                       <span className="text-[7px] font-black uppercase tracking-wider force-white opacity-60 whitespace-nowrap">Editar perfil</span>
                     </div>
                   </div>
-                  <p className="font-bold text-[9px] uppercase tracking-[0.2em] text-center md:text-left force-gold">
-                    {profileTitle}
-                  </p>
+                  <div className="flex flex-col items-center md:items-start mt-1">
+                    <p className="font-bold text-[9px] uppercase tracking-[0.2em] text-center md:text-left force-gold">
+                      {profileProfession}
+                    </p>
+                    {user.email && (
+                      <p className="text-[10px] font-medium text-white/70 lowercase tracking-wide text-center md:text-left mt-0.5 force-white opacity-70">
+                        {user.email}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -473,12 +509,6 @@ export function Profile() {
                       ))}
                     </div>
                     
-                    <button 
-                      onClick={() => setSubscribed(false)}
-                      className="w-full bg-white/10 backdrop-blur-md force-white border border-white/20 py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-white/20 transition-all active:scale-[0.98]"
-                    >
-                      Gerir Assinatura
-                    </button>
                   </motion.div>
               )}
             </AnimatePresence>

@@ -128,9 +128,38 @@ async function initDB() {
     await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "dislikes" TEXT[] DEFAULT '{}';`);
     await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "author" VARCHAR(255) DEFAULT 'Autor Desconhecido';`);
 
-    // 3. Garantir que a coluna avatar existe na tabela User
+    // 3. Garantir que a coluna avatar e xp existem na tabela User
     await pool.query(`
       ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "avatar" VARCHAR(512);
+    `);
+    await pool.query(`
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "xp" INTEGER DEFAULT 0;
+    `);
+
+    // 4. Criar tabela de perguntas do Quiz
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "QuizQuestion" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "question" TEXT NOT NULL,
+        "options" JSONB NOT NULL,
+        "correctAnswer" INTEGER NOT NULL,
+        "feedback" TEXT NOT NULL,
+        "points" INTEGER DEFAULT 10,
+        "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // 5. Criar tabela de Trivia (Curiosidades)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "Trivia" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "title" VARCHAR(255) NOT NULL,
+        "fact" TEXT NOT NULL,
+        "imageUrl" VARCHAR(512),
+        "isActive" BOOLEAN DEFAULT FALSE,
+        "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
+      );
     `);
 
     // 4. Criar tabela de Comentários
@@ -651,6 +680,106 @@ app.post('/api/comments', authMiddleware, async (req, res) => {
   }
 });
 
+// ==========================================
+// QUIZ & RANKINGS ENDPOINTS
+// ==========================================
+
+// Get Top 10 for rankings + others
+app.get('/api/rankings', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT id, name, avatar, xp FROM "User" ORDER BY xp DESC LIMIT 50');
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar rankings' });
+  }
+});
+
+// Get Quiz Questions (Public)
+app.get('/api/quiz', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM "QuizQuestion" ORDER BY "createdAt" ASC');
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar perguntas' });
+  }
+});
+
+// Submit Quiz Score
+app.post('/api/quiz/score', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'Autenticação necessária' });
+  
+  try {
+    const user = jwt.verify(auth.slice(7), JWT_SECRET);
+    const { points } = req.body;
+    if (!points || points <= 0) return res.status(400).json({ error: 'Pontos inválidos' });
+    
+    await pool.query('UPDATE "User" SET xp = xp + $1 WHERE id = $2', [points, user.id]);
+    res.json({ message: 'Pontos adicionados com sucesso' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao submeter pontuação' });
+  }
+});
+
+// Admin: Create Question
+app.post('/api/admin/quiz', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'Autenticação necessária' });
+  try {
+    const user = jwt.verify(auth.slice(7), JWT_SECRET);
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Apenas admins' });
+    
+    const { question, options, correctAnswer, feedback, points } = req.body;
+    const { rows } = await pool.query(
+      'INSERT INTO "QuizQuestion" (question, options, "correctAnswer", feedback, points) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [question, JSON.stringify(options), correctAnswer, feedback, points || 10]
+    );
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao criar pergunta' });
+  }
+});
+
+// Admin: Update Question
+app.put('/api/admin/quiz/:id', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'Autenticação necessária' });
+  try {
+    const user = jwt.verify(auth.slice(7), JWT_SECRET);
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Apenas admins' });
+    
+    const { question, options, correctAnswer, feedback, points } = req.body;
+    const { rows } = await pool.query(
+      'UPDATE "QuizQuestion" SET question = $1, options = $2, "correctAnswer" = $3, feedback = $4, points = $5, "updatedAt" = NOW() WHERE id = $6 RETURNING *',
+      [question, JSON.stringify(options), correctAnswer, feedback, points || 10, req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao atualizar pergunta' });
+  }
+});
+
+// Admin: Delete Question
+app.delete('/api/admin/quiz/:id', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'Autenticação necessária' });
+  try {
+    const user = jwt.verify(auth.slice(7), JWT_SECRET);
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Apenas admins' });
+    
+    await pool.query('DELETE FROM "QuizQuestion" WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Pergunta apagada com sucesso' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao apagar pergunta' });
+  }
+});
+
 // -- API DE CONTEÚDO --
 
 // Listar conteúdos (GET)
@@ -860,6 +989,36 @@ app.patch('/api/users/:id', async (req, res) => {
   }
 });
 
+// Update user own profile (name + profession)
+app.put('/api/users/:id/profile', async (req, res) => {
+  const { id } = req.params;
+  const { name, profession } = req.body;
+  const allowed = ['Estudante', 'Docente', 'Trabalhador'];
+  if (profession && !allowed.includes(profession)) {
+    return res.status(400).json({ error: 'Profissão inválida' });
+  }
+  try {
+    const fields = [];
+    const values = [];
+    let idx = 1;
+    if (name) { fields.push(`name = $${idx++}`); values.push(name); }
+    if (profession) { fields.push(`profession = $${idx++}`); values.push(profession); }
+    if (fields.length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+    values.push(id);
+    const result = await pool.query(
+      `UPDATE "User" SET ${fields.join(', ')} WHERE id = $${idx} RETURNING id, name, email, role, profession, avatar`,
+      values
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Utilizador não encontrado' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao atualizar perfil' });
+  }
+});
+
+
+
 // -- ELITE REQUESTS --
 
 // Utilizador submete pedido de Elite
@@ -958,6 +1117,76 @@ app.get('/api/stats', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
+// ==========================================
+// TRIVIA / SABIAS QUE
+// ==========================================
+
+const requireAdmin = (req, res, next) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Acesso não autorizado' });
+  try {
+    const user = jwt.verify(auth.slice(7), process.env.JWT_SECRET || 'secret');
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Apenas admin pode aceder' });
+    req.user = user;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Token inválido' });
+  }
+};
+
+app.get('/api/trivia/active', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM "Trivia" WHERE "isActive" = TRUE LIMIT 1');
+    res.json(result.rows[0] || null);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar trivia ativa' });
+  }
+});
+
+app.get('/api/trivia', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM "Trivia" ORDER BY "createdAt" DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar trivias' });
+  }
+});
+
+app.post('/api/trivia', requireAdmin, async (req, res) => {
+  try {
+    const { title, fact, imageUrl } = req.body;
+    const result = await pool.query(
+      'INSERT INTO "Trivia" (title, fact, "imageUrl") VALUES ($1, $2, $3) RETURNING *',
+      [title, fact, imageUrl]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar trivia' });
+  }
+});
+
+app.put('/api/trivia/:id/activate', requireAdmin, async (req, res) => {
+  try {
+    await pool.query('UPDATE "Trivia" SET "isActive" = FALSE');
+    const result = await pool.query(
+      'UPDATE "Trivia" SET "isActive" = TRUE WHERE id = $1 RETURNING *',
+      [req.params.id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao ativar trivia' });
+  }
+});
+
+app.delete('/api/trivia/:id', requireAdmin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM "Trivia" WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Trivia removida com sucesso' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao remover trivia' });
   }
 });
 

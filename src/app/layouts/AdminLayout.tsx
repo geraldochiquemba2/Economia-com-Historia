@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, NavLink, useLocation, useNavigate, MemoryRouter } from "react-router";
-import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare } from "lucide-react";
+import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare, Trophy, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
 import { ScrollToTop } from "../components/ScrollToTop";
@@ -32,6 +32,8 @@ export function AdminLayout() {
     { to: "/admin", icon: LayoutDashboard, label: "Painel", exact: true },
     { to: "/admin/content", icon: FileVideo, label: "Conteúdo" },
     { to: "/admin/users", icon: Users, label: "Usuários" },
+    { to: "/admin/quiz", icon: Trophy, label: "Quiz" },
+    { to: "/admin/trivia", icon: Lightbulb, label: "Curiosidades" },
   ];
 
   return (

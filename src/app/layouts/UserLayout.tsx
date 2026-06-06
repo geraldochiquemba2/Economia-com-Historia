@@ -177,7 +177,7 @@ export function UserLayout() {
 
       {/* Bottom Navigation for Mobile */}
       <nav className={`backdrop-blur-xl border-t fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-[60] transition-all duration-300 ${
-        isLight ? "bg-[#1a0108]/95 border-[#3A0310]/40" : "bg-[#0F0F0F]/95 border-white/5"
+        isLight ? "bg-white/95 border-neutral-200/80" : "bg-[#0F0F0F]/95 border-white/5"
       }`}>
         {navItems.map((item) => (
           <NavLink
@@ -186,7 +186,9 @@ export function UserLayout() {
             end={item.exact}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
-                isActive ? "text-white" : "text-white/60 hover:text-white"
+                isActive 
+                  ? (isLight ? "text-[#3A0310]" : "text-white") 
+                  : (isLight ? "text-neutral-400 hover:text-[#3A0310]" : "text-white/60 hover:text-white")
               }`
             }
           >
@@ -227,7 +229,9 @@ export function UserLayout() {
             to="/admin"
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
-                isActive ? "text-[#E8B4B8]" : "text-white/60 hover:text-white"
+                isActive 
+                  ? (isLight ? "text-[#3A0310]" : "text-[#E8B4B8]") 
+                  : (isLight ? "text-neutral-400 hover:text-[#3A0310]" : "text-white/60 hover:text-white")
               }`
             }
           >
@@ -238,7 +242,7 @@ export function UserLayout() {
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   className="relative"
                 >
-                  <ShieldAlert className={`w-6 h-6 mb-1 text-[#E8B4B8] ${isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
+                  <ShieldAlert className={`w-6 h-6 mb-1 ${isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
                   {isActive && (
                     <motion.div
                       layoutId="nav-glow-admin"
@@ -246,7 +250,7 @@ export function UserLayout() {
                     />
                   )}
                 </motion.div>
-                <span className="text-[10px] uppercase tracking-widest font-black transition-all duration-300 mt-1 text-[#E8B4B8]">
+                <span className="text-[10px] uppercase tracking-widest font-black transition-all duration-300 mt-1">
                   Admin
                 </span>
                 {isActive && (
@@ -267,7 +271,9 @@ export function UserLayout() {
             to="/login"
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full relative transition-all duration-300 ${
-                isActive ? "text-[#E8B4B8]" : "text-white/60 hover:text-white"
+                isActive 
+                  ? (isLight ? "text-[#3A0310]" : "text-[#E8B4B8]") 
+                  : (isLight ? "text-neutral-400 hover:text-[#3A0310]" : "text-white/60 hover:text-white")
               }`
             }
           >
@@ -305,7 +311,9 @@ export function UserLayout() {
         {/* Theme Toggle inside bottom nav */}
         <button
           onClick={toggleTheme}
-          className="flex flex-col items-center justify-center w-full h-full text-white/60 hover:text-white transition-all duration-300"
+          className={`flex flex-col items-center justify-center w-full h-full transition-all duration-300 ${
+            isLight ? "text-neutral-400 hover:text-[#3A0310]" : "text-white/60 hover:text-white"
+          }`}
           aria-label="Alternar tema"
         >
           <motion.div

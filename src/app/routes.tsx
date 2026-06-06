@@ -19,6 +19,8 @@ import { SavedDebates } from "./pages/SavedDebates";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminContent } from "./pages/admin/AdminContent";
 import { AdminUsers } from "./pages/admin/AdminUsers";
+import { AdminQuiz } from "./pages/admin/AdminQuiz";
+import { AdminTrivia } from "./pages/admin/AdminTrivia";
 
 // Layouts
 import { UserLayout } from "./layouts/UserLayout";
@@ -61,6 +63,8 @@ export const router = createBrowserRouter([
       { index: true, Component: AdminDashboard },
       { path: "content", Component: AdminContent },
       { path: "users", Component: AdminUsers },
+      { path: "quiz", Component: AdminQuiz },
+      { path: "trivia", Component: AdminTrivia },
     ],
   },
 ]);
