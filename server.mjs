@@ -204,6 +204,8 @@ async function initDB() {
         UNIQUE("userId")
       );
     `);
+    // 8b. Adicionar coluna de motivo de rejeição
+    await pool.query(`ALTER TABLE "EliteRequest" ADD COLUMN IF NOT EXISTS "rejectionReason" TEXT;`);
 
     console.log('[DB] Base de Dados sincronizada com sucesso.');
   } catch (err) {
@@ -908,15 +910,15 @@ app.get('/api/elite-requests', async (req, res) => {
 // Admin aprova ou rejeita um pedido
 app.patch('/api/elite-requests/:id', async (req, res) => {
   const { id } = req.params;
-  const { action } = req.body; // 'approve' ou 'reject'
+  const { action, reason } = req.body; // 'approve' ou 'reject'
   try {
     const { rows } = await pool.query('SELECT * FROM "EliteRequest" WHERE id = $1', [id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Pedido não encontrado' });
     const request = rows[0];
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
     await pool.query(
-      'UPDATE "EliteRequest" SET status = $1, "reviewedAt" = NOW() WHERE id = $2',
-      [newStatus, id]
+      'UPDATE "EliteRequest" SET status = $1, "reviewedAt" = NOW(), "rejectionReason" = $2 WHERE id = $3',
+      [newStatus, action === 'reject' ? (reason || null) : null, id]
     );
     if (action === 'approve') {
       await pool.query('UPDATE "User" SET role = $1 WHERE id = $2', ['elite', request.userId]);
@@ -925,6 +927,18 @@ app.patch('/api/elite-requests/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao processar pedido' });
+  }
+});
+
+// Apagar pedido de Elite (usado para cancelar ou limpar após rejeição)
+app.delete('/api/elite-requests/user/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    await pool.query('DELETE FROM "EliteRequest" WHERE "userId" = $1', [userId]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao apagar pedido' });
   }
 });
 

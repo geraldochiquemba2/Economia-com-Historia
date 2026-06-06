@@ -38,6 +38,8 @@ export function AdminUsers() {
   const [updatingPlan, setUpdatingPlan] = useState<string | null>(null);
   const [eliteRequests, setEliteRequests] = useState<any[]>([]);
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<{ id: string, userId: string, name: string } | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const fetchEliteRequests = async () => {
     try {
@@ -47,13 +49,13 @@ export function AdminUsers() {
     } catch { /* ignorar */ }
   };
 
-  const handleEliteAction = async (requestId: string, userId: string, action: 'approve' | 'reject') => {
+  const handleEliteAction = async (requestId: string, userId: string, action: 'approve' | 'reject', reason?: string) => {
     setProcessingRequest(requestId);
     try {
       await fetch(`/api/elite-requests/${requestId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, reason }),
       });
       // Atualizar estado local
       setEliteRequests(prev => prev.map(r =>
@@ -62,6 +64,8 @@ export function AdminUsers() {
       if (action === 'approve') {
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: 'elite', plan: 'elite' } : u));
       }
+      setRejectTarget(null);
+      setRejectionReason("");
     } catch {
       setError('Erro ao processar pedido.');
     } finally {
@@ -225,11 +229,11 @@ export function AdminUsers() {
                     Aprovar
                   </button>
                   <button
-                    onClick={() => handleEliteAction(req.id, req.userId, 'reject')}
+                    onClick={() => setRejectTarget({ id: req.id, userId: req.userId, name: req.name })}
                     disabled={processingRequest === req.id}
-                    className="flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-400/40 font-black text-[10px] uppercase tracking-widest px-3 py-2 rounded-xl transition-all active:scale-95 disabled:opacity-60"
+                    className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white border border-red-500/40 font-black text-[10px] uppercase tracking-widest px-3 py-2 rounded-xl transition-all active:scale-95 disabled:opacity-60"
                   >
-                    <XCircle className="w-3.5 h-3.5" />
+                    <XCircle className="w-3.5 h-3.5" style={{ color: "#ffffff" }} />
                     Rejeitar
                   </button>
                 </div>
@@ -383,6 +387,46 @@ export function AdminUsers() {
                   className="flex-1 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-widest transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
                   {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   {deleting ? "A Remover..." : "Remover"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ELITE REJECT MODAL */}
+      <AnimatePresence>
+        {rejectTarget && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            onClick={() => setRejectTarget(null)}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="bg-white dark:bg-[#1A0A0D] border border-neutral-200 dark:border-[#3A0310]/60 rounded-[2rem] p-8 max-w-sm w-full shadow-2xl flex flex-col"
+              onClick={e => e.stopPropagation()}>
+              <div className="w-14 h-14 bg-amber-100 dark:bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <Crown className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h2 className="text-xl font-black text-center text-neutral-900 dark:text-white uppercase tracking-tight mb-2">Rejeitar Pedido?</h2>
+              <p className="text-center text-neutral-600 dark:text-neutral-400 text-xs font-medium mb-1">Qual o motivo da rejeição para o utilizador:</p>
+              <p className="text-center font-black text-[#3A0310] dark:text-[#E8B4B8] text-sm uppercase tracking-tight mb-4">{rejectTarget.name}</p>
+              
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Ex: O utilizador não cumpre os requisitos..."
+                className="w-full bg-neutral-100 dark:bg-black/20 border border-neutral-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-neutral-800 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 min-h-[100px] mb-6 resize-none"
+              />
+
+              <div className="flex gap-3">
+                <button onClick={() => setRejectTarget(null)} className="flex-1 py-3 rounded-2xl border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-neutral-300 font-black uppercase text-xs tracking-widest hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors">Cancelar</button>
+                <button 
+                  onClick={() => handleEliteAction(rejectTarget.id, rejectTarget.userId, 'reject', rejectionReason)} 
+                  disabled={processingRequest === rejectTarget.id || !rejectionReason.trim()}
+                  className="flex-1 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-widest transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                  {processingRequest === rejectTarget.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                  Rejeitar
                 </button>
               </div>
             </motion.div>

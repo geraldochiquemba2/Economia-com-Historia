@@ -135,11 +135,11 @@ export function SavedDebates() {
                     transition={{ delay: index * 0.05 }}
                     className="w-full bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-[#E8B4B8] rounded-2xl overflow-hidden shadow-sm group hover:border-[#5A051A] dark:hover:border-[#F2C8CB] transition-all"
                   >
-                    <button
-                      onClick={() => navigate(`/app/explore/${content.id}`)}
-                      className="w-full p-4 flex items-center gap-4 hover:bg-neutral-50 dark:hover:bg-white/[0.03] transition-all text-left"
-                    >
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-neutral-100 flex-shrink-0 relative border border-black/5">
+                    <div className="w-full p-4 flex items-center gap-4">
+                      <div
+                        className="w-10 h-10 rounded-xl overflow-hidden bg-neutral-100 flex-shrink-0 relative border border-black/5 cursor-pointer"
+                        onClick={() => navigate(`/app/explore/${content.id}`)}
+                      >
                         {content.thumbnail ? (
                           <img src={content.thumbnail} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -149,7 +149,10 @@ export function SavedDebates() {
                         )}
                       </div>
 
-                      <div className="flex-1 min-w-0">
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => navigate(`/app/explore/${content.id}`)}
+                      >
                         <h3 className="text-xs md:text-sm font-black uppercase tracking-tight text-neutral-800 dark:text-white group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-1 mb-0.5">
                           {content.title || "Conteúdo"}
                         </h3>
@@ -157,15 +160,13 @@ export function SavedDebates() {
                           {content.type === "video" ? "Vídeo" : content.type === "text" ? "Texto" : content.type === "podcast" ? "Podcast" : content.type === "jindungo" ? "Com Jindungo" : content.type}
                         </p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-neutral-300 flex-shrink-0 group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] group-hover:translate-x-0.5 transition-all" />
-                    </button>
 
-                    <div className="px-4 pb-3 flex justify-end">
                       <button
-                    onClick={(e) => { e.preventDefault(); removeSavedContent(content.id, 'content'); }}
-                    className="w-8 h-8 rounded-lg bg-white/80 dark:bg-black/50 backdrop-blur-md flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-500/20 text-neutral-600 dark:text-neutral-300 hover:text-red-500 transition-colors shadow-sm"
-                    title="Remover dos guardados"
-                  >      <Bookmark className="w-3 h-3 fill-current" />
+                        onClick={(e) => { e.stopPropagation(); removeSavedContent(content.id, 'content'); }}
+                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 border border-red-200 dark:border-red-500/20"
+                        title="Remover dos guardados"
+                      >
+                        <Bookmark className="w-3 h-3 fill-current" />
                         Remover
                       </button>
                     </div>
@@ -188,15 +189,18 @@ export function SavedDebates() {
                     transition={{ delay: index * 0.05 }}
                     className="w-full bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-[#E8B4B8] rounded-2xl overflow-hidden shadow-sm group hover:border-[#5A051A] dark:hover:border-[#F2C8CB] transition-all"
                   >
-                    <button
-                      onClick={() => navigate(`/app/forum/${fav.id}`)}
-                      className="w-full p-4 flex items-center gap-4 hover:bg-neutral-50 dark:hover:bg-white/[0.03] transition-all text-left"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3A0310]/10 to-[#3A0310]/5 dark:from-white/10 dark:to-white/5 flex items-center justify-center flex-shrink-0 border border-[#3A0310]/10 dark:border-white/5">
+                    <div className="w-full p-4 flex items-center gap-4">
+                      <div
+                        className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3A0310]/10 to-[#3A0310]/5 dark:from-white/10 dark:to-white/5 flex items-center justify-center flex-shrink-0 border border-[#3A0310]/10 dark:border-white/5 cursor-pointer"
+                        onClick={() => navigate(`/app/forum/${fav.id}`)}
+                      >
                         <MessageSquare className="w-4 h-4 text-[#3A0310] dark:text-[#E8B4B8]" />
                       </div>
 
-                      <div className="flex-1 min-w-0">
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => navigate(`/app/forum/${fav.id}`)}
+                      >
                         <h3 className="text-xs md:text-sm font-black uppercase tracking-tight text-neutral-800 dark:text-white group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-1 mb-0.5">
                           {fav.title || "Debate"}
                         </h3>
@@ -204,15 +208,13 @@ export function SavedDebates() {
                           {fav.author && `${fav.author} • `}{fav.date || ""}
                         </p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-neutral-300 flex-shrink-0 group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] group-hover:translate-x-0.5 transition-all" />
-                    </button>
 
-                    <div className="px-4 pb-3 flex justify-end">
                       <button
-                        onClick={() => removeSavedContent(fav.id, 'forum')}
-                        className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 flex items-center justify-center border border-neutral-200 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:border-red-500/30 transition-all text-neutral-400 dark:text-neutral-500"
-                        title="Remover"
-                      >  <Bookmark className="w-3 h-3 fill-current" />
+                        onClick={(e) => { e.stopPropagation(); removeSavedContent(fav.id, 'forum'); }}
+                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 border border-red-200 dark:border-red-500/20"
+                        title="Remover dos guardados"
+                      >
+                        <Bookmark className="w-3 h-3 fill-current" />
                         Remover
                       </button>
                     </div>

@@ -63,14 +63,23 @@ export function Profile() {
   }, [storedUser.id]);
 
   // Estado do pedido de Elite
-  const [eliteRequest, setEliteRequest] = useState<{ status: string | null }>({ status: null });
+  const [eliteRequest, setEliteRequest] = useState<{ status: string | null, rejectionReason?: string }>({ status: null });
   const [requestingElite, setRequestingElite] = useState(false);
 
   useEffect(() => {
     if (!storedUser.id) return;
     fetch(`/api/elite-requests/user/${storedUser.id}`)
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setEliteRequest(data); })
+      .then(data => {
+        if (data && data.status) {
+          setEliteRequest({
+            status: data.status,
+            rejectionReason: data.rejectionReason || data.rejection_reason || undefined,
+          });
+        } else {
+          setEliteRequest({ status: null });
+        }
+      })
       .catch(() => {});
   }, [storedUser.id]);
 
@@ -90,6 +99,20 @@ export function Profile() {
       }
     } catch {
       toast.error('Erro ao enviar pedido. Tenta novamente.');
+    } finally {
+      setRequestingElite(false);
+    }
+  };
+
+  const handleCancelEliteRequest = async () => {
+    if (!storedUser.id || requestingElite) return;
+    setRequestingElite(true);
+    try {
+      await fetch(`/api/elite-requests/user/${storedUser.id}`, { method: 'DELETE' });
+      setEliteRequest({ status: null });
+      toast.success('Pronto!', { description: 'O pedido foi removido do sistema.' });
+    } catch {
+      toast.error('Erro ao remover pedido.');
     } finally {
       setRequestingElite(false);
     }
@@ -365,23 +388,39 @@ export function Profile() {
                   </p>
                   
                   {eliteRequest.status === 'pending' ? (
-                    <div className="w-full bg-amber-500/10 border border-amber-500/40 py-4 rounded-xl flex justify-center items-center gap-2">
-                      <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
-                      <span className="font-black text-xs uppercase tracking-widest text-amber-400">Pedido Pendente para Elite</span>
+                    <div className="space-y-3">
+                      <div className="w-full bg-amber-500/10 border border-amber-500/40 py-4 rounded-xl flex justify-center items-center gap-2">
+                        <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                        <span className="font-black text-xs uppercase tracking-widest text-amber-400">Pedido Pendente para Elite</span>
+                      </div>
+                      <button
+                        onClick={handleCancelEliteRequest}
+                        disabled={requestingElite}
+                        className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-[0.98] flex justify-center items-center border border-red-500/20 disabled:opacity-60"
+                      >
+                        Cancelar Pedido
+                      </button>
                     </div>
                   ) : eliteRequest.status === 'rejected' ? (
                     <div className="space-y-3">
-                      <div className="w-full bg-red-500/10 border border-red-500/30 py-3 rounded-xl flex justify-center items-center gap-2">
-                        <X className="w-4 h-4 text-red-400" />
-                        <span className="font-black text-xs uppercase tracking-widest text-red-400">Pedido Rejeitado</span>
+                      <div className="w-full bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex flex-col gap-3">
+                        <div className="flex items-center gap-2">
+                          <X className="w-4 h-4 text-red-400" />
+                          <span className="font-black text-xs uppercase tracking-widest text-red-400">Pedido Rejeitado</span>
+                        </div>
+                        {eliteRequest.rejectionReason && (
+                          <p className="text-xs text-red-200/80 font-medium p-3 bg-red-950/40 rounded-lg border border-red-500/20 text-left">
+                            <strong className="block text-red-400 mb-1">Motivo do Administrador:</strong>
+                            {eliteRequest.rejectionReason}
+                          </p>
+                        )}
                       </div>
                       <button
-                        onClick={handleEliteRequest}
+                        onClick={handleCancelEliteRequest}
                         disabled={requestingElite}
-                        className="w-full bg-[#3A0310] force-white py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-[#5A051A] transition-all active:scale-[0.98] flex justify-center items-center gap-2 border border-[#E8B4B8]/20 disabled:opacity-60"
+                        className="w-full bg-[#3A0310] force-white py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-[#5A051A] transition-all active:scale-[0.98] flex justify-center items-center border border-[#E8B4B8]/20 disabled:opacity-60"
                       >
-                        {requestingElite ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crown className="w-4 h-4 force-gold" />}
-                        Tentar Novamente
+                        OK, Entendi
                       </button>
                     </div>
                   ) : (

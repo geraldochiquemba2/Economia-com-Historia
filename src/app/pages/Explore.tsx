@@ -27,6 +27,7 @@ export function Explore() {
   const [loading, setLoading] = useState(true);
   const [savedContents, setSavedContents] = useState<any[]>([]);
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const [eliteRequestStatus, setEliteRequestStatus] = useState<string | null>(null);
 
   // Sync initial filter if URL changes
   useEffect(() => {
@@ -46,6 +47,11 @@ export function Explore() {
             else setSavedContents([]);
           })
           .catch(() => setSavedContents([]));
+        // Verificar status do pedido elite
+        fetch(`/api/elite-requests/user/${user.id}`)
+          .then(r => r.json())
+          .then(data => setEliteRequestStatus(data?.status || null))
+          .catch(() => {});
       } else {
         setSavedContents([]);
       }
@@ -69,9 +75,21 @@ export function Explore() {
     const parsedUser = JSON.parse(user);
     const userId = parsedUser.id;
 
+    // Bloquear guardar conteúdo Jindungo para não-Elite
+    if (content.type === 'jindungo' && parsedUser.role !== 'elite' && parsedUser.role !== 'admin') {
+      toast.error('Acesso Restrito 🔥', {
+        description: 'Só membros Elite podem guardar Textos com Jindungo. Solicita o acesso no teu Perfil.'
+      });
+      return;
+    }
+
+    const updated = [...savedContents];
+    const index = updated.findIndex(c => c.id === content.id);
+
     if (index >= 0) {
       updated.splice(index, 1);
       fetch(`/api/users/${userId}/saved/${content.id}`, { method: 'DELETE' }).catch(console.error);
+      toast.success('Removido dos guardados!');
     } else {
       updated.push(content);
       fetch(`/api/users/${userId}/saved`, {
@@ -79,6 +97,7 @@ export function Explore() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contentId: content.id })
       }).catch(console.error);
+      toast.success('Guardado!', { description: 'Podes aceder em qualquer altura no teu Perfil.' });
     }
     setSavedContents(updated);
   };
@@ -142,6 +161,19 @@ export function Explore() {
     }
     return list;
   })();
+
+  const handleCancelEliteRequest = async () => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+    const u = JSON.parse(userStr);
+    try {
+      await fetch(`/api/elite-requests/user/${u.id}`, { method: 'DELETE' });
+      setEliteRequestStatus(null);
+      toast.success('Pedido cancelado!', { description: 'Podes solicitar novamente quando quiseres.' });
+    } catch {
+      toast.error('Erro ao cancelar pedido.');
+    }
+  };
 
   const typeIcon = (type: string) => {
     if (type === "video") return <PlayCircle className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1.5" />;
@@ -251,6 +283,71 @@ export function Explore() {
              </div>
           </div>
         )}
+
+        {filter === 'jindungo' && (() => {
+          const userStr = localStorage.getItem('user');
+          if (!userStr) return null;
+          const u = JSON.parse(userStr);
+          if (u.role === 'elite' || u.role === 'admin') return null;
+          return (
+            <div className="bg-[#3A0310] border border-[#E8B4B8]/30 p-8 rounded-[2.5rem] text-center shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent pointer-events-none" />
+              <div className="relative z-10 flex flex-col items-center">
+                <Flame className="w-14 h-14 mb-4" style={{ color: '#E8B4B8' }} />
+                <h3 className="text-2xl font-black uppercase tracking-tight mb-2" style={{ color: '#ffffff' }}>Conteúdo Exclusivo Elite 🔥</h3>
+                <p className="text-sm font-medium mb-2" style={{ color: '#d4d4d4' }}>
+                  Os <strong style={{ color: '#E8B4B8' }}>Textos com Jindungo</strong> são reservados para membros <strong style={{ color: '#E8B4B8' }}>Elite</strong>.
+                </p>
+
+                {eliteRequestStatus === 'pending' ? (
+                  <>
+                    <p className="text-xs font-medium mb-6 mt-2" style={{ color: '#a3a3a3' }}>
+                      O teu pedido de acesso Elite já foi enviado e está a aguardar aprovação do administrador. ⏳
+                    </p>
+                    <div className="flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 px-6 py-3 rounded-2xl mb-4">
+                      <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                      <span className="font-black text-xs uppercase tracking-widest text-amber-400">Pedido Pendente — Aguarda Aprovação</span>
+                    </div>
+                    <button
+                      onClick={handleCancelEliteRequest}
+                      className="inline-flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-400 font-black text-[11px] uppercase tracking-widest px-6 py-3 rounded-2xl transition-all active:scale-95"
+                    >
+                      Cancelar Pedido
+                    </button>
+                  </>
+                ) : eliteRequestStatus === 'rejected' ? (
+                  <>
+                    <p className="text-xs font-medium mb-6 mt-2" style={{ color: '#f87171' }}>
+                      O teu pedido foi rejeitado. Vai ao teu Perfil para ver o motivo e tentar novamente.
+                    </p>
+                    <Link
+                      to="/app/profile"
+                      className="inline-flex items-center gap-2 bg-white font-black text-[11px] uppercase tracking-widest px-8 py-4 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
+                      style={{ color: '#3A0310' }}
+                    >
+                      <Flame className="w-4 h-4" style={{ color: '#3A0310' }} />
+                      Ver Motivo no Perfil
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-medium mb-8 mt-2" style={{ color: '#a3a3a3' }}>
+                      Solicita o teu acesso Elite no teu Perfil e aguarda a aprovação do administrador.
+                    </p>
+                    <Link
+                      to="/app/profile"
+                      className="inline-flex items-center gap-2 bg-white font-black text-[11px] uppercase tracking-widest px-8 py-4 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
+                      style={{ color: '#3A0310' }}
+                    >
+                      <Flame className="w-4 h-4" style={{ color: '#3A0310' }} />
+                      Solicitar Acesso Elite no Meu Perfil
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
