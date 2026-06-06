@@ -242,14 +242,14 @@ const CommentNode = ({
           )}
           {(isOwner || isAdmin) && (
             <button onClick={handleDelete} disabled={loadingAction}
-              className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-neutral-400 hover:text-red-500 transition-all"
+              className={`p-1.5 rounded-lg transition-all ${effectivelyHidden ? "text-white hover:bg-white/20" : "hover:bg-red-50 dark:hover:bg-red-500/10 text-neutral-400 hover:text-red-500"}`}
               title="Eliminar">
               <Trash2 className="w-3 h-3" />
             </button>
           )}
           {isAdmin && (
             <button onClick={() => setShowHideForm(v => !v)} disabled={loadingAction}
-              className={`p-1.5 rounded-lg transition-all ${comment.isHidden ? "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10" : "text-neutral-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10"}`}
+              className={`p-1.5 rounded-lg transition-all ${effectivelyHidden ? "text-white hover:bg-white/20" : "text-neutral-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10"}`}
               title={comment.isHidden ? "Mostrar" : "Ocultar"}>
               {comment.isHidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
             </button>
