@@ -18,6 +18,7 @@ import {
   Lightbulb
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { NotificationsModal } from "../components/NotificationsModal";
 
 // Unsplash images for catchy content
 const imgCoins = "https://images.unsplash.com/photo-1589180176337-503fed4bcfe0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
@@ -43,6 +44,8 @@ export function Home() {
   const [featuredThemes, setFeaturedThemes] = useState<any[]>([]);
   const [recommendedThemes, setRecommendedThemes] = useState<any[]>([]);
   const [activeTrivia, setActiveTrivia] = useState<any>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetch('/api/content')
@@ -84,20 +87,20 @@ export function Home() {
             className="w-full h-full object-cover opacity-80 scale-105"
           />
           {/* Sepia & light overlay gradient for contrast */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black/85" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#3A0310]/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-[#0F0F0F]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0F0F]/60 to-transparent" />
         </div>
 
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.25em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] opacity-95" style={{ color: '#E8B4B8' }}>Bem-vindo à</p>
-              <h1 className="text-xl md:text-3xl font-black tracking-tight uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] mt-1.5" style={{ color: '#ffffff' }}>Economia com História</h1>
+              <p className="text-[10px] md:text-xs font-medium uppercase tracking-[0.25em] opacity-80" style={{ color: '#E8B4B8' }}>Bem-vindo à</p>
+              <h1 className="text-xl md:text-3xl font-light tracking-tight mt-1" style={{ color: '#ffffff' }}>Economia com História</h1>
             </div>
             
-            <button className="relative p-3 bg-white/20 backdrop-blur-md rounded-2xl hover:bg-white/30 transition-all duration-350 border border-white/25 shadow-2xl active:scale-95">
+            <button onClick={() => setShowNotifications(true)} className="relative p-3 bg-white/5 backdrop-blur-xl rounded-full hover:bg-white/10 transition-all duration-500 border border-white/10 shadow-lg active:scale-95">
               <Bell className="w-5 h-5" style={{ color: '#ffffff' }} />
-              <span className="absolute top-3 right-3 w-2 h-2 bg-[#E8B4B8] rounded-full border border-black shadow-[0_0_8px_#E8B4B8]"></span>
+              {unreadCount > 0 && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#E8B4B8] rounded-full border border-[#0F0F0F]"></span>}
             </button>
           </div>
 
@@ -109,7 +112,7 @@ export function Home() {
             <input 
               type="text" 
               placeholder="Procurar tesouros de conhecimento..." 
-              className="w-full bg-white/15 backdrop-blur-md border border-white/20 placeholder-white/70 rounded-2xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/20 transition-all text-xs font-bold uppercase tracking-widest shadow-2xl force-white force-white-placeholder"
+              className="w-full bg-white/5 backdrop-blur-xl border border-white/10 placeholder-white/50 rounded-full py-4 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/20 transition-all text-xs font-light tracking-wide shadow-xl force-white force-white-placeholder"
               style={{ color: '#ffffff' }}
             />
           </div>
@@ -125,13 +128,13 @@ export function Home() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative overflow-hidden p-6 rounded-[2.5rem] bg-white/5 border border-white/5 shadow-2xl flex items-center justify-between"
+            className="relative overflow-hidden p-6 rounded-[2.5rem] bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg flex items-center justify-between"
           >
             <div className="flex items-center gap-4">
               <div className="w-2.5 h-12 rounded-full bg-gradient-to-b from-[#3A0310] to-[#E8B4B8]" />
               <div>
-                <h2 className="text-2xl font-black text-white uppercase tracking-tight">Olá, {firstName}</h2>
-                <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mt-1">Pronto para a jornada de hoje?</p>
+                <h2 className="text-2xl font-light text-white tracking-tight">Olá, {firstName}</h2>
+                <p className="text-[10px] text-neutral-400 font-medium uppercase tracking-wider mt-1 opacity-60">Pronto para a jornada de hoje?</p>
               </div>
             </div>
             <div className="flex items-center gap-1.5 bg-[#3A0310]/30 text-[#E8B4B8] px-4 py-2 rounded-full border border-[#E8B4B8]/20 text-[9px] font-black uppercase tracking-wider">
@@ -170,11 +173,11 @@ export function Home() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative overflow-hidden rounded-[2.5rem] border border-amber-500/30 shadow-2xl group"
+            className="relative overflow-hidden rounded-[2.5rem] border border-amber-500/10 shadow-xl opacity-95 group"
           >
             <div className="absolute inset-0 bg-[#0F0F0F]">
-              <img src={activeTrivia.imageUrl} alt="" className="w-full h-full object-cover opacity-30 group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#3A0310]/95 via-[#3A0310]/80 to-transparent md:to-black/50" />
+              <img src={activeTrivia.imageUrl} alt="" className="w-full h-full object-cover opacity-70 group-hover:opacity-85 group-hover:scale-105 transition-all duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent md:to-black/10" />
             </div>
             <div className="relative p-8 md:p-10 flex flex-col md:flex-row items-center gap-8">
               <div className="flex-1">
@@ -182,10 +185,10 @@ export function Home() {
                   <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center shadow-lg">
                     <Lightbulb className="w-4 h-4 text-[#3A0310]" />
                   </div>
-                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-[0.3em]">Curiosidade</span>
+                  <span className="text-[10px] font-medium text-amber-400 uppercase tracking-[0.3em]">Curiosidade</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-4 leading-tight">{activeTrivia.title}</h2>
-                <p className="text-sm md:text-base text-neutral-200 font-medium leading-relaxed max-w-2xl drop-shadow-md">{activeTrivia.fact}</p>
+                <h2 className="text-3xl md:text-5xl font-light tracking-tight mb-4 leading-tight drop-shadow-2xl force-white" style={{ color: "#ffffff" }}>{activeTrivia.title}</h2>
+                <p className="text-sm md:text-base font-medium leading-relaxed max-w-2xl drop-shadow-md force-white" style={{ color: "#ffffff" }}>{activeTrivia.fact}</p>
               </div>
             </div>
           </motion.section>
@@ -198,9 +201,9 @@ export function Home() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Coins className="w-4 h-4 text-[#E8B4B8]" />
-                <span className="text-[10px] font-black text-[#E8B4B8] uppercase tracking-[0.3em]">Em Destaque</span>
+                <span className="text-[10px] font-medium text-[#E8B4B8] uppercase tracking-[0.2em]">Em Destaque</span>
               </div>
-              <h2 className="text-2xl font-black text-white tracking-tight uppercase">Temas em Destaque</h2>
+              <h2 className="text-2xl font-light text-white tracking-tight">Temas em Destaque</h2>
             </div>
           </div>
           
@@ -250,10 +253,10 @@ export function Home() {
                         <Gem className="w-3 h-3" style={{ color: '#ffffff' }} />
                       </div>
                     </div>
-                    <h3 className="font-black text-2xl leading-tight mb-3 drop-shadow-2xl uppercase tracking-tighter" style={{ color: '#ffffff' }}>
+                    <h3 className="font-light text-2xl leading-tight mb-3 drop-shadow-lg tracking-tight" style={{ color: '#ffffff' }}>
                       {theme.title}
                     </h3>
-                    <p className="text-sm font-medium line-clamp-2 mb-6" style={{ color: '#e5e5e5' }}>
+                    <p className="text-sm font-light line-clamp-2 opacity-80 mb-6" style={{ color: '#e5e5e5' }}>
                       {theme.description}
                     </p>
                     
@@ -397,6 +400,13 @@ export function Home() {
         </section>
         )}
         
+        {showNotifications && (
+          <NotificationsModal
+            isOpen={showNotifications}
+            onClose={() => setShowNotifications(false)}
+            onUnreadCountChange={setUnreadCount}
+          />
+        )}
       </main>
     </div>
   );

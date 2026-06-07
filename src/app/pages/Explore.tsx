@@ -195,14 +195,14 @@ export function Explore() {
   return (
     <div className="min-h-screen pb-24 transition-colors duration-300">
       {/* Header */}
-      <header className="px-6 pt-10 pb-6 sticky top-0 z-50 md:relative md:top-auto border-b md:border border-[#3A0310]/5 dark:border-white/5 bg-white/90 dark:bg-black/90 backdrop-blur-xl md:rounded-[2.5rem] md:mt-6 md:p-10 md:px-10 shadow-2xl transition-all duration-300">
+      <header className="px-6 pt-10 pb-6 sticky top-0 z-50 md:relative md:top-auto border-b md:border border-white/10/5 dark:border-white/5 bg-white/90 dark:bg-black/90 backdrop-blur-xl md:rounded-[2rem] md:mt-6 md:p-10 md:px-10 shadow-md transition-all duration-300">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 bg-[#3A0310]/5 dark:bg-[#3A0310]/30 rounded-2xl border border-[#3A0310]/20 dark:border-[#3A0310]/50 shadow-inner">
+          <div className="p-2.5 bg-[#0a0a0a]/5 dark:bg-[#0a0a0a]/30 rounded-2xl border border-white/10/20 dark:border-white/10/50 shadow-inner">
             <Compass className="w-6 h-6 text-[#3A0310] dark:text-[#E8B4B8]" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-neutral-800 dark:text-white tracking-tight uppercase">Explorar</h1>
-            <p className="text-[10px] text-neutral-400 dark:text-white uppercase tracking-widest font-black">Conhecimento de Prestígio</p>
+            <h1 className="text-2xl font-medium text-neutral-800 dark:text-white tracking-tight uppercase">Explorar</h1>
+            <p className="text-[10px] text-neutral-400 dark:text-white uppercase tracking-wide font-medium">Conhecimento de Prestígio</p>
           </div>
         </div>
 
@@ -216,7 +216,7 @@ export function Explore() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="O que procuras?"
-            className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white placeholder-neutral-400 dark:placeholder-white rounded-2xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-[#3A0310]/50 focus:bg-neutral-100 dark:focus:bg-white/10 transition-all text-xs font-bold uppercase tracking-wider"
+            className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white placeholder-neutral-400 dark:placeholder-white rounded-2xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-white/10/50 focus:bg-neutral-100 dark:focus:bg-white/10 transition-all text-xs font-bold uppercase tracking-wider"
           />
         </div>
 
@@ -226,9 +226,9 @@ export function Explore() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-2.5 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl text-[8px] md:text-xs font-black uppercase tracking-wider md:tracking-widest transition-all border whitespace-nowrap active:scale-95 shadow-sm flex-shrink-0 ${
+              className={`px-2.5 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl text-[8px] md:text-xs font-medium uppercase tracking-wider md:tracking-wide transition-all border whitespace-nowrap active:scale-95 shadow-sm flex-shrink-0 ${
                 filter === f
-                  ? "bg-[#3A0310] border-[#E8B4B8]/30 shadow-[0_4px_15px_rgba(58,3,16,0.25)]"
+                  ? "bg-[#0a0a0a] border-[#E8B4B8]/30 shadow-[0_4px_15px_rgba(58,3,16,0.25)]"
                   : "bg-neutral-50 dark:bg-white/5 text-neutral-500 dark:text-white border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-white/10 hover:text-[#3A0310] dark:hover:text-white"
               }`}
               style={filter === f ? { color: "white" } : {}}
@@ -249,9 +249,9 @@ export function Explore() {
             <button
               key={s}
               onClick={() => setSort(s)}
-              className={`px-3 py-1.5 rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap active:scale-95 flex-shrink-0 ${
+              className={`px-3 py-1.5 rounded-xl text-[8px] md:text-[10px] font-medium uppercase tracking-wide transition-all border whitespace-nowrap active:scale-95 flex-shrink-0 ${
                 sort === s
-                  ? "bg-[#3A0310] force-white border-[#E8B4B8]/30 shadow-[0_4px_15px_rgba(58,3,16,0.25)]"
+                  ? "bg-[#0a0a0a] force-white border-[#E8B4B8]/30 shadow-[0_4px_15px_rgba(58,3,16,0.25)]"
                   : "bg-neutral-50 dark:bg-white/5 text-neutral-500 dark:text-white border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-white/10"
               }`}
             >
@@ -266,17 +266,17 @@ export function Explore() {
       {/* Grid */}
       <div className="p-6 space-y-6">
         {filter === 'jindungo' && !localStorage.getItem('user') && (
-          <div className="bg-[#3A0310] border border-[#E8B4B8]/30 p-8 rounded-[2.5rem] text-center shadow-2xl relative overflow-hidden">
+          <div className="bg-[#0a0a0a] border border-[#E8B4B8]/30 p-8 rounded-[2rem] text-center shadow-md relative overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent pointer-events-none" />
              <div className="relative z-10 flex flex-col items-center">
                <Flame className="w-12 h-12 mb-4" style={{ color: '#E8B4B8' }} />
-               <h3 className="text-2xl font-black uppercase tracking-tight mb-2" style={{ color: '#ffffff' }}>Acesso Restrito</h3>
+               <h3 className="text-2xl font-medium uppercase tracking-tight mb-2" style={{ color: '#ffffff' }}>Acesso Restrito</h3>
                <p className="text-sm font-medium mb-6" style={{ color: '#d4d4d4' }}>Faz login ou regista-te para teres acesso exclusivo aos Textos com Jindungo 🔥.</p>
                <div className="flex gap-3">
-                 <Link to="/login" className="inline-block bg-white font-black text-[11px] uppercase tracking-widest px-6 py-3.5 rounded-xl hover:scale-105 active:scale-95 transition-all" style={{ color: '#3A0310' }}>
+                 <Link to="/login" className="inline-block bg-white font-medium text-[11px] uppercase tracking-wide px-6 py-3.5 rounded-xl hover:scale-105 active:scale-95 transition-all" style={{ color: '#3A0310' }}>
                    Fazer Login
                  </Link>
-                 <Link to="/register" className="inline-block bg-black/20 border border-white/20 font-black text-[11px] uppercase tracking-widest px-6 py-3.5 rounded-xl hover:bg-black/40 hover:scale-105 active:scale-95 transition-all" style={{ color: '#ffffff' }}>
+                 <Link to="/register" className="inline-block bg-black/20 border border-white/20 font-medium text-[11px] uppercase tracking-wide px-6 py-3.5 rounded-xl hover:bg-black/40 hover:scale-105 active:scale-95 transition-all" style={{ color: '#ffffff' }}>
                    Cadastrar
                  </Link>
                </div>
@@ -290,11 +290,11 @@ export function Explore() {
           const u = JSON.parse(userStr);
           if (u.role === 'elite' || u.role === 'admin') return null;
           return (
-            <div className="bg-[#3A0310] border border-[#E8B4B8]/30 p-8 rounded-[2.5rem] text-center shadow-2xl relative overflow-hidden">
+            <div className="bg-[#0a0a0a] border border-[#E8B4B8]/30 p-8 rounded-[2rem] text-center shadow-md relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent pointer-events-none" />
               <div className="relative z-10 flex flex-col items-center">
                 <Flame className="w-14 h-14 mb-4" style={{ color: '#E8B4B8' }} />
-                <h3 className="text-2xl font-black uppercase tracking-tight mb-2" style={{ color: '#ffffff' }}>Conteúdo Exclusivo Elite 🔥</h3>
+                <h3 className="text-2xl font-medium uppercase tracking-tight mb-2" style={{ color: '#ffffff' }}>Conteúdo Exclusivo Elite 🔥</h3>
                 <p className="text-sm font-medium mb-2" style={{ color: '#d4d4d4' }}>
                   Os <strong style={{ color: '#E8B4B8' }}>Textos com Jindungo</strong> são reservados para membros <strong style={{ color: '#E8B4B8' }}>Elite</strong>.
                 </p>
@@ -306,11 +306,11 @@ export function Explore() {
                     </p>
                     <div className="flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 px-6 py-3 rounded-2xl mb-4">
                       <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
-                      <span className="font-black text-xs uppercase tracking-widest text-amber-400">Pedido Pendente — Aguarda Aprovação</span>
+                      <span className="font-medium text-xs uppercase tracking-wide text-amber-400">Pedido Pendente — Aguarda Aprovação</span>
                     </div>
                     <button
                       onClick={handleCancelEliteRequest}
-                      className="inline-flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-400 font-black text-[11px] uppercase tracking-widest px-6 py-3 rounded-2xl transition-all active:scale-95"
+                      className="inline-flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-400 font-medium text-[11px] uppercase tracking-wide px-6 py-3 rounded-2xl transition-all active:scale-95"
                     >
                       Cancelar Pedido
                     </button>
@@ -322,7 +322,7 @@ export function Explore() {
                     </p>
                     <Link
                       to="/app/profile"
-                      className="inline-flex items-center gap-2 bg-white font-black text-[11px] uppercase tracking-widest px-8 py-4 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
+                      className="inline-flex items-center gap-2 bg-white font-medium text-[11px] uppercase tracking-wide px-8 py-4 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
                       style={{ color: '#3A0310' }}
                     >
                       <Flame className="w-4 h-4" style={{ color: '#3A0310' }} />
@@ -336,7 +336,7 @@ export function Explore() {
                     </p>
                     <Link
                       to="/app/profile"
-                      className="inline-flex items-center gap-2 bg-white font-black text-[11px] uppercase tracking-widest px-8 py-4 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
+                      className="inline-flex items-center gap-2 bg-white font-medium text-[11px] uppercase tracking-wide px-8 py-4 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
                       style={{ color: '#3A0310' }}
                     >
                       <Flame className="w-4 h-4" style={{ color: '#3A0310' }} />
@@ -352,17 +352,17 @@ export function Explore() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Loader2 className="w-8 h-8 text-[#3A0310] dark:text-[#E8B4B8] animate-spin" />
-            <p className="text-xs font-black uppercase tracking-widest text-neutral-400">A carregar conteúdos...</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">A carregar conteúdos...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Compass className="w-10 h-10 text-neutral-300 dark:text-neutral-600" />
-            <p className="text-xs font-black uppercase tracking-widest text-neutral-400 text-center">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-400 text-center">
               {search ? "Nenhum resultado para a sua pesquisa." : "Nenhum conteúdo disponível ainda."}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             <AnimatePresence mode="popLayout">
               {filtered.map((content, idx) => (
                 <motion.div
@@ -394,9 +394,9 @@ export function Explore() {
                         }
                       }
                     }}
-                    className="block bg-white dark:bg-white/5 rounded-2xl md:rounded-[2.5rem] border-2 border-[#3A0310] dark:border-[#E8B4B8]/40 overflow-hidden hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 hover:shadow-[0_20px_50px_rgba(58,3,16,0.12)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-300 group shadow-lg flex flex-col h-full"
+                    className="block bg-white dark:bg-white/5 rounded-3xl md:rounded-[2rem] border-2 border-white/10 dark:border-[#E8B4B8]/40 overflow-hidden hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 hover:shadow-[0_20px_50px_rgba(58,3,16,0.12)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-300 group shadow-md flex flex-col h-full"
                   >
-                    <div className="relative h-24 md:h-48 w-full overflow-hidden shrink-0">
+                    <div className="relative h-40 md:h-48 w-full overflow-hidden shrink-0">
                       {content.thumbnail ? (
                         <>
                           <div className="absolute inset-0">
@@ -409,7 +409,7 @@ export function Explore() {
                           />
                         </>
                       ) : (
-                        <div className="w-full h-full bg-[#3A0310]/5 dark:bg-[#3A0310]/20 flex items-center justify-center">
+                        <div className="w-full h-full bg-[#0a0a0a]/5 dark:bg-[#0a0a0a]/20 flex items-center justify-center">
                           <Compass className="w-8 h-8 text-[#3A0310]/30 dark:text-[#E8B4B8]/30" />
                         </div>
                       )}
@@ -421,7 +421,7 @@ export function Explore() {
                           onClick={(e) => toggleSave(e, content)}
                           className={`p-2 rounded-xl backdrop-blur-md transition-all hover:scale-105 active:scale-95 border ${
                             savedContents.some(c => c.id === content.id)
-                              ? 'bg-[#3A0310]/80 force-white shadow-lg border-[#3A0310]/50'
+                              ? 'bg-[#0a0a0a]/80 force-white shadow-md border-white/10/50'
                               : 'bg-black/50 force-white border-white/30 hover:bg-black/70'
                           }`}
                           title={savedContents.some(c => c.id === content.id) ? "Remover dos guardados" : "Guardar para mais tarde"}
@@ -432,17 +432,17 @@ export function Explore() {
 
                     </div>
 
-                    <div className="p-3 md:p-6 flex flex-col justify-between grow">
+                    <div className="p-4 md:p-6 flex flex-col justify-between grow">
                       <div>
-                        <div className="flex items-center gap-2 mb-1 md:mb-2.5 flex-wrap">
-                          <h3 className="font-black text-neutral-800 dark:text-white text-xs md:text-lg group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2">
+                        <div className="flex items-center gap-2 mb-2 md:mb-2.5 flex-wrap">
+                          <h3 className="font-medium text-neutral-800 dark:text-white text-base md:text-lg group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2">
                             {content.title}
                           </h3>
-                          <span className="shrink-0 flex items-center gap-0.5 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[7px] md:text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border border-[#3A0310] dark:border-[#E8B4B8]">
+                          <span className="shrink-0 flex items-center gap-1 bg-[#0a0a0a]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[9px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded-md border border-white/10 dark:border-[#E8B4B8]">
                             {typeIcon(content.type)}{typeLabel(content.type)}
                           </span>
                         </div>
-                        <p className="text-neutral-900 dark:text-white text-[8px] md:text-xs line-clamp-2 leading-relaxed font-medium">
+                        <p className="text-neutral-900 dark:text-white text-xs line-clamp-2 leading-relaxed font-medium">
                           {content.description}
                         </p>
                       </div>
@@ -453,15 +453,15 @@ export function Explore() {
                             const stats = getContentStats(content);
                             return (
                               <>
-                                <span className="flex items-center gap-0.5 md:gap-1 text-[6px] md:text-[9px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                                <span className="flex items-center gap-0.5 md:gap-1 text-[6px] md:text-[9px] font-medium uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
                                   <ThumbsUp className="w-2.5 h-2.5 md:w-3 md:h-3 text-blue-500" />
                                   {stats.likes}
                                 </span>
-                                <span className="flex items-center gap-0.5 md:gap-1 text-[6px] md:text-[9px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                                <span className="flex items-center gap-0.5 md:gap-1 text-[6px] md:text-[9px] font-medium uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
                                   <ThumbsDown className="w-2.5 h-2.5 md:w-3 md:h-3 text-red-500" />
                                   {stats.dislikes}
                                 </span>
-                                <span className="flex items-center gap-0.5 md:gap-1 text-[6px] md:text-[9px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                                <span className="flex items-center gap-0.5 md:gap-1 text-[6px] md:text-[9px] font-medium uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
                                   <MessageSquare className="w-2.5 h-2.5 md:w-3 md:h-3 text-neutral-400 dark:text-neutral-500" />
                                   Disc. {stats.comments}
                                 </span>
@@ -469,7 +469,7 @@ export function Explore() {
                             );
                           })()}
                         </div>
-                        <div className="flex items-center text-[#3A0310] dark:text-[#E8B4B8] font-black text-[6px] md:text-[9px] uppercase tracking-widest gap-0.5 md:gap-1 group-hover:gap-1.5 md:group-hover:gap-2.5 transition-all whitespace-nowrap">
+                        <div className="flex items-center text-[#3A0310] dark:text-[#E8B4B8] font-medium text-[6px] md:text-[9px] uppercase tracking-wide gap-0.5 md:gap-1 group-hover:gap-1.5 md:group-hover:gap-2.5 transition-all whitespace-nowrap">
                           Aceder <ArrowLeft className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 rotate-180" />
                         </div>
                       </div>

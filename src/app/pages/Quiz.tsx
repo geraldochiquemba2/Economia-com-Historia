@@ -115,26 +115,26 @@ export function Quiz() {
                   </div>
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-black mb-1.5 tracking-tighter uppercase text-neutral-800 dark:text-white leading-tight">
+                <h1 className="text-3xl md:text-4xl font-light mb-1.5 tracking-tighter uppercase text-neutral-800 dark:text-white leading-tight">
                   Duelo de <span className="text-[#3A0310] dark:text-[#E8B4B8]">Prestígio</span>
                 </h1>
-                <p className="text-neutral-500 dark:text-neutral-400 mb-4 max-w-[340px] md:max-w-md leading-relaxed text-xs md:text-sm font-semibold">
+                <p className="text-neutral-400 dark:text-neutral-500 font-light mb-4 max-w-[340px] md:max-w-md leading-relaxed text-xs md:text-sm font-semibold">
                   Demonstra o teu domínio sobre a economia histórica e ascende na hierarquia global.
                 </p>
 
-                <div className="grid grid-cols-2 gap-3 w-full max-w-md">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
                   <button
                     onClick={handleStart}
-                    className="w-full py-4 bg-[#3A0310] force-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#5A051A] transition-all border border-[#E8B4B8]/20 flex justify-center items-center gap-2 shadow-2xl active:scale-[0.98]"
+                    className="w-full py-4 px-2 bg-black/90 dark:bg-white/10 force-white rounded-xl font-medium text-xs uppercase tracking-wide hover:bg-black/70 dark:hover:bg-white/20 transition-all border border-black/10 dark:border-white/10 flex justify-center items-center gap-2 shadow-md active:scale-[0.98]"
                   >
-                    <Swords className="w-4 h-4 force-gold" />
-                    Começar Desafio
+                    <Swords className="w-4 h-4 force-gold flex-shrink-0" />
+                    <span>Começar Desafio</span>
                   </button>
                   <button
                     onClick={() => setStep("ranking")}
-                    className="w-full py-4 bg-white dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-neutral-100 dark:hover:bg-white/10 transition-all shadow-sm"
+                    className="w-full py-4 px-2 bg-white dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white rounded-xl font-medium text-xs uppercase tracking-wide hover:bg-neutral-100 dark:hover:bg-white/10 transition-all shadow-sm flex justify-center items-center"
                   >
-                    Ver Ranking Global
+                    <span>Ver Ranking Global</span>
                   </button>
                 </div>
                 
@@ -153,8 +153,8 @@ export function Quiz() {
                     </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-[#3A0310]/5 transition-all">
-                    <div className="p-3 bg-[#3A0310]/5 dark:bg-[#3A0310]/30 rounded-xl">
+                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/90 dark:bg-white/10/5 transition-all">
+                    <div className="p-3 bg-black/90 dark:bg-white/10/5 dark:bg-black/90 dark:bg-white/10/30 rounded-xl">
                       <Trophy className="w-5 h-5 text-[#3A0310] dark:text-[#E8B4B8]" />
                     </div>
                     <div>
@@ -163,8 +163,8 @@ export function Quiz() {
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-[#3A0310]/5 transition-all">
-                    <div className="p-3 bg-[#3A0310]/5 dark:bg-[#3A0310]/30 rounded-xl">
+                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/90 dark:bg-white/10/5 transition-all">
+                    <div className="p-3 bg-black/90 dark:bg-white/10/5 dark:bg-black/90 dark:bg-white/10/30 rounded-xl">
                       <Medal className="w-5 h-5 text-[#3A0310] dark:text-[#E8B4B8]" />
                     </div>
                     <div>
@@ -173,8 +173,8 @@ export function Quiz() {
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-[#3A0310]/5 transition-all">
-                    <div className="p-3 bg-[#3A0310]/5 dark:bg-[#3A0310]/30 rounded-xl">
+                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/90 dark:bg-white/10/5 transition-all">
+                    <div className="p-3 bg-black/90 dark:bg-white/10/5 dark:bg-black/90 dark:bg-white/10/30 rounded-xl">
                       <Award className="w-5 h-5 text-[#3A0310] dark:text-[#E8B4B8]" />
                     </div>
                     <div>
@@ -183,7 +183,7 @@ export function Quiz() {
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-[#3A0310]/5 transition-all">
+                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/90 dark:bg-white/10/5 transition-all">
                     <div className="p-3 bg-amber-500/10 rounded-xl">
                       <Flame className="w-5 h-5 text-amber-500" />
                     </div>
@@ -198,16 +198,16 @@ export function Quiz() {
                   <span className="text-[10px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block">Missões Semanais de Prestígio</span>
                   
                   <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[2rem] p-5 relative overflow-hidden group hover:border-[#3A0310]/80 transition-all shadow-sm">
-                    <div className="absolute top-0 left-0 w-1.5 h-full bg-[#3A0310]" />
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-black/90 dark:bg-white/10" />
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h4 className="font-black text-xs text-neutral-800 dark:text-white uppercase tracking-tight">Rota do Café e Açúcar</h4>
                         <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">Acerta 5 questões sobre trocas coloniais africanas</p>
                       </div>
-                      <span className="text-[9px] font-black text-[#3A0310] dark:text-[#E8B4B8] bg-white dark:bg-white/5 border border-[#E8B4B8]/20 px-2 py-0.5 rounded-md shadow-sm">+250 XP</span>
+                      <span className="text-[9px] font-black text-[#3A0310] dark:text-[#E8B4B8] bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 px-2 py-0.5 rounded-md shadow-sm">+250 XP</span>
                     </div>
                     <div className="w-full bg-neutral-200 dark:bg-white/10 h-1.5 rounded-full overflow-hidden mt-3">
-                      <div className="bg-[#3A0310] dark:bg-[#E8B4B8] h-full rounded-full transition-all duration-1000" style={{ width: '60%' }} />
+                      <div className="bg-black/90 dark:bg-white/10 dark:bg-[#E8B4B8] h-full rounded-full transition-all duration-1000" style={{ width: '60%' }} />
                     </div>
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-wider">Progresso da Missão</span>
@@ -228,13 +228,13 @@ export function Quiz() {
                 </>
               ) : (
                   <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-neutral-50 dark:bg-white/5 rounded-[2rem] border border-neutral-200 dark:border-white/10 shadow-sm">
-                    <div className="w-16 h-16 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 rounded-2xl flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 bg-black/90 dark:bg-white/10/10 dark:bg-[#E8B4B8]/10 rounded-2xl flex items-center justify-center mb-4">
                       <Trophy className="w-8 h-8 text-[#3A0310] dark:text-[#E8B4B8]" />
                     </div>
                     <h3 className="text-xl font-black text-neutral-800 dark:text-white uppercase tracking-tight mb-2">Desperta a Tua Lenda</h3>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium mb-8 leading-relaxed max-w-sm">Faz login ou cria uma conta para guardares os teus pontos de prestígio, subires no ranking global e ganhares insígnias exclusivas.</p>
                     <div className="flex gap-3 w-full justify-center">
-                      <Link to="/login" className="px-6 py-3 bg-[#3A0310] text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#5A051A] transition-all shadow-md">
+                      <Link to="/login" className="px-6 py-3 bg-black/90 dark:bg-white/10 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black/70 dark:hover:bg-white/20 transition-all shadow-md">
                         Entrar na Conta
                       </Link>
                       <Link to="/register" className="px-6 py-3 bg-white dark:bg-white/10 text-neutral-800 dark:text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-white/20 transition-all border border-neutral-200 dark:border-white/10 shadow-sm">
@@ -262,7 +262,7 @@ export function Quiz() {
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3A0310] dark:text-[#E8B4B8]">Questão {currentQuestion + 1} / {questions.length || 0}</span>
                 <div className="flex gap-1.5 mt-2">
                   {questions.map((_, i) => (
-                    <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= currentQuestion ? 'w-6 bg-[#3A0310]' : 'w-2 bg-neutral-200 dark:bg-white/10'}`} />
+                    <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= currentQuestion ? 'w-6 bg-black/90 dark:bg-white/10' : 'w-2 bg-neutral-200 dark:bg-white/10'}`} />
                   ))}
                 </div>
               </div>
@@ -291,9 +291,9 @@ export function Quiz() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-4 bg-[#3A0310]/5 dark:bg-[#3A0310]/10 border border-[#3A0310]/20 dark:border-[#3A0310]/30 rounded-[1.5rem] text-xs font-medium relative overflow-hidden"
+                      className="p-4 bg-black/90 dark:bg-white/10/5 dark:bg-black/90 dark:bg-white/10/10 border border-[#3A0310]/20 dark:border-[#3A0310]/30 rounded-[1.5rem] text-xs font-medium relative overflow-hidden"
                     >
-                      <div className="absolute top-0 left-0 w-1.5 h-full bg-[#3A0310]"></div>
+                      <div className="absolute top-0 left-0 w-1.5 h-full bg-black/90 dark:bg-white/10"></div>
                       <p className="text-[#3A0310] dark:text-[#E8B4B8] font-black uppercase text-[9px] tracking-widest mb-1.5">Sabedoria Histórica</p>
                       <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed italic">"{questions[currentQuestion].feedback}"</p>
                     </motion.div>
@@ -311,10 +311,10 @@ export function Quiz() {
                     let btnClass = "bg-white dark:bg-white/5 border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-white/10 shadow-sm";
                     if (showFeedback) {
                       if (isCorrect) btnClass = "bg-green-500/20 border-green-500/50 text-green-600 dark:text-green-400 shadow-[0_0_20px_rgba(34,197,94,0.15)]";
-                      else if (isSelected) btnClass = "bg-[#3A0310]/15 dark:bg-[#3A0310]/40 border-[#3A0310] text-[#3A0310] dark:text-white";
+                      else if (isSelected) btnClass = "bg-black/90 dark:bg-white/10/15 dark:bg-black/90 dark:bg-white/10/40 border-[#3A0310] text-[#3A0310] dark:text-white";
                       else btnClass = "bg-white/40 dark:bg-white/5 border-neutral-200 dark:border-white/5 text-neutral-500 dark:text-neutral-400 opacity-70";
                     } else if (isSelected) {
-                      btnClass = "bg-[#3A0310]/10 dark:bg-[#3A0310]/40 border-[#3A0310] text-[#3A0310] dark:text-white shadow-[0_0_20px_rgba(58,3,16,0.15)]";
+                      btnClass = "bg-black/90 dark:bg-white/10/10 dark:bg-black/90 dark:bg-white/10/40 border-[#3A0310] text-[#3A0310] dark:text-white shadow-[0_0_20px_rgba(58,3,16,0.15)]";
                     }
 
                     return (
@@ -327,7 +327,7 @@ export function Quiz() {
                         <span className="text-sm">{opt}</span>
                         {showFeedback && isCorrect && <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400" />}
                         {showFeedback && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-500" />}
-                        {!showFeedback && <div className={`w-2 h-2 rounded-full border border-neutral-300 dark:border-white/20 group-hover:bg-[#E8B4B8]/50 transition-colors ${isSelected ? 'bg-[#3A0310] dark:bg-[#E8B4B8]' : ''}`} />}
+                        {!showFeedback && <div className={`w-2 h-2 rounded-full border border-neutral-300 dark:border-white/20 group-hover:bg-[#E8B4B8]/50 transition-colors ${isSelected ? 'bg-black/90 dark:bg-white/10 dark:bg-[#E8B4B8]' : ''}`} />}
                       </button>
                     );
                   })}
@@ -337,7 +337,7 @@ export function Quiz() {
                   <div className="py-2">
                     <button
                       onClick={nextQuestion}
-                      className="w-full py-3.5 bg-[#3A0310] force-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#5A051A] transition-all flex justify-center items-center gap-2 shadow-xl active:scale-[0.98] border border-[#E8B4B8]/20"
+                      className="w-full py-3.5 bg-black/90 dark:bg-white/10 force-white rounded-xl font-medium text-sm uppercase tracking-widest hover:bg-black/70 dark:hover:bg-white/20 transition-all flex justify-center items-center gap-2 shadow-xl active:scale-[0.98] border border-black/10 dark:border-white/10"
                     >
                       {currentQuestion < questions.length - 1 ? "Próxima Questão" : "Ver Resultados"}
                       <ChevronRight className="w-5 h-5 force-white" />
@@ -382,13 +382,13 @@ export function Quiz() {
             <div className="w-full grid grid-cols-2 gap-3 max-w-md">
               <button
                 onClick={() => setStep("ranking")}
-                className="w-full py-3.5 bg-[#3A0310] force-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#5A051A] transition-all shadow-md border border-[#E8B4B8]/20"
+                className="w-full py-3.5 bg-black/90 dark:bg-white/10 force-white rounded-xl font-medium text-xs uppercase tracking-wide hover:bg-black/70 dark:hover:bg-white/20 transition-all shadow-md border border-black/10 dark:border-white/10"
               >
                 Ver Ranking
               </button>
               <button
                 onClick={() => navigate("/app")}
-                className="w-full py-3.5 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-neutral-200 dark:hover:bg-white/10 transition-all shadow-sm"
+                className="w-full py-3.5 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white rounded-xl font-medium text-xs uppercase tracking-wide hover:bg-neutral-200 dark:hover:bg-white/10 transition-all shadow-sm"
               >
                 Concluir
               </button>
@@ -416,12 +416,12 @@ export function Quiz() {
             {/* Podium Section */}
             {rankings.length > 0 ? (
               <div className="flex justify-center items-end gap-3 mb-12 h-64 relative">
-                <div className="absolute inset-0 bg-[#3A0310]/5 rounded-[3rem] -z-10"></div>
+                <div className="absolute inset-0 bg-black/90 dark:bg-white/10/5 rounded-[3rem] -z-10"></div>
 
                 {/* 2nd Place */}
                 <div className="flex flex-col items-center flex-1 h-[75%] group">
                   <div className="relative mb-3">
-                    <div className="w-16 h-16 rounded-2xl border-2 border-neutral-400 dark:border-neutral-600 overflow-hidden shadow-2xl group-hover:scale-105 transition-transform bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl border-2 border-neutral-400 dark:border-neutral-600 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
                       {rankings[1]?.avatar
                         ? <img src={rankings[1].avatar} alt="2nd" className="w-full h-full object-cover" />
                         : <span className="text-xl font-black text-neutral-400 dark:text-neutral-500">{rankings[1]?.name?.charAt(0) || "?"}</span>
@@ -430,7 +430,7 @@ export function Quiz() {
                     <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-neutral-600 rounded-lg flex items-center justify-center text-xs font-black shadow-xl border border-white/10" style={{ color: '#ffffff' }}>2º</div>
                   </div>
                   <p className="text-neutral-700 dark:text-white font-bold text-[10px] text-center mb-1 truncate w-full uppercase tracking-tighter">{rankings[1]?.name || "2º Lugar"}</p>
-                  <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-2xl border-t border-x border-[#E8B4B8] dark:border-white/10 flex flex-col items-center justify-center pt-4 shadow-2xl">
+                  <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-2xl border-t border-x border-[#E8B4B8] dark:border-white/10 flex flex-col items-center justify-center pt-4 shadow-md">
                      <Award className="w-5 h-5 text-neutral-400 opacity-50 mb-2" />
                      <span className="text-neutral-500 dark:text-neutral-400 font-black text-xs">{rankings[1]?.xp ?? 0} XP</span>
                   </div>
@@ -448,19 +448,19 @@ export function Quiz() {
                         : <span className="text-2xl font-black text-[#3A0310] dark:text-[#E8B4B8]">{rankings[0]?.name?.charAt(0) || "?"}</span>
                       }
                     </div>
-                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#3A0310] rounded-lg flex items-center justify-center text-xs font-black text-white shadow-xl border border-[#E8B4B8]/30">1º</div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-black/90 dark:bg-white/10 rounded-lg flex items-center justify-center text-xs font-black text-white shadow-xl border border-[#E8B4B8]/30">1º</div>
                   </div>
                   <p className="text-neutral-800 dark:text-white font-black text-xs text-center mb-1 truncate w-full uppercase tracking-tight">{rankings[0]?.name || "1º Lugar"}</p>
-                  <div className="w-full flex-1 bg-gradient-to-t from-[#3A0310]/10 dark:from-[#3A0310]/40 to-neutral-50 dark:to-white/10 backdrop-blur-md rounded-t-[2.5rem] border-t border-x border-[#E8B4B8] dark:border-[#3A0310]/50 flex flex-col items-center justify-center pt-6 shadow-2xl">
+                  <div className="w-full flex-1 bg-gradient-to-t from-[#3A0310]/10 dark:from-[#3A0310]/40 to-neutral-50 dark:to-white/10 backdrop-blur-md rounded-t-[2.5rem] border-t border-x border-[#E8B4B8] dark:border-[#3A0310]/50 flex flex-col items-center justify-center pt-6 shadow-md">
                      <Award className="w-6 h-6 text-[#3A0310] dark:text-[#E8B4B8] mb-2" />
-                     <span className="text-[#3A0310] dark:text-[#E8B4B8] font-black text-sm">{rankings[0]?.xp ?? 0} XP</span>
+                     <span className="text-[#3A0310] dark:text-[#E8B4B8] font-medium text-sm">{rankings[0]?.xp ?? 0} XP</span>
                   </div>
                 </div>
 
                 {/* 3rd Place */}
                 <div className="flex flex-col items-center flex-1 h-[65%] group">
                   <div className="relative mb-3">
-                    <div className="w-14 h-14 rounded-2xl border-2 border-orange-200 dark:border-orange-900/50 overflow-hidden shadow-2xl group-hover:scale-105 transition-transform bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-2xl border-2 border-orange-200 dark:border-orange-900/50 overflow-hidden shadow-md group-hover:scale-105 transition-transform bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
                       {rankings[2]?.avatar
                         ? <img src={rankings[2].avatar} alt="3rd" className="w-full h-full object-cover" />
                         : <span className="text-xl font-black text-neutral-400 dark:text-neutral-500">{rankings[2]?.name?.charAt(0) || "?"}</span>
@@ -469,7 +469,7 @@ export function Quiz() {
                     <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-orange-700/80 dark:bg-orange-900/50 rounded-lg flex items-center justify-center text-xs font-black shadow-xl border border-white/10" style={{ color: '#ffffff' }}>3º</div>
                   </div>
                   <p className="text-neutral-700 dark:text-white font-bold text-[10px] text-center mb-1 truncate w-full uppercase tracking-tighter">{rankings[2]?.name || "3º Lugar"}</p>
-                  <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-xl border-t border-x border-[#E8B4B8] dark:border-white/10 flex flex-col items-center justify-center pt-2 shadow-2xl">
+                  <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-xl border-t border-x border-[#E8B4B8] dark:border-white/10 flex flex-col items-center justify-center pt-2 shadow-md">
                      <Award className="w-4 h-4 text-neutral-400 dark:text-neutral-500 mb-1" />
                      <span className="text-neutral-500 font-black text-[10px]">{rankings[2]?.xp ?? 0} XP</span>
                   </div>

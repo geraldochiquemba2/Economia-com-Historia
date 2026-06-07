@@ -169,6 +169,7 @@ const CommentNode = ({
 
   return (
     <motion.div
+      id={`comment-${comment.id}`}
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       className={

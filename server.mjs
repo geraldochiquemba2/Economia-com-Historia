@@ -236,6 +236,20 @@ async function initDB() {
     // 8b. Adicionar coluna de motivo de rejeição
     await pool.query(`ALTER TABLE "EliteRequest" ADD COLUMN IF NOT EXISTS "rejectionReason" TEXT;`);
 
+    // 9. Tabela de Notificações
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "Notification" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "userId" UUID REFERENCES "User"(id) ON DELETE CASCADE,
+        "actorName" VARCHAR(255) NOT NULL,
+        "type" VARCHAR(50) NOT NULL,
+        "contentId" VARCHAR(512),
+        "commentId" UUID,
+        "isRead" BOOLEAN DEFAULT FALSE,
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
     console.log('[DB] Base de Dados sincronizada com sucesso.');
   } catch (err) {
     console.error('[DB] Erro ao sincronizar Base de Dados:', err);
@@ -621,8 +635,10 @@ app.post('/api/comments/:id/react', authMiddleware, async (req, res) => {
 
   try {
     // Obter comentário atual
-    const { rows } = await pool.query('SELECT likes, dislikes FROM "Comment" WHERE id = $1', [id]);
+    const { rows } = await pool.query('SELECT "userId", "contentId", likes, dislikes FROM "Comment" WHERE id = $1', [id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Comentário não encontrado' });
+    const commentOwnerId = rows[0].userId;
+    const contentId = rows[0].contentId;
 
     let likes = rows[0].likes || [];
     let dislikes = rows[0].dislikes || [];
@@ -633,6 +649,15 @@ app.post('/api/comments/:id/react', authMiddleware, async (req, res) => {
       } else {
         likes.push(userId); // Adicionar like
         dislikes = dislikes.filter(uid => uid !== userId); // Garantir que não está nos dislikes
+        // --- NOTIFICAÇÃO DE LIKE ---
+        if (commentOwnerId && commentOwnerId !== userId) {
+          const userRes = await pool.query('SELECT name FROM "User" WHERE id = $1', [userId]);
+          const actorName = userRes.rows[0]?.name || 'Utilizador';
+          await pool.query(
+            'INSERT INTO "Notification" ("userId", "actorName", type, "contentId", "commentId") VALUES ($1, $2, $3, $4, $5)',
+            [commentOwnerId, actorName, 'like', contentId, id]
+          );
+        }
       }
     } else {
       if (dislikes.includes(userId)) {
@@ -640,6 +665,13 @@ app.post('/api/comments/:id/react', authMiddleware, async (req, res) => {
       } else {
         dislikes.push(userId); // Adicionar dislike
         likes = likes.filter(uid => uid !== userId); // Garantir que não está nos likes
+        // --- NOTIFICAÇÃO DE DISLIKE ---
+        if (commentOwnerId && commentOwnerId !== userId) {
+          await pool.query(
+            'INSERT INTO "Notification" ("userId", "actorName", type, "contentId", "commentId") VALUES ($1, $2, $3, $4, $5)',
+            [commentOwnerId, 'Alguém', 'dislike', contentId, id]
+          );
+        }
       }
     }
 
@@ -673,6 +705,25 @@ app.post('/api/comments', authMiddleware, async (req, res) => {
       'INSERT INTO "Comment" ("contentId", "userId", "author", "avatar", "text", "parentId") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [contentId, user.id, author, avatar, text, parentId || null]
     );
+
+    // --- NOTIFICAÇÕES DE MENÇÃO ---
+    const mentions = text.match(/@([A-Za-zÀ-ÿ0-9_]+)/g);
+    if (mentions) {
+      const uniqueMentions = [...new Set(mentions.map(m => m.substring(1)))];
+      for (const mentionedName of uniqueMentions) {
+        const userRes = await pool.query('SELECT id FROM "User" WHERE name ILIKE $1', [mentionedName]);
+        if (userRes.rows.length > 0) {
+          const mentionedUserId = userRes.rows[0].id;
+          if (mentionedUserId !== user.id) {
+            await pool.query(
+              'INSERT INTO "Notification" ("userId", "actorName", type, "contentId", "commentId") VALUES ($1, $2, $3, $4, $5)',
+              [mentionedUserId, author, 'mention', contentId, result.rows[0].id]
+            );
+          }
+        }
+      }
+    }
+
     res.json({ ...result.rows[0], replies: [] });
   } catch (error) {
     console.error(error);
@@ -1197,6 +1248,47 @@ app.get('/api/health', (req, res) => {
 
 // Serve static files from the React frontend app
 app.use(express.static(path.join(__dirname, 'dist')));
+
+// -- NOTIFICAÇÕES --
+
+app.get('/api/users/:id/notifications', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  if (!req.user || req.user.id !== id) return res.status(403).json({ error: 'Acesso negado' });
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM "Notification" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 50',
+      [id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar notificações' });
+  }
+});
+
+app.patch('/api/notifications/:id/read', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // A query podia verificar se o dono da notificação é o req.user.id
+    await pool.query('UPDATE "Notification" SET "isRead" = TRUE WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao marcar notificação' });
+  }
+});
+
+app.patch('/api/users/:id/notifications/read-all', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  if (!req.user || req.user.id !== id) return res.status(403).json({ error: 'Acesso negado' });
+  try {
+    await pool.query('UPDATE "Notification" SET "isRead" = TRUE WHERE "userId" = $1 AND "isRead" = FALSE', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao marcar notificações' });
+  }
+});
 
 // Catch-all route to serve the React app for any unhandled paths (SPA routing)
 app.get(/.*/, (req, res) => {

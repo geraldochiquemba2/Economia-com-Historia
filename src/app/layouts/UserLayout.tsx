@@ -57,7 +57,7 @@ export function UserLayout() {
     if (isActive) {
       return isLight
         ? "flex items-center gap-1.5 lg:gap-2.5 px-2.5 py-2 lg:px-4 lg:py-2.5 rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest bg-[#3A0310]/5 text-[#3A0310] transition-all duration-300"
-        : "flex items-center gap-1.5 lg:gap-2.5 px-2.5 py-2 lg:px-4 lg:py-2.5 rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest bg-[#E8B4B8]/10 text-[#E8B4B8] transition-all duration-300";
+        : "flex items-center gap-1.5 lg:gap-2.5 px-2.5 py-2 lg:px-4 lg:py-2.5 rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest bg-[#E8B4B8]/10 text-white transition-all duration-300";
     } else {
       return isLight
         ? "flex items-center gap-1.5 lg:gap-2.5 px-2.5 py-2 lg:px-4 lg:py-2.5 rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest text-neutral-500 hover:text-[#3A0310] hover:bg-[#3A0310]/5 transition-all duration-300"
