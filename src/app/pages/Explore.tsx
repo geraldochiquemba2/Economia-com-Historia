@@ -195,38 +195,38 @@ export function Explore() {
   return (
     <div className="min-h-screen pb-24 transition-colors duration-300">
       {/* Header */}
-      <header className="px-6 pt-10 pb-6 sticky top-0 z-50 md:relative md:top-auto border-b md:border border-white/10/5 dark:border-white/5 bg-white/90 dark:bg-black/90 backdrop-blur-xl md:rounded-[2rem] md:mt-6 md:p-10 md:px-10 shadow-md transition-all duration-300">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 bg-[#0a0a0a]/5 dark:bg-[#0a0a0a]/30 rounded-2xl border border-white/10/20 dark:border-white/10/50 shadow-inner">
-            <Compass className="w-6 h-6 text-[#3A0310] dark:text-[#E8B4B8]" />
+      <header className="px-4 pt-7 pb-3 sticky top-0 z-50 md:relative md:top-auto border-b md:border border-white/10/5 dark:border-white/5 bg-white/90 dark:bg-black/90 backdrop-blur-xl md:rounded-[2rem] md:mt-6 md:p-10 md:px-10 shadow-md transition-all duration-300">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-2 bg-[#0a0a0a]/5 dark:bg-[#0a0a0a]/30 rounded-xl border border-white/10/20 dark:border-white/10/50 shadow-inner">
+            <Compass className="w-4 h-4 md:w-6 md:h-6 text-[#3A0310] dark:text-[#E8B4B8]" />
           </div>
           <div>
-            <h1 className="text-2xl font-medium text-neutral-800 dark:text-white tracking-tight uppercase">Explorar</h1>
-            <p className="text-[10px] text-neutral-400 dark:text-white uppercase tracking-wide font-medium">Conhecimento de Prestígio</p>
+            <h1 className="text-lg md:text-2xl font-medium text-neutral-800 dark:text-white tracking-tight uppercase">Explorar</h1>
+            <p className="text-[9px] md:text-[10px] text-neutral-400 dark:text-white uppercase tracking-wide font-medium">Conhecimento de Prestígio</p>
           </div>
         </div>
 
         {/* Search */}
-        <div className="relative mb-6">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="w-4 h-4 text-neutral-400 dark:text-white" />
+        <div className="relative mb-3">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="w-3.5 h-3.5 md:w-4 md:h-4 text-neutral-400 dark:text-white" />
           </div>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="O que procuras?"
-            className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white placeholder-neutral-400 dark:placeholder-white rounded-2xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-white/10/50 focus:bg-neutral-100 dark:focus:bg-white/10 transition-all text-xs font-bold uppercase tracking-wider"
+            className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white placeholder-neutral-400 dark:placeholder-white rounded-xl py-2.5 md:py-3.5 pl-9 md:pl-11 pr-4 focus:outline-none focus:border-white/10/50 focus:bg-neutral-100 dark:focus:bg-white/10 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wider"
           />
         </div>
 
         {/* Filters */}
-        <div className="flex gap-1.5 md:gap-2 overflow-x-auto pb-2 -mx-6 px-6 hide-scrollbar" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+        <div className="flex gap-1 md:gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:-mx-6 md:px-6 hide-scrollbar" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
           {["all", "jindungo", "video", "text", "podcast", "forum"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-2.5 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl text-[8px] md:text-xs font-medium uppercase tracking-wider md:tracking-wide transition-all border whitespace-nowrap active:scale-95 shadow-sm flex-shrink-0 ${
+              className={`px-2 py-1 md:px-5 md:py-2.5 rounded-lg md:rounded-2xl text-[7px] md:text-xs font-medium uppercase tracking-wider md:tracking-wide transition-all border whitespace-nowrap active:scale-95 shadow-sm flex-shrink-0 ${
                 filter === f
                   ? "bg-[#0a0a0a] border-[#E8B4B8]/30 shadow-[0_4px_15px_rgba(58,3,16,0.25)]"
                   : "bg-neutral-50 dark:bg-white/5 text-neutral-500 dark:text-white border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-white/10 hover:text-[#3A0310] dark:hover:text-white"
@@ -234,7 +234,7 @@ export function Explore() {
               style={filter === f ? { color: "white" } : {}}
             >
               {f === "all" && "Todos"}
-              {f === "jindungo" && "Texto com Jindungo 🔥"}
+              {f === "jindungo" && "Jindungo 🔥"}
               {f === "video" && "Vídeos"}
               {f === "text" && "Leituras"}
               {f === "podcast" && "Áudios"}
@@ -244,20 +244,20 @@ export function Explore() {
         </div>
 
         {/* Sort buttons */}
-        <div className="flex gap-1.5 mt-3">
+        <div className="flex gap-1 mt-2">
           {(["recent", "oldest", "popular"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setSort(s)}
-              className={`px-3 py-1.5 rounded-xl text-[8px] md:text-[10px] font-medium uppercase tracking-wide transition-all border whitespace-nowrap active:scale-95 flex-shrink-0 ${
+              className={`px-2 py-1 md:px-3 md:py-1.5 rounded-lg md:rounded-xl text-[7px] md:text-[10px] font-medium uppercase tracking-wide transition-all border whitespace-nowrap active:scale-95 flex-shrink-0 ${
                 sort === s
                   ? "bg-[#0a0a0a] force-white border-[#E8B4B8]/30 shadow-[0_4px_15px_rgba(58,3,16,0.25)]"
                   : "bg-neutral-50 dark:bg-white/5 text-neutral-500 dark:text-white border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-white/10"
               }`}
             >
-              {s === "recent" && "Mais Recentes"}
-              {s === "oldest" && "Mais Antigos"}
-              {s === "popular" && "Mais Destacados"}
+              {s === "recent" && "Recentes"}
+              {s === "oldest" && "Antigos"}
+              {s === "popular" && "Destacados"}
             </button>
           ))}
         </div>
@@ -362,7 +362,7 @@ export function Explore() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
             <AnimatePresence mode="popLayout">
               {filtered.map((content, idx) => (
                 <motion.div
@@ -394,9 +394,9 @@ export function Explore() {
                         }
                       }
                     }}
-                    className="block bg-white dark:bg-white/5 rounded-3xl md:rounded-[2rem] border-2 border-white/10 dark:border-[#E8B4B8]/40 overflow-hidden hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 hover:shadow-[0_20px_50px_rgba(58,3,16,0.12)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-300 group shadow-md flex flex-col h-full"
+                    className="block bg-white dark:bg-white/5 rounded-2xl md:rounded-[2rem] border border-neutral-200 dark:border-[#E8B4B8]/40 overflow-hidden hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 hover:shadow-[0_20px_50px_rgba(58,3,16,0.12)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-300 group shadow-md flex flex-col h-full"
                   >
-                    <div className="relative h-40 md:h-48 w-full overflow-hidden shrink-0">
+                    <div className="relative h-28 md:h-48 w-full overflow-hidden shrink-0">
                       {content.thumbnail ? (
                         <>
                           <div className="absolute inset-0">
@@ -432,10 +432,10 @@ export function Explore() {
 
                     </div>
 
-                    <div className="p-4 md:p-6 flex flex-col justify-between grow">
+                    <div className="p-3 md:p-6 flex flex-col justify-between grow">
                       <div>
                         <div className="flex items-center gap-2 mb-2 md:mb-2.5 flex-wrap">
-                          <h3 className="font-medium text-neutral-800 dark:text-white text-base md:text-lg group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2">
+                          <h3 className="font-medium text-neutral-800 dark:text-white text-xs md:text-lg group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2">
                             {content.title}
                           </h3>
                           <span className="shrink-0 flex items-center gap-1 bg-[#0a0a0a]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[9px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded-md border border-white/10 dark:border-[#E8B4B8]">
