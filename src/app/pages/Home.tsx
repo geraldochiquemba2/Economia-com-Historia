@@ -207,14 +207,14 @@ export function Home() {
             </div>
           </div>
           
-          <div className="flex gap-6 overflow-x-auto pb-6 -mx-6 px-6">
+          <div className="flex gap-3 md:gap-6 overflow-x-auto pb-4 md:pb-6 -mx-6 px-6">
             {featuredThemes.map((theme, index) => (
               <motion.div
                 key={theme.id}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                className="flex-shrink-0 w-[85vw] max-w-[340px] group"
+                className="flex-shrink-0 w-[70vw] max-w-[260px] group"
               >
                 <Link 
                   to={`/app/explore/${theme.id}`} 
@@ -235,7 +235,7 @@ export function Home() {
                       }
                     }
                   }}
-                  className="block relative h-96 rounded-[2.5rem] overflow-hidden border border-white/10 group-hover:border-[#3A0310]/50 transition-all duration-500 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]"
+                  className="block relative h-52 md:h-96 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 group-hover:border-[#3A0310]/50 transition-all duration-500 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]"
                 >
                   <ImageWithFallback 
                     src={theme.thumbnail || imgCoins}
@@ -244,7 +244,7 @@ export function Home() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                   
-                  <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                  <div className="absolute inset-0 p-4 md:p-8 flex flex-col justify-end">
                     <div className="flex items-center gap-2 mb-4">
                       <span className="bg-[#3A0310] text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border border-[#E8B4B8]/20 shadow-2xl" style={{ color: '#E8B4B8' }}>
                         {({ jindungo: "Texto com Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[theme.type] || theme.type)}
@@ -253,10 +253,10 @@ export function Home() {
                         <Gem className="w-3 h-3" style={{ color: '#ffffff' }} />
                       </div>
                     </div>
-                    <h3 className="font-light text-2xl leading-tight mb-3 drop-shadow-lg tracking-tight" style={{ color: '#ffffff' }}>
+                    <h3 className="font-light text-base md:text-2xl leading-tight mb-2 md:mb-3 drop-shadow-lg tracking-tight" style={{ color: '#ffffff' }}>
                       {theme.title}
                     </h3>
-                    <p className="text-sm font-light line-clamp-2 opacity-80 mb-6" style={{ color: '#e5e5e5' }}>
+                    <p className="text-sm font-light line-clamp-2 opacity-80 mb-3 md:mb-6 hidden md:block" style={{ color: '#e5e5e5' }}>
                       {theme.description}
                     </p>
                     
@@ -264,7 +264,7 @@ export function Home() {
                       <div className="flex items-center gap-2">
                         <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-black/40 rounded-md border border-white/10" style={{ color: '#a3a3a3' }}>Ver Discussões</span>
                       </div>
-                      <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-[#3A0310] group-hover:border-[#E8B4B8]/30 transition-all duration-300 shadow-2xl">
+                      <div className="w-9 h-9 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-[#3A0310] group-hover:border-[#E8B4B8]/30 transition-all duration-300 shadow-2xl">
                         <Play className="w-4 h-4 ml-0.5" fill="currentColor" style={{ color: '#ffffff' }} />
                       </div>
                     </div>
@@ -349,7 +349,7 @@ export function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 + (index * 0.1) }}
-                className="flex-shrink-0 w-[85vw] max-w-[340px]"
+                className="flex-shrink-0 w-[72vw] max-w-[280px]"
               >
                 <Link 
                   to={`/app/explore/${rec.id}`}
@@ -370,9 +370,9 @@ export function Home() {
                       }
                     }
                   }}
-                  className="flex bg-white dark:bg-white/5 rounded-[2rem] p-4 border-2 border-[#3A0310] dark:border-white/10 hover:bg-[#3A0310]/5 dark:hover:bg-white/10 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 transition-all duration-300 group shadow-lg overflow-hidden relative"
+                  className="flex bg-white dark:bg-white/5 rounded-2xl md:rounded-[2rem] p-3 md:p-4 border-2 border-[#3A0310] dark:border-white/10 hover:bg-[#3A0310]/5 dark:hover:bg-white/10 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 transition-all duration-300 group shadow-lg overflow-hidden relative"
                 >
-                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 border border-[#3A0310]/20 dark:border-white/10 shadow-xl">
+                  <div className="relative w-16 h-16 md:w-24 md:h-24 rounded-xl md:rounded-2xl overflow-hidden flex-shrink-0 border border-[#3A0310]/20 dark:border-white/10 shadow-xl">
                     <ImageWithFallback 
                       src={rec.thumbnail || imgMarket} 
                       alt={rec.title}

@@ -176,7 +176,7 @@ export function UserLayout() {
       </main>
 
       {/* Bottom Navigation for Mobile */}
-      <nav className={`backdrop-blur-xl border-t fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-14 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-[60] transition-all duration-300 ${
+      <nav className={`backdrop-blur-xl border-t fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-12 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-[60] transition-all duration-300 ${
         isLight ? "bg-white/95 border-neutral-200/80" : "bg-[#0F0F0F]/95 border-white/5"
       }`}>
         {navItems.map((item) => (
@@ -199,7 +199,7 @@ export function UserLayout() {
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   className="relative"
                 >
-                  <item.icon className={`w-5 h-5 ${isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
+                  <item.icon className={`w-4 h-4 ${isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
                   {isActive && (
                     <motion.div 
                        layoutId="nav-glow"
@@ -207,7 +207,7 @@ export function UserLayout() {
                     />
                   )}
                 </motion.div>
-                <span className="text-[8px] uppercase tracking-widest font-black transition-all duration-300">
+                <span className="text-[7px] uppercase tracking-widest font-black transition-all duration-300">
                   {item.label}
                 </span>
                 
