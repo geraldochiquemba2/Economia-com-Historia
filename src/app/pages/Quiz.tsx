@@ -153,8 +153,8 @@ export function Quiz() {
                     </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/90 dark:bg-white/10/5 transition-all">
-                    <div className="p-3 bg-black/90 dark:bg-white/10/5 dark:bg-black/90 dark:bg-white/10/30 rounded-xl">
+                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/5 dark:hover:bg-white/10 transition-all">
+                    <div className="p-3 bg-[#3A0310]/10 dark:bg-white/10 rounded-xl">
                       <Trophy className="w-5 h-5 text-[#3A0310] dark:text-[#E8B4B8]" />
                     </div>
                     <div>
@@ -163,8 +163,8 @@ export function Quiz() {
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/90 dark:bg-white/10/5 transition-all">
-                    <div className="p-3 bg-black/90 dark:bg-white/10/5 dark:bg-black/90 dark:bg-white/10/30 rounded-xl">
+                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/5 dark:hover:bg-white/10 transition-all">
+                    <div className="p-3 bg-[#3A0310]/10 dark:bg-white/10 rounded-xl">
                       <Medal className="w-5 h-5 text-[#3A0310] dark:text-[#E8B4B8]" />
                     </div>
                     <div>
@@ -173,8 +173,8 @@ export function Quiz() {
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/90 dark:bg-white/10/5 transition-all">
-                    <div className="p-3 bg-black/90 dark:bg-white/10/5 dark:bg-black/90 dark:bg-white/10/30 rounded-xl">
+                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/5 dark:hover:bg-white/10 transition-all">
+                    <div className="p-3 bg-[#3A0310]/10 dark:bg-white/10 rounded-xl">
                       <Award className="w-5 h-5 text-[#3A0310] dark:text-[#E8B4B8]" />
                     </div>
                     <div>
@@ -183,7 +183,7 @@ export function Quiz() {
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/90 dark:bg-white/10/5 transition-all">
+                  <div className="bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-white/10 rounded-[1.5rem] p-5 flex items-center gap-4 shadow-sm hover:bg-black/5 dark:hover:bg-white/10 transition-all">
                     <div className="p-3 bg-amber-500/10 rounded-xl">
                       <Flame className="w-5 h-5 text-amber-500" />
                     </div>
