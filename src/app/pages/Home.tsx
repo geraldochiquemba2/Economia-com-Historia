@@ -98,7 +98,7 @@ export function Home() {
               <h1 className="text-xl md:text-3xl font-light tracking-tight mt-1" style={{ color: '#ffffff' }}>Economia com História</h1>
             </div>
             
-            <button onClick={() => { if (token) { setShowNotifications(true); } else { navigate('/login'); } }} className="relative p-3 bg-white/5 backdrop-blur-xl rounded-full hover:bg-white/10 transition-all duration-500 border border-white/10 shadow-lg active:scale-95">
+            <button onClick={() => { if (token) { setShowNotifications(true); } }} className="relative p-3 bg-white/5 backdrop-blur-xl rounded-full hover:bg-white/10 transition-all duration-500 border border-white/10 shadow-lg active:scale-95">
               <Bell className="w-5 h-5" style={{ color: '#ffffff' }} />
               {unreadCount > 0 && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#E8B4B8] rounded-full border border-[#0F0F0F]"></span>}
             </button>
