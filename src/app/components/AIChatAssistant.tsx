@@ -48,9 +48,9 @@ export function AIChatAssistant() {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1, type: "spring", stiffness: 260, damping: 20 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-[#3A0310] to-[#E8B4B8] text-white shadow-2xl flex items-center justify-center hover:shadow-[0_0_30px_rgba(232,180,184,0.4)] transition-all active:scale-90"
+        className="fixed bottom-[52px] right-5 z-50 w-11 h-11 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-[#3A0310] to-[#E8B4B8] text-white shadow-2xl flex items-center justify-center hover:shadow-[0_0_30px_rgba(232,180,184,0.4)] transition-all active:scale-90"
       >
-        {isOpen ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6" />}
+        {isOpen ? <X className="w-5 h-5 md:w-6 md:h-6 force-white" /> : <Bot className="w-5 h-5 md:w-6 md:h-6 force-white" />}
         {!isOpen && (
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
         )}
@@ -64,8 +64,8 @@ export function AIChatAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] bg-white dark:bg-[#1A0A0D] border border-neutral-200 dark:border-[#3A0310]/60 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col"
-            style={{ height: "500px", maxHeight: "calc(100vh - 8rem)" }}
+            className="fixed bottom-[110px] right-5 md:right-6 z-50 w-[320px] md:w-[360px] max-w-[calc(100vw-2.5rem)] bg-white dark:bg-[#1A0A0D] border border-neutral-200 dark:border-[#3A0310]/60 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col"
+            style={{ height: "460px", maxHeight: "calc(100vh - 14rem)" }}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-[#3A0310] to-[#5A081B] p-4 flex items-center gap-3">
