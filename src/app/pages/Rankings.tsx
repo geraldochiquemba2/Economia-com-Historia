@@ -10,10 +10,17 @@ export function Rankings() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/rankings')
-      .then(res => res.json())
-      .then(data => { setRankings(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    const fetchRankings = async () => {
+      try {
+        const res = await fetch('/api/rankings');
+        const data = await res.json();
+        setRankings(data);
+      } catch {}
+      finally { setLoading(false); }
+    };
+    fetchRankings();
+    const interval = setInterval(fetchRankings, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {

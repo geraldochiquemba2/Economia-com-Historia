@@ -38,28 +38,28 @@ export function Explore() {
   }, [searchParams]);
 
   useEffect(() => {
-    try {
-      const userStr = localStorage.getItem('user');
-      const user = userStr ? JSON.parse(userStr) : null;
-      if (user?.id) {
-        fetch(`/api/users/${user.id}/saved`)
-          .then(r => r.json())
-          .then(data => {
-            if (Array.isArray(data)) setSavedContents(data);
-            else setSavedContents([]);
-          })
-          .catch(() => setSavedContents([]));
-        // Verificar status do pedido elite
-        fetch(`/api/elite-requests/user/${user.id}`)
-          .then(r => r.json())
-          .then(data => setEliteRequestStatus(data?.status || null))
-          .catch(() => {});
-      } else {
-        setSavedContents([]);
-      }
-    } catch {
-      setSavedContents([]);
-    }
+    const fetchData = async () => {
+      try {
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (user?.id) {
+          const [savedRes, eliteRes] = await Promise.all([
+            fetch(`/api/users/${user.id}/saved`),
+            fetch(`/api/elite-requests/user/${user.id}`),
+          ]);
+          const savedData = await savedRes.json();
+          const eliteData = await eliteRes.json();
+          if (Array.isArray(savedData)) setSavedContents(savedData);
+          else setSavedContents([]);
+          setEliteRequestStatus(eliteData?.status || null);
+        } else {
+          setSavedContents([]);
+        }
+      } catch { setSavedContents([]); }
+    };
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const toggleSave = (e: React.MouseEvent, content: ContentItem) => {

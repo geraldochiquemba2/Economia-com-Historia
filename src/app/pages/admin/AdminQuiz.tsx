@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Edit2, Trash2, Save, X, RefreshCw, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, RefreshCw, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
 
 interface QuizQuestion {
   id: string;
@@ -29,6 +29,13 @@ export function AdminQuiz() {
     points: 10
   });
 
+  // AI generation state
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiTopic, setAiTopic] = useState('');
+  const [aiCount, setAiCount] = useState(5);
+  const [generating, setGenerating] = useState(false);
+  const [aiError, setAiError] = useState('');
+
   const fetchQuestions = async () => {
     setLoading(true);
     try {
@@ -46,6 +53,28 @@ export function AdminQuiz() {
   useEffect(() => {
     fetchQuestions();
   }, []);
+
+  const handleGenerateAI = async () => {
+    setGenerating(true);
+    setAiError('');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/admin/quiz/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ topic: aiTopic, count: aiCount })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao gerar');
+      await fetchQuestions();
+      setShowAIModal(false);
+      setAiTopic('');
+    } catch (err: any) {
+      setAiError(err.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleOpenModal = (q?: QuizQuestion) => {
     if (q) {
@@ -137,13 +166,22 @@ export function AdminQuiz() {
           <h1 className="text-2xl font-black text-neutral-800 dark:text-white uppercase tracking-tighter">Gestão de Quiz</h1>
           <p className="text-sm text-neutral-500">Crie e edite as perguntas do Círculo de Elite.</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-[#3A0310] text-white rounded-lg hover:bg-[#5A081B] transition-colors shadow-lg font-bold"
-        >
-          <Plus className="w-5 h-5" />
-          Nova Pergunta
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAIModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity shadow-lg font-bold"
+          >
+            <Sparkles className="w-5 h-5" />
+            Gerar com IA
+          </button>
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 px-4 py-2 bg-[#3A0310] text-white rounded-lg hover:bg-[#5A081B] transition-colors shadow-lg font-bold"
+          >
+            <Plus className="w-5 h-5" />
+            Nova Pergunta
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -324,6 +362,65 @@ export function AdminQuiz() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* AI GENERATE MODAL */}
+      <AnimatePresence>
+        {showAIModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            onClick={() => { setShowAIModal(false); setAiError(''); }}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-neutral-800 dark:text-white uppercase">Gerar Quiz com IA</h2>
+                  <p className="text-xs text-neutral-500">Groq AI irá criar perguntas automaticamente</p>
+                </div>
+              </div>
+
+              {aiError && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-xs font-bold">{aiError}</div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider mb-1.5">Tema</label>
+                  <input type="text" value={aiTopic} onChange={e => setAiTopic(e.target.value)}
+                    placeholder="Ex: Guerra Civil Angolana, Cultura de Angola..."
+                    className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm text-neutral-800 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-violet-500 transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider mb-1.5">Quantidade</label>
+                  <select value={aiCount} onChange={e => setAiCount(Number(e.target.value))}
+                    className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm text-neutral-800 dark:text-white focus:outline-none focus:border-violet-500 transition-colors">
+                    <option value={3}>3 perguntas</option>
+                    <option value={5}>5 perguntas</option>
+                    <option value={10}>10 perguntas</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => { setShowAIModal(false); setAiError(''); }}
+                  className="flex-1 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 font-bold text-xs uppercase tracking-wider hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={handleGenerateAI} disabled={generating || !aiTopic.trim()}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
+                  {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {generating ? "A gerar..." : "Gerar"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

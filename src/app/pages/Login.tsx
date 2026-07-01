@@ -1,19 +1,21 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { Lock, Mail, ArrowRight, Loader2, ArrowLeft, Home } from "lucide-react";
+import { Lock, Mail, ArrowRight, Loader2, ArrowLeft, Home, Ban } from "lucide-react";
 
 export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [blockedInfo, setBlockedInfo] = useState<{ reason: string } | null>(null);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setBlockedInfo(null);
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -23,7 +25,13 @@ export function Login() {
       });
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || "Erro ao fazer login");
+      if (!response.ok) {
+        if (data.blocked) {
+          setBlockedInfo({ reason: data.blockReason || "Sem motivo especificado" });
+          return;
+        }
+        throw new Error(data.error || "Erro ao fazer login");
+      }
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -70,6 +78,18 @@ export function Login() {
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-xl mb-6 text-sm text-center font-bold">
             {error}
+          </div>
+        )}
+
+        {blockedInfo && (
+          <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-xl mb-6">
+            <div className="flex items-center gap-2 mb-2 justify-center">
+              <Ban className="w-5 h-5 shrink-0" />
+              <p className="text-sm font-bold text-center uppercase tracking-wider">Conta Bloqueada</p>
+            </div>
+            <p className="text-xs text-center font-medium leading-relaxed">A sua conta foi bloqueada pelo administrador.</p>
+            <p className="text-xs text-center font-medium mt-1 text-red-300">Motivo: {blockedInfo.reason}</p>
+            <p className="text-[10px] text-center font-bold uppercase tracking-widest mt-3 text-red-400/70">Contacte o administrador para mais informações.</p>
           </div>
         )}
 

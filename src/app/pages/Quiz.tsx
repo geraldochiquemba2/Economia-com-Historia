@@ -18,6 +18,7 @@ export function Quiz() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [rankings, setRankings] = useState<any[]>([]);
+  const [streak, setStreak] = useState(0);
 
   const userStr = localStorage.getItem("user");
   const currentUser = userStr ? JSON.parse(userStr) : null;
@@ -33,6 +34,13 @@ export function Quiz() {
   React.useEffect(() => {
     fetch('/api/quiz').then(res => res.json()).then(data => setQuestions(data)).catch(console.error);
     fetch('/api/rankings').then(res => res.json()).then(data => setRankings(data)).catch(console.error);
+    // Update streak
+    if (currentUser?.id) {
+      fetch(`/api/users/${currentUser.id}/streak`, { method: 'PUT' })
+        .then(res => res.json())
+        .then(data => { if (data.streak !== undefined) setStreak(data.streak); })
+        .catch(() => {});
+    }
   }, []);
 
   const handleStart = () => {
@@ -189,7 +197,7 @@ export function Quiz() {
                     </div>
                     <div>
                       <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest mb-0.5">Sequência Ativa</span>
-                      <span className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-tight">{Math.max(0, Math.floor(userXP / 200))} Dias 🔥</span>
+                      <span className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-tight">{streak} Dias 🔥</span>
                     </div>
                   </div>
                 </div>
@@ -291,11 +299,11 @@ export function Quiz() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-4 bg-black/90 dark:bg-white/10/5 dark:bg-black/90 dark:bg-white/10/10 border border-[#3A0310]/20 dark:border-[#3A0310]/30 rounded-[1.5rem] text-xs font-medium relative overflow-hidden"
+                      className="p-4 bg-black/90 dark:bg-white/10 border border-white/20 dark:border-[#3A0310]/30 rounded-[1.5rem] text-xs font-medium relative overflow-hidden"
                     >
                       <div className="absolute top-0 left-0 w-1.5 h-full bg-black/90 dark:bg-white/10"></div>
-                      <p className="text-[#3A0310] dark:text-[#E8B4B8] font-black uppercase text-[9px] tracking-widest mb-1.5">Sabedoria Histórica</p>
-                      <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed italic">"{questions[currentQuestion].feedback}"</p>
+                      <p className="text-[#E8B4B8] font-black uppercase text-[9px] tracking-widest mb-1.5 force-white">Sabedoria Histórica</p>
+                      <p className="text-white/80 dark:text-neutral-300 leading-relaxed italic force-white">"{questions[currentQuestion].feedback}"</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -310,11 +318,11 @@ export function Quiz() {
                     
                     let btnClass = "bg-white dark:bg-white/5 border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-white/10 shadow-sm";
                     if (showFeedback) {
-                      if (isCorrect) btnClass = "bg-green-500/20 border-green-500/50 text-green-600 dark:text-green-400 shadow-[0_0_20px_rgba(34,197,94,0.15)]";
-                      else if (isSelected) btnClass = "bg-black/90 dark:bg-white/10/15 dark:bg-black/90 dark:bg-white/10/40 border-[#3A0310] text-[#3A0310] dark:text-white";
-                      else btnClass = "bg-white/40 dark:bg-white/5 border-neutral-200 dark:border-white/5 text-neutral-500 dark:text-neutral-400 opacity-70";
+                      if (isCorrect) btnClass = "bg-green-500/20 border-green-500/50 text-green-700 dark:text-green-400 shadow-[0_0_20px_rgba(34,197,94,0.15)]";
+                      else if (isSelected) btnClass = "bg-black/90 dark:bg-white/10/15 border-[#3A0310] text-white dark:text-white";
+                      else btnClass = "bg-black/60 dark:bg-white/5 border-neutral-300 dark:border-white/5 text-white/80 dark:text-neutral-400 opacity-80";
                     } else if (isSelected) {
-                      btnClass = "bg-black/90 dark:bg-white/10/10 dark:bg-black/90 dark:bg-white/10/40 border-[#3A0310] text-[#3A0310] dark:text-white shadow-[0_0_20px_rgba(58,3,16,0.15)]";
+                      btnClass = "bg-black/90 dark:bg-white/10/10 border-[#3A0310] text-white dark:text-white shadow-[0_0_20px_rgba(58,3,16,0.15)]";
                     }
 
                     return (
@@ -324,7 +332,7 @@ export function Quiz() {
                         onClick={() => handleSelect(idx)}
                         className={`w-full text-left p-3.5 px-5 rounded-xl border transition-all font-bold flex justify-between items-center group ${btnClass}`}
                       >
-                        <span className="text-sm">{opt}</span>
+                        <span className={`text-sm ${showFeedback && isSelected && !isCorrect ? 'force-white' : ''}`}>{opt}</span>
                         {showFeedback && isCorrect && <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400" />}
                         {showFeedback && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-500" />}
                         {!showFeedback && <div className={`w-2 h-2 rounded-full border border-neutral-300 dark:border-white/20 group-hover:bg-[#E8B4B8]/50 transition-colors ${isSelected ? 'bg-black/90 dark:bg-white/10 dark:bg-[#E8B4B8]' : ''}`} />}
@@ -427,7 +435,7 @@ export function Quiz() {
                         : <span className="text-xl font-black text-neutral-400 dark:text-neutral-500">{rankings[1]?.name?.charAt(0) || "?"}</span>
                       }
                     </div>
-                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-neutral-600 rounded-lg flex items-center justify-center text-xs font-black shadow-xl border border-white/10" style={{ color: '#ffffff' }}>2º</div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-neutral-600 rounded-lg flex items-center justify-center text-xs font-black shadow-xl border border-white/10 force-white">2º</div>
                   </div>
                   <p className="text-neutral-700 dark:text-white font-bold text-[10px] text-center mb-1 truncate w-full uppercase tracking-tighter">{rankings[1]?.name || "2º Lugar"}</p>
                   <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-2xl border-t border-x border-[#E8B4B8] dark:border-white/10 flex flex-col items-center justify-center pt-4 shadow-md">
@@ -448,7 +456,7 @@ export function Quiz() {
                         : <span className="text-2xl font-black text-[#3A0310] dark:text-[#E8B4B8]">{rankings[0]?.name?.charAt(0) || "?"}</span>
                       }
                     </div>
-                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-black/90 dark:bg-white/10 rounded-lg flex items-center justify-center text-xs font-black text-white shadow-xl border border-[#E8B4B8]/30">1º</div>
+                     <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-black/90 dark:bg-white/10 rounded-lg flex items-center justify-center text-xs font-black shadow-xl border border-[#E8B4B8]/30 force-white">1º</div>
                   </div>
                   <p className="text-neutral-800 dark:text-white font-black text-xs text-center mb-1 truncate w-full uppercase tracking-tight">{rankings[0]?.name || "1º Lugar"}</p>
                   <div className="w-full flex-1 bg-gradient-to-t from-[#3A0310]/10 dark:from-[#3A0310]/40 to-neutral-50 dark:to-white/10 backdrop-blur-md rounded-t-[2.5rem] border-t border-x border-[#E8B4B8] dark:border-[#3A0310]/50 flex flex-col items-center justify-center pt-6 shadow-md">
@@ -466,7 +474,7 @@ export function Quiz() {
                         : <span className="text-xl font-black text-neutral-400 dark:text-neutral-500">{rankings[2]?.name?.charAt(0) || "?"}</span>
                       }
                     </div>
-                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-orange-700/80 dark:bg-orange-900/50 rounded-lg flex items-center justify-center text-xs font-black shadow-xl border border-white/10" style={{ color: '#ffffff' }}>3º</div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-orange-700/80 dark:bg-orange-900/50 rounded-lg flex items-center justify-center text-xs font-black shadow-xl border border-white/10 force-white">3º</div>
                   </div>
                   <p className="text-neutral-700 dark:text-white font-bold text-[10px] text-center mb-1 truncate w-full uppercase tracking-tighter">{rankings[2]?.name || "3º Lugar"}</p>
                   <div className="w-full flex-1 bg-white dark:bg-white/5 backdrop-blur-md rounded-t-xl border-t border-x border-[#E8B4B8] dark:border-white/10 flex flex-col items-center justify-center pt-2 shadow-md">

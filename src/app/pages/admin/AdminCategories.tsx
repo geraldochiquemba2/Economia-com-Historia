@@ -130,7 +130,11 @@ export function AdminCategories() {
     }
   };
 
-  useEffect(() => { fetchCategories(); }, []);
+  useEffect(() => {
+    fetchCategories();
+    const interval = setInterval(fetchCategories, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSave = async () => {
     if (!formData.name.trim()) { setError('Nome obrigatório'); return; }

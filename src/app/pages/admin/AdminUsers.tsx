@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Users, Search, Ban, Mail, Loader2, AlertTriangle, Trash2, ShieldCheck, ChevronDown, Check, Crown, Clock, XCircle, Bell, ArrowDownUp, PenLine, Eye } from "lucide-react";
+import { Users, Search, Ban, Mail, Loader2, AlertTriangle, Trash2, ShieldCheck, ChevronDown, Check, Crown, Clock, XCircle, Bell, ArrowDownUp, PenLine, Eye, ShieldOff } from "lucide-react";
 import { ImageModal } from "../../components/ImageModal";
 
 type UserItem = {
@@ -12,6 +12,8 @@ type UserItem = {
   profession: string;
   avatar?: string;
   createdAt: string;
+  blocked?: boolean;
+  blockReason?: string;
 };
 
 const PLANS = [
@@ -44,6 +46,37 @@ export function AdminUsers() {
   const [rejectTarget, setRejectTarget] = useState<{ id: string, userId: string, name: string } | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("todos");
+  const [blockTarget, setBlockTarget] = useState<UserItem | null>(null);
+  const [blockReason, setBlockReason] = useState("");
+  const [blocking, setBlocking] = useState(false);
+
+  const handleBlock = async () => {
+    if (!blockTarget) return;
+    setBlocking(true);
+    try {
+      await fetch(`/api/users/${blockTarget.id}/block`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: blockReason }),
+      });
+      setUsers(prev => prev.map(u => u.id === blockTarget.id ? { ...u, blocked: true, blockReason: blockReason } : u));
+      setBlockTarget(null);
+      setBlockReason("");
+    } catch {
+      setError("Erro ao bloquear utilizador.");
+    } finally {
+      setBlocking(false);
+    }
+  };
+
+  const handleUnblock = async (user: UserItem) => {
+    try {
+      await fetch(`/api/users/${user.id}/unblock`, { method: "PUT" });
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, blocked: false, blockReason: undefined } : u));
+    } catch {
+      setError("Erro ao desbloquear utilizador.");
+    }
+  };
 
   const fetchEliteRequests = async () => {
     try {
@@ -90,7 +123,12 @@ export function AdminUsers() {
     }
   };
 
-  useEffect(() => { fetchUsers(); fetchEliteRequests(); }, []);
+  useEffect(() => {
+    fetchUsers();
+    fetchEliteRequests();
+    const interval = setInterval(() => { fetchUsers(); fetchEliteRequests(); }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -100,6 +138,7 @@ export function AdminUsers() {
   }, []);
 
   const filteredUsers = users
+    .filter((u) => u.role !== "admin")
     .filter((u) =>
       (u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase()))
@@ -377,7 +416,12 @@ export function AdminUsers() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1.5 md:opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {user.blocked && (
+                      <div className="px-2.5 py-1 bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-xl text-[10px] font-bold uppercase tracking-wider mr-1">
+                        Bloqueado
+                      </div>
+                    )}
                     <a
                       href={`mailto:${user.email}`}
                       title="Enviar email"
@@ -385,13 +429,23 @@ export function AdminUsers() {
                     >
                       <Mail className="w-4 h-4" />
                     </a>
-                    <button
-                      onClick={() => setDeleteTarget(user)}
-                      title="Remover utilizador"
-                      className="p-2.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 hover:bg-red-500 hover:text-white dark:hover:bg-red-500/30 rounded-xl transition-colors"
-                    >
-                      <Ban className="w-4 h-4" />
-                    </button>
+                    {user.blocked ? (
+                      <button
+                        onClick={() => handleUnblock(user)}
+                        title="Desbloquear utilizador"
+                        className="p-2.5 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 hover:bg-green-500 hover:text-white dark:hover:bg-green-500/30 rounded-xl transition-colors"
+                      >
+                        <ShieldOff className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setBlockTarget(user)}
+                        title="Bloquear utilizador"
+                        className="p-2.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 hover:bg-red-500 hover:text-white dark:hover:bg-red-500/30 rounded-xl transition-colors"
+                      >
+                        <Ban className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -434,6 +488,44 @@ export function AdminUsers() {
                   className="flex-1 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-widest transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
                   {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   {deleting ? "A Remover..." : "Remover"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* BLOCK MODAL */}
+      <AnimatePresence>
+        {blockTarget && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            onClick={() => { setBlockTarget(null); setBlockReason(""); }}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="bg-white dark:bg-[#1A0A0D] border border-neutral-200 dark:border-[#3A0310]/60 rounded-[2rem] p-8 max-w-sm w-full shadow-2xl"
+              onClick={e => e.stopPropagation()}>
+              <div className="w-14 h-14 bg-red-100 dark:bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <Ban className="w-7 h-7 text-red-600 dark:text-red-400" />
+              </div>
+              <h2 className="text-xl font-black text-center text-neutral-900 dark:text-white uppercase tracking-tight mb-2">Bloquear Utilizador?</h2>
+              <p className="text-center text-neutral-600 dark:text-neutral-400 text-xs font-medium mb-1">O utilizador não conseguirá fazer login:</p>
+              <p className="text-center font-black text-[#3A0310] dark:text-[#E8B4B8] text-sm uppercase tracking-tight mb-1">{blockTarget.name}</p>
+              <p className="text-center text-neutral-500 text-xs mb-4">{blockTarget.email}</p>
+              <textarea
+                value={blockReason}
+                onChange={(e) => setBlockReason(e.target.value)}
+                placeholder="Motivo do bloqueio (ex: comportamento inadequado)..."
+                className="w-full bg-neutral-100 dark:bg-black/20 border border-neutral-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-neutral-800 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 min-h-[80px] mb-6 resize-none"
+              />
+              <div className="flex gap-3">
+                <button onClick={() => { setBlockTarget(null); setBlockReason(""); }}
+                  className="flex-1 py-3 rounded-2xl border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-neutral-300 font-black uppercase text-xs tracking-widest hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors">Cancelar</button>
+                <button onClick={handleBlock} disabled={blocking || !blockReason.trim()}
+                  className="flex-1 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-widest transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                  {blocking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />}
+                  {blocking ? "A Bloquear..." : "Bloquear"}
                 </button>
               </div>
             </motion.div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { MessageCircle, CornerDownRight, Send, Lock, Loader2, Pencil, Trash2, EyeOff, Eye, Check, X, ShieldAlert, ThumbsUp, ThumbsDown, ListFilter } from "lucide-react";
+import { MessageCircle, CornerDownRight, Send, Lock, Loader2, Pencil, Trash2, EyeOff, Eye, Check, X, ShieldAlert, ThumbsUp, ThumbsDown, ListFilter, Crown } from "lucide-react";
 import { Link } from "react-router";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -416,16 +416,21 @@ const CommentNode = ({
 // ─── CommentSection ───────────────────────────────────────────────────────────
 type CommentSectionProps = {
   contentId?: string;
+  contentType?: string;
   title?: string;
   placeholder?: string;
   className?: string;
 };
 
-export function CommentSection({ contentId, title = "Discussões", placeholder = "Contribuir para o debate...", className = "" }: CommentSectionProps) {
+export function CommentSection({ contentId, contentType, title = "Discussões", placeholder = "Contribuir para o debate...", className = "" }: CommentSectionProps) {
   const userRaw = localStorage.getItem("user");
   const token = localStorage.getItem("token") || undefined;
   const user = userRaw ? JSON.parse(userRaw) : null;
   const isLoggedIn = !!(user && token);
+
+  const isJindungo = contentType === 'jindungo';
+  const hasEliteAccess = ['elite', 'admin', 'escritor', 'revisor'].includes(user?.role);
+  const canMention = !isJindungo || hasEliteAccess;
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -441,12 +446,17 @@ export function CommentSection({ contentId, title = "Discussões", placeholder =
 
   useEffect(() => {
     if (!contentId) { setLoading(false); return; }
-    setLoading(true);
-    fetch(`/api/comments/${encodeURIComponent(contentId)}`)
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setComments(data); })
-      .catch(err => console.error("Erro ao carregar comentários:", err))
-      .finally(() => setLoading(false));
+    const fetchComments = async () => {
+      try {
+        const res = await fetch(`/api/comments/${encodeURIComponent(contentId)}`);
+        const data = await res.json();
+        if (Array.isArray(data)) setComments(data);
+      } catch (err) { console.error("Erro ao carregar comentários:", err); }
+      finally { setLoading(false); }
+    };
+    fetchComments();
+    const interval = setInterval(fetchComments, 30000);
+    return () => clearInterval(interval);
   }, [contentId]);
 
   // Pesquisar utilizadores para menções
@@ -516,6 +526,11 @@ export function CommentSection({ contentId, title = "Discussões", placeholder =
     // Detetar se estamos a escrever uma menção (última palavra começa por @)
     const match = val.match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
     if (match) {
+      if (!canMention) {
+        setMentionSearch(null);
+        setMentionResults([]);
+        return;
+      }
       setMentionSearch(match[1]);
     } else {
       setMentionSearch(null);

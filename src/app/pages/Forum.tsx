@@ -15,16 +15,17 @@ export function Forum() {
 
   // Buscar tópicos de fórum da API (type=forum)
   useEffect(() => {
-    setLoading(true);
-    fetch('/api/content')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setTopics(data.filter((t: any) => t.type === 'forum'));
-        }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const fetchTopics = async () => {
+      try {
+        const res = await fetch('/api/content');
+        const data = await res.json();
+        if (Array.isArray(data)) setTopics(data.filter((t: any) => t.type === 'forum'));
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    };
+    fetchTopics();
+    const interval = setInterval(fetchTopics, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredAndSortedTopics = useMemo(() => {
@@ -78,7 +79,7 @@ export function Forum() {
             </div>
             {isAdmin && (
               <Link
-                to="/app/admin"
+                to="/admin/content"
                 className="bg-[#3A0310] force-white p-2.5 rounded-xl shadow-md hover:bg-[#5A051A] transition-all border border-[#E8B4B8]/20 group active:scale-95"
               >
                 <PlusCircle className="w-5 h-5 force-gold group-hover:scale-110 transition-transform" />

@@ -4,6 +4,7 @@ import { Home, Compass, BookOpenCheck, MessageSquare, User, ShieldAlert, Sun, Mo
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
 import { ScrollToTop } from "../components/ScrollToTop";
+import { AIChatAssistant } from "../components/AIChatAssistant";
 
 export function UserLayout() {
   const location = useLocation();
@@ -180,6 +181,8 @@ export function UserLayout() {
           </PageTransition>
         </AnimatePresence>
       </main>
+
+      <AIChatAssistant />
 
       {/* Bottom Navigation for Mobile */}
       <nav className={`backdrop-blur-xl border-t fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-12 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] z-[60] transition-all duration-300 ${

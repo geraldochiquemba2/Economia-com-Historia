@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useLocation, useNavigate, MemoryRouter } from "react-router";
-import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare, Trophy, Lightbulb, ClipboardCheck, Bell, Folder, KeyRound } from "lucide-react";
+import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare, Trophy, Lightbulb, ClipboardCheck, Bell, Folder, KeyRound, Shield } from "lucide-react";
 import { NotificationsModal } from "../components/NotificationsModal";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
@@ -37,27 +37,37 @@ export function AdminLayout() {
 
   // Buscar pedidos de redefinição de senha pendentes
   React.useEffect(() => {
-    fetch("/api/admin/password-resets", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setPasswordResetCount(data.filter((r: any) => r.status === 'pending').length);
-      })
-      .catch(() => {});
+    const fetchResets = async () => {
+      try {
+        const res = await fetch("/api/admin/password-resets", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) setPasswordResetCount(data.filter((r: any) => r.status === 'pending').length);
+        }
+      } catch {}
+    };
+    fetchResets();
+    const interval = setInterval(fetchResets, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   React.useEffect(() => {
     if (!user?.id) return;
-    fetch(`/api/users/${user.id}/notifications`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    })
-      .then(res => res.json())
-      .then(data => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch(`/api/users/${user.id}/notifications`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await res.json();
         if (Array.isArray(data)) setUnreadCount(data.filter(n => !n.isRead).length);
-      })
-      .catch(() => {});
-  }, []);
+      } catch {}
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   // Aplicar o tema guardado quando o admin é montado
   React.useEffect(() => {
@@ -87,6 +97,7 @@ export function AdminLayout() {
     { to: "/admin/trivia", icon: Lightbulb, label: "Curiosidades" },
     { to: "/admin/categories", icon: Folder, label: "Categorias" },
     { to: "/admin/password-resets", icon: KeyRound, label: "Senhas" },
+    { to: "/admin/ai-comments", icon: Shield, label: "Moderação IA" },
   ];
 
   return (
@@ -122,7 +133,7 @@ export function AdminLayout() {
                   </span>
                 )}
                 {item.to === "/admin/password-resets" && passwordResetCount > 0 && (
-                  <span className="absolute -top-2 -right-3 min-w-[18px] h-[18px] flex items-center justify-center bg-amber-500 text-white text-[8px] font-black rounded-full px-1 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+                  <span className="absolute -top-2 -right-3 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full px-1 animate-bounce shadow-[0_0_12px_rgba(239,68,68,0.7)]">
                     {passwordResetCount}
                   </span>
                 )}
@@ -193,7 +204,7 @@ export function AdminLayout() {
                   </span>
                 )}
                 {item.to === "/admin/password-resets" && passwordResetCount > 0 && (
-                  <span className="absolute top-1 right-1/4 min-w-[16px] h-[16px] flex items-center justify-center bg-amber-500 text-white text-[7px] font-black rounded-full px-0.5 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)] z-10">
+                  <span className="absolute top-1 right-1/4 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-full px-0.5 animate-bounce shadow-[0_0_12px_rgba(239,68,68,0.7)] z-10">
                     {passwordResetCount}
                   </span>
                 )}

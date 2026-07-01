@@ -109,15 +109,19 @@ export function Home() {
 
   useEffect(() => {
     if (!token || !user?.id) return;
-    fetch(`/api/users/${user.id}/notifications`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch(`/api/users/${user.id}/notifications`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
         if (Array.isArray(data)) setUnreadCount(data.filter(n => !n.isRead).length);
-      })
-      .catch(() => {});
-  }, []);
+      } catch {}
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
+  }, [token, user?.id]);
 
   useEffect(() => {
     fetch('/api/content')

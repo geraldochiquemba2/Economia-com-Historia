@@ -58,16 +58,22 @@ export function Profile() {
   // Buscar role actualizado do servidor (actualização feita pelo admin)
   useEffect(() => {
     if (!storedUser.id) return;
-    fetch(`/api/users/${storedUser.id}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data && data.role) {
-          const updatedUser = { ...storedUser, role: data.role };
-          setUser(updatedUser);
-          localStorage.setItem('user', JSON.stringify(updatedUser));
+    const fetchRole = async () => {
+      try {
+        const res = await fetch(`/api/users/${storedUser.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.role) {
+            const updatedUser = { ...storedUser, role: data.role };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
         }
-      })
-      .catch(() => {});
+      } catch {}
+    };
+    fetchRole();
+    const interval = setInterval(fetchRole, 30000);
+    return () => clearInterval(interval);
   }, [storedUser.id]);
 
   // Estado do pedido de Elite
@@ -76,19 +82,25 @@ export function Profile() {
 
   useEffect(() => {
     if (!storedUser.id) return;
-    fetch(`/api/elite-requests/user/${storedUser.id}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data && data.status) {
-          setEliteRequest({
-            status: data.status,
-            rejectionReason: data.rejectionReason || data.rejection_reason || undefined,
-          });
-        } else {
-          setEliteRequest({ status: null });
+    const fetchElite = async () => {
+      try {
+        const res = await fetch(`/api/elite-requests/user/${storedUser.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.status) {
+            setEliteRequest({
+              status: data.status,
+              rejectionReason: data.rejectionReason || data.rejection_reason || undefined,
+            });
+          } else {
+            setEliteRequest({ status: null });
+          }
         }
-      })
-      .catch(() => {});
+      } catch {}
+    };
+    fetchElite();
+    const interval = setInterval(fetchElite, 30000);
+    return () => clearInterval(interval);
   }, [storedUser.id]);
 
   const handleEliteRequest = async () => {
@@ -152,23 +164,35 @@ export function Profile() {
 
   React.useEffect(() => {
     if (!user?.id) return;
-    fetch(`/api/users/${user.id}/saved`)
-      .then(res => res.json())
-      .then(data => setFavorites(Array.isArray(data) ? data : []))
-      .catch(() => setFavorites([]));
+    const fetchSaved = async () => {
+      try {
+        const res = await fetch(`/api/users/${user.id}/saved`);
+        const data = await res.json();
+        setFavorites(Array.isArray(data) ? data : []);
+      } catch { setFavorites([]); }
+    };
+    fetchSaved();
+    const interval = setInterval(fetchSaved, 30000);
+    return () => clearInterval(interval);
   }, [user?.id]);
 
   React.useEffect(() => {
     if (!user.id) return;
-    fetch(`/api/users/${user.id}/stats`)
-      .then(res => res.json())
-      .then(data => { if (!data.error) setStats(data); })
-      .catch(console.error);
-    
-    fetch(`/api/users/${user.id}/completed`)
-      .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setCompletedStudies(data); })
-      .catch(console.error);
+    const fetchStats = async () => {
+      try {
+        const [statsRes, completedRes] = await Promise.all([
+          fetch(`/api/users/${user.id}/stats`),
+          fetch(`/api/users/${user.id}/completed`),
+        ]);
+        const statsData = await statsRes.json();
+        const completedData = await completedRes.json();
+        if (!statsData.error) setStats(statsData);
+        if (Array.isArray(completedData)) setCompletedStudies(completedData);
+      } catch (err) { console.error(err); }
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
   }, [user.id]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,8 +251,7 @@ export function Profile() {
 
 
   const options = [
-    { icon: Bell, label: "Alertas de Prestígio" },
-    { icon: Shield, label: "Segurança de Conta" },
+    { icon: Shield, label: "Segurança de Conta", sublabel: "Mudar Senha", path: "/change-password" },
   ];
 
   return (
@@ -549,13 +572,17 @@ export function Profile() {
             {options.map((item, index) => (
               <button 
                 key={item.label}
+                onClick={() => item.path && navigate(item.path)}
                 className="w-full flex items-center justify-between p-4.5 md:p-5 hover:bg-neutral-50 dark:hover:bg-white/[0.03] transition-all group active:bg-neutral-100 dark:active:bg-white/[0.05]"
               >
                 <div className="flex items-center gap-4 text-neutral-700 dark:text-neutral-300 font-bold uppercase tracking-tighter transition-colors group-hover:text-[#3A0310] dark:group-hover:text-white">
                   <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center border border-neutral-200/50 dark:border-white/5 group-hover:bg-[#3A0310]/15 dark:group-hover:bg-[#3A0310]/20 group-hover:border-[#3A0310]/40 transition-all">
                     <item.icon className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors" />
                   </div>
-                  <span className="text-xs md:text-sm">{item.label}</span>
+                  <div>
+                    <span className="text-xs md:text-sm block">{item.label}</span>
+                    {item.sublabel && <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-normal normal-case">{item.sublabel}</span>}
+                  </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-neutral-400 dark:text-neutral-700 group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] group-hover:translate-x-0.5 transition-all" />
               </button>

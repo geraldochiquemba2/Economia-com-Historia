@@ -35,7 +35,11 @@ export function AdminPasswordResets() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => {
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleReset = async (id: string) => {
     setProcessingId(id);

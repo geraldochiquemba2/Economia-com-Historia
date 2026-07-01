@@ -31,24 +31,24 @@ export function ForumDetail() {
   // Buscar tópico da API
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    fetch(`/api/content/${id}`)
-      .then(async r => {
-        if (!r.ok) throw new Error('not found');
-        return r.json();
-      })
-      .then(data => {
+    const fetchTopic = async () => {
+      try {
+        const res = await fetch(`/api/content/${id}`);
+        if (!res.ok) throw new Error('not found');
+        const data = await res.json();
         setTopic(data);
         setLikesCount(data.likes?.length || 0);
         setDislikesCount(data.dislikes?.length || 0);
-        // Verificar se já reagiu
         if (currentUser?.id) {
           if (data.likes?.includes(currentUser.id)) setReaction('like');
           else if (data.dislikes?.includes(currentUser.id)) setReaction('dislike');
         }
-      })
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false));
+      } catch { setNotFound(true); }
+      finally { setLoading(false); }
+    };
+    fetchTopic();
+    const interval = setInterval(fetchTopic, 60000);
+    return () => clearInterval(interval);
   }, [id]);
 
   // Verificar se está guardado na API

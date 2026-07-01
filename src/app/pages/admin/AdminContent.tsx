@@ -74,7 +74,11 @@ export function AdminContent() {
     }
   };
 
-  useEffect(() => { fetchContent(); }, []);
+  useEffect(() => {
+    fetchContent();
+    const interval = setInterval(fetchContent, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredItems = filter === "all" ? items : items.filter((i) => i.type === filter);
 

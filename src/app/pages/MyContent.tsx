@@ -68,7 +68,11 @@ export function MyContent() {
     }
   };
 
-  useEffect(() => { fetchMyContent(); }, []);
+  useEffect(() => {
+    fetchMyContent();
+    const interval = setInterval(fetchMyContent, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const statusColor = (s: string) => {
     if (s === 'approved') return 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-400 dark:border-green-500/30';

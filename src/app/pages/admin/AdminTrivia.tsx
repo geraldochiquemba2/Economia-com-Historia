@@ -45,7 +45,11 @@ export function AdminTrivia() {
     }
   };
 
-  useEffect(() => { fetchContent(); }, []);
+  useEffect(() => {
+    fetchContent();
+    const interval = setInterval(fetchContent, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleDeleteClick = (item: TriviaItem) => setDeleteTarget(item);
 

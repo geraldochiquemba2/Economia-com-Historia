@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Bell, Heart, ThumbsDown, MessageCircle, X, CheckCheck } from "lucide-react";
+import { Bell, Heart, ThumbsDown, MessageCircle, X, CheckCheck, ArrowUp, ArrowDown, Shield } from "lucide-react";
 import { useNavigate } from "react-router";
 
 export function NotificationsModal({ isOpen, onClose, onUnreadCountChange }: { isOpen: boolean, onClose: () => void, onUnreadCountChange?: (count: number) => void }) {
@@ -138,12 +138,16 @@ export function NotificationsModal({ isOpen, onClose, onUnreadCountChange }: { i
                       {notif.type === 'like' && <Heart className="w-4 h-4 text-red-500 fill-red-500" />}
                       {notif.type === 'dislike' && <ThumbsDown className="w-4 h-4 text-neutral-500 fill-neutral-500" />}
                       {notif.type === 'mention' && <MessageCircle className="w-4 h-4 text-blue-500 fill-blue-500" />}
+                      {notif.type === 'role_promotion' && <ArrowUp className="w-4 h-4 text-green-500 fill-green-500" />}
+                      {notif.type === 'role_demotion' && <ArrowDown className="w-4 h-4 text-amber-500 fill-amber-500" />}
                     </div>
                     <div className="flex-1">
                       <p className={`text-xs md:text-sm ${notif.isRead ? 'text-neutral-600 dark:text-neutral-300' : 'text-neutral-900 dark:text-white font-bold'}`}>
                         {notif.type === 'like' && <><span className="font-black text-[#3A0310] dark:text-[#E8B4B8]">{notif.actorName}</span> meteu gosto no teu comentário.</>}
                         {notif.type === 'dislike' && <><span className="font-black text-neutral-500">Alguém</span> não gostou do teu comentário.</>}
                         {notif.type === 'mention' && <><span className="font-black text-[#3A0310] dark:text-[#E8B4B8]">{notif.actorName}</span> mencionou-te num comentário.</>}
+                        {notif.type === 'role_promotion' && <><span className="font-black text-green-600 dark:text-green-400">Foste promovido(a)</span> para <span className="font-black text-[#3A0310] dark:text-[#E8B4B8]">{notif.contentId}</span>.</>}
+                        {notif.type === 'role_demotion' && <><span className="font-black text-amber-600 dark:text-amber-400">Foste despromovido(a)</span> para <span className="font-black text-[#3A0310] dark:text-[#E8B4B8]">{notif.contentId}</span>.</>}
                       </p>
                       <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest mt-1 block">
                         {new Date(notif.createdAt).toLocaleDateString('pt-PT')} às {new Date(notif.createdAt).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}

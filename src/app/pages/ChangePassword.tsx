@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { Lock, ArrowRight, Loader2, KeyRound } from "lucide-react";
+import { Lock, ArrowRight, Loader2, KeyRound, ArrowLeft } from "lucide-react";
 
 export function ChangePassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -9,6 +9,9 @@ export function ChangePassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isForced = user?.mustChangePassword === true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +62,16 @@ export function ChangePassword() {
         <img src="https://images.unsplash.com/photo-1447069387593-a5de0862481e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920" alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(232,180,184,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(232,180,184,0.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       </div>
+
+      {!isForced && (
+        <button
+          onClick={() => navigate("/app/profile")}
+          className="absolute top-6 left-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl text-white force-white font-black uppercase tracking-widest text-[10px] transition-all duration-300 group shadow-2xl"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span className="hidden sm:inline">Voltar</span>
+        </button>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

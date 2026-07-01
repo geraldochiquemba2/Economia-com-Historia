@@ -28,6 +28,7 @@ import { AdminTrivia } from "./pages/admin/AdminTrivia";
 import { AdminReview } from "./pages/admin/AdminReview";
 import { AdminCategories } from "./pages/admin/AdminCategories";
 import { AdminPasswordResets } from "./pages/admin/AdminPasswordResets";
+import { AdminAIComments } from "./pages/admin/AdminAIComments";
 
 // Layouts
 import { UserLayout } from "./layouts/UserLayout";
@@ -85,6 +86,7 @@ export const router = createBrowserRouter([
       { path: "trivia", Component: AdminTrivia },
       { path: "categories", Component: AdminCategories },
       { path: "password-resets", Component: AdminPasswordResets },
+      { path: "ai-comments", Component: AdminAIComments },
     ],
   },
 ]);

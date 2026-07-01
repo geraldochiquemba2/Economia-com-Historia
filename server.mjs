@@ -8,6 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import nodemailer from 'nodemailer';
+import Groq from 'groq-sdk';
 
 dotenv.config();
 
@@ -153,6 +154,10 @@ async function initDB() {
       ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "profession" VARCHAR(255) DEFAULT 'Estudante';
     `);
 
+    // 1b. Colunas de bloqueio
+    await pool.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "blocked" BOOLEAN DEFAULT FALSE;`);
+    await pool.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "blockReason" TEXT;`);
+
     // 2. Garantir que a tabela Content existe
     await pool.query(`
       CREATE TABLE IF NOT EXISTS "Content" (
@@ -189,6 +194,12 @@ async function initDB() {
     `);
     await pool.query(`
       ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "xp" INTEGER DEFAULT 0;
+    `);
+    await pool.query(`
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastActiveDate" DATE;
+    `);
+    await pool.query(`
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "streak" INTEGER DEFAULT 0;
     `);
 
     // 4. Criar tabela de perguntas do Quiz
@@ -432,7 +443,10 @@ app.post('/api/auth/login', async (req, res) => {
 
     const user = rows[0];
 
-    // Verificar se há pedido de redefinição pendente
+    // Verificar se o utilizador está bloqueado
+    if (user.blocked) {
+      return res.status(403).json({ error: 'Conta bloqueada', blocked: true, blockReason: user.blockReason || 'Motivo não especificado.' });
+    }
     const { rows: pendingResets } = await pool.query(
       `SELECT * FROM "PasswordReset" WHERE "userId" = $1 AND status = 'pending' ORDER BY "requestedAt" DESC LIMIT 1`,
       [user.id]
@@ -966,7 +980,11 @@ app.post('/api/comments', authMiddleware, async (req, res) => {
     if (mentions) {
       const uniqueMentions = [...new Set(mentions.map(m => m.substring(1)))];
       for (const mentionedName of uniqueMentions) {
-        const userRes = await pool.query('SELECT id FROM "User" WHERE name ILIKE $1', [mentionedName]);
+        // Procurar utilizador removendo espacos do nome (mencao nao tem espacos)
+        const userRes = await pool.query(
+          'SELECT id FROM "User" WHERE REPLACE(name, \' \', \'\') ILIKE $1',
+          [mentionedName]
+        );
         if (userRes.rows.length > 0) {
           const mentionedUserId = userRes.rows[0].id;
           if (mentionedUserId !== user.id) {
@@ -1083,6 +1101,199 @@ app.delete('/api/admin/quiz/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao apagar pergunta' });
+  }
+});
+
+// ==========================================
+// AI ENDPOINTS (Groq)
+// ==========================================
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// Admin: Gerar quiz com IA
+app.post('/api/admin/quiz/generate', requireAdmin, async (req, res) => {
+  const { topic, count = 5 } = req.body;
+  if (!topic) return res.status(400).json({ error: 'Tema é obrigatório' });
+
+  try {
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: `Gera perguntas de quiz sobre Angolan history, culture, geography, economy and society. 
+Return ONLY a valid JSON array. Each object must have:
+- "question": string (the question text)
+- "options": array of exactly 4 strings (the 4 answer choices)
+- "correctAnswer": integer 0-3 (index of the correct option)
+- "feedback": string (historical context shown after answering)
+- "points": integer 10-50 (XP reward, higher = harder)
+
+Rules:
+- Questions must be in Portuguese
+- Mix difficulty levels (easy, medium, hard)
+- feedback must be educational and historically accurate
+- No duplicate questions
+- Return ONLY the JSON array, no markdown, no explanation`
+        },
+        {
+          role: 'user',
+          content: `Gera ${count} perguntas de quiz sobre o tema: "${topic || 'História e Cultura de Angola'}"`
+        }
+      ],
+      temperature: 0.8,
+      max_tokens: 4000
+    });
+
+    const content = completion.choices[0]?.message?.content || '';
+    // Extract JSON from response (handle markdown code blocks)
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return res.status(500).json({ error: 'Resposta da IA inválida' });
+
+    const questions = JSON.parse(jsonMatch[0]);
+
+    // Save to database
+    const saved = [];
+    for (const q of questions) {
+      const result = await pool.query(
+        'INSERT INTO "QuizQuestion" ("question", "options", "correctAnswer", "feedback", "points") VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [q.question, JSON.stringify(q.options), q.correctAnswer, q.feedback, q.points || 10]
+      );
+      saved.push(result.rows[0]);
+    }
+
+    res.json({ message: `${saved.length} perguntas criadas com sucesso`, questions: saved });
+  } catch (error) {
+    console.error('[AI Quiz Generation Error]', error);
+    res.status(500).json({ error: 'Erro ao gerar quiz com IA' });
+  }
+});
+
+// AI Assistant Chat - knows about platform content
+app.post('/api/ai/chat', async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'Mensagem é obrigatória' });
+
+  try {
+    // Fetch platform stats for context
+    const [contentRes, usersRes, rankingsRes, categoriesRes] = await Promise.all([
+      pool.query('SELECT title, type, "viewCount", "likesCount", status FROM "Content" WHERE status = $1 ORDER BY "viewCount" DESC NULLS LAST LIMIT 20', ['approved']),
+      pool.query('SELECT COUNT(*) as total FROM "User"'),
+      pool.query('SELECT name, xp FROM "User" ORDER BY xp DESC LIMIT 10'),
+      pool.query('SELECT name, icon FROM "Category" WHERE hidden = FALSE')
+    ]);
+
+    const topContent = contentRes.rows;
+    const totalUsers = usersRes.rows[0]?.total || 0;
+    const topRankings = rankingsRes.rows;
+    const categories = categoriesRes.rows;
+
+    const systemPrompt = ` és um assistente de IA da plataforma "economia" — uma plataforma angolana de conteúdo, quizzes e debate sobre história, cultura, geografia, economia e sociedade de Angola.
+
+CONHECIMENTO DA PLATAFORMA:
+- ${totalUsers} utilizadores registados
+- Categorias: ${categories.map(c => `${c.icon} ${c.name}`).join(', ') || 'Sem categorias'}
+- Top conteúdo mais acedido: ${topContent.slice(0, 10).map(c => `"${c.title}" (${c.type}, ${c.viewCount || 0} acessos, ${c.likesCount || 0} likes)`).join('\n  ') || 'Nenhum'}
+- Top utilizadores (ranking): ${topRankings.map((u, i) => `${i+1}º ${u.name} - ${u.xp} XP`).join('\n  ') || 'Sem rankings'}
+
+REGRAS:
+- Responde em português
+- Sé mas amigável
+- Usa os dados da plataforma quando relevante
+- Recomenda conteúdo quando o utilizador pergunta sobre temas
+- Se não sabes algo, diz que não tens essa informação
+- Máximo 3 frases por resposta (curto e direto)
+- Podes usar emojis`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ],
+      temperature: 0.7,
+      max_tokens: 300
+    });
+
+    const reply = completion.choices[0]?.message?.content || 'Desculpa, não consegui processar a tua pergunta.';
+    res.json({ reply });
+  } catch (error) {
+    console.error('[AI Chat Error]', error);
+    res.status(500).json({ error: 'Erro ao comunicar com a IA' });
+  }
+});
+
+// Admin: Analisar comentários com IA (moderação)
+app.get('/api/admin/comments/analyze', requireAdmin, async (req, res) => {
+  try {
+    // Buscar todos os comentários com info do autor e conteúdo
+    const { rows: comments } = await pool.query(`
+      SELECT c.id, c.text, c.author, c."userId", c."contentId", c."createdAt", c."isHidden",
+             ct.title as "contentTitle", ct.type as "contentType"
+      FROM "Comment" c
+      LEFT JOIN "Content" ct ON c."contentId" = ct.id::text
+      WHERE c."isDeleted" = FALSE
+      ORDER BY c."createdAt" DESC
+      LIMIT 100
+    `);
+
+    if (comments.length === 0) return res.json({ analysis: [], summary: 'Nenhum comentário encontrado.' });
+
+    // Send to AI for analysis
+    const commentsText = comments.map((c, i) => `[${i+1}] Autor: ${c.author} | Conteúdo: ${c.contentTitle || 'N/A'} | Texto: "${c.text}" | Data: ${new Date(c.createdAt).toLocaleDateString('pt-BR')}`).join('\n');
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: ` és um moderador de conteúdo especializado. Analisa os comentários e identifica:
+
+1. Comentários abusivos (insultos, ameaças, discurso de ódio)
+2. Comentários suspeitos (spam, phishing, links maliciosos)
+3. Comentários que violam regras (off-topic, conteúdo inadequado)
+4. Comentários positivos e construtivos
+
+Para CADA comentário, retorna um objeto JSON com:
+- "id": o índice do comentário (1, 2, 3...)
+- "status": "limpo" | "suspeito" | "abusivo" | "violacao"
+- "motivo": explicação breve (máx 10 palavras)
+- "severidade": "nenhuma" | "baixa" | "media" | "alta"
+
+Retorna APENAS um JSON válido com:
+{
+  "analysis": [array de objetos],
+  "resumo": "resumo geral em 2-3 frases",
+  "totalAbusivos": número,
+  "totalSuspeitos": número
+}
+
+NÃO uses markdown. NÃO expliques. Apenas o JSON.`
+        },
+        {
+          role: 'user',
+          content: `Analisa estes ${comments.length} comentários:\n\n${commentsText}`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 3000
+    });
+
+    const content = completion.choices[0]?.message?.content || '';
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(500).json({ error: 'Resposta da IA inválida' });
+
+    const analysis = JSON.parse(jsonMatch[0]);
+    // Merge original comment data with AI analysis
+    const merged = analysis.analysis.map((a) => {
+      const original = comments[a.id - 1];
+      return { ...a, comment: original };
+    });
+
+    res.json({ analysis: merged, summary: analysis.resumo, totalAbusivos: analysis.totalAbusivos, totalSuspeitos: analysis.totalSuspeitos });
+  } catch (error) {
+    console.error('[AI Comment Analysis Error]', error);
+    res.status(500).json({ error: 'Erro ao analisar comentários' });
   }
 });
 
@@ -1398,13 +1609,62 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
+// Bloquear utilizador
+app.put('/api/users/:id/block', requireAdmin, async (req, res) => {
+  const { reason } = req.body;
+  try {
+    await pool.query(
+      `UPDATE "User" SET blocked = TRUE, "blockReason" = $1 WHERE id = $2`,
+      [reason || 'Sem motivo especificado', req.params.id]
+    );
+    res.json({ message: 'Utilizador bloqueado com sucesso' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao bloquear utilizador' });
+  }
+});
+
+// Desbloquear utilizador
+app.put('/api/users/:id/unblock', requireAdmin, async (req, res) => {
+  try {
+    await pool.query(
+      `UPDATE "User" SET blocked = FALSE, "blockReason" = NULL WHERE id = $2`,
+      [req.params.id]
+    );
+    res.json({ message: 'Utilizador desbloqueado com sucesso' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao desbloquear utilizador' });
+  }
+});
+
 // Update user role (Admin panel)
 app.patch('/api/users/:id', async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
   try {
+    // Get old role before update
+    const oldUser = await pool.query('SELECT role FROM "User" WHERE id = $1', [id]);
+    const oldRole = oldUser.rows[0]?.role;
+
     const result = await pool.query('UPDATE "User" SET role = $1 WHERE id = $2 RETURNING id, role', [role, id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Utilizador não encontrado' });
+
+    // Send notification on promotion/demotion
+    if (oldRole && oldRole !== role && oldRole !== 'admin' && role !== 'admin') {
+      const roleLabels: Record<string, string> = {
+        elite: 'Elite', escritor: 'Escritor', revisor: 'Revisor', base: 'Acesso Base'
+      };
+      const isPromotion = ['elite', 'escritor', 'revisor'].includes(role) && role !== 'base';
+      const action = isPromotion ? 'promovido' : 'despromovido';
+      const newLabel = roleLabels[role] || role;
+
+      await pool.query(
+        'INSERT INTO "Notification" ("userId", "actorName", type, "contentId") VALUES ($1, $2, $3, $4)',
+        [id, 'Administrador', `role_${action}`, newLabel]
+      );
+    }
+
     // Se promovido para elite, marcar o pedido como aprovado
     if (role === 'elite') {
       await pool.query(
@@ -1416,6 +1676,52 @@ app.patch('/api/users/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao atualizar utilizador' });
+  }
+});
+
+// Update user streak (called on login/page visit)
+app.put('/api/users/:id/streak', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { rows } = await pool.query('SELECT "lastActiveDate", streak FROM "User" WHERE id = $1', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Utilizador não encontrado' });
+
+    const user = rows[0];
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate).toISOString().split('T')[0] : null;
+
+    if (lastActive === today) {
+      // Already active today, no change
+      return res.json({ streak: user.streak || 0, lastActiveDate: user.lastActiveDate });
+    }
+
+    let newStreak = user.streak || 0;
+    if (lastActive) {
+      const lastDate = new Date(lastActive);
+      const todayDate = new Date(today);
+      const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        // Consecutive day - increment streak
+        newStreak += 1;
+      } else if (diffDays > 1) {
+        // Missed days - reset streak to 1
+        newStreak = 1;
+      }
+    } else {
+      // First time active
+      newStreak = 1;
+    }
+
+    await pool.query(
+      'UPDATE "User" SET "lastActiveDate" = $1, streak = $2 WHERE id = $3',
+      [today, newStreak, id]
+    );
+
+    res.json({ streak: newStreak, lastActiveDate: today });
+  } catch (error) {
+    console.error('[Streak Error]', error);
+    res.status(500).json({ error: 'Erro ao atualizar streak' });
   }
 });
 

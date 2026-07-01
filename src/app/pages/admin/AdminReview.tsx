@@ -43,7 +43,11 @@ export function AdminReview() {
     }
   };
 
-  useEffect(() => { fetchPending(); }, []);
+  useEffect(() => {
+    fetchPending();
+    const interval = setInterval(fetchPending, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleApprove = async (item: ContentItem) => {
     setProcessingId(item.id);
