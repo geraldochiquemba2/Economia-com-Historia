@@ -572,7 +572,7 @@ app.post('/api/admin/password-resets/:id/reset', requireAdmin, async (req, res) 
       // Não falhar o request por causa do email
     }
 
-    res.json({ message: 'Senha redefinida com sucesso. Email enviado ao utilizador.' });
+    res.json({ message: 'Senha redefinida com sucesso.', newPassword, userName: reset.name, userEmail: reset.email });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao processar redefinição' });

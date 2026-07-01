@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { KeyRound, Loader2, CheckCircle2, Clock, Mail, Send, User } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { KeyRound, Loader2, CheckCircle2, Clock, Mail, Send, User, Copy, Check, X } from "lucide-react";
 
 interface PasswordResetRequest {
   id: string;
@@ -19,6 +19,8 @@ export function AdminPasswordResets() {
   const [requests, setRequests] = useState<PasswordResetRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [resetResult, setResetResult] = useState<{ name: string; email: string; password: string } | null>(null);
 
   const fetchRequests = async () => {
     try {
@@ -42,11 +44,19 @@ export function AdminPasswordResets() {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.newPassword) {
+        setResetResult({ name: data.userName, email: data.userEmail, password: data.newPassword });
         fetchRequests();
       }
     } catch { /* ignorar */ }
     setProcessingId(null);
+  };
+
+  const handleCopy = (password: string, id: string) => {
+    navigator.clipboard.writeText(password);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const pendingRequests = requests.filter(r => r.status === 'pending');
@@ -72,8 +82,53 @@ export function AdminPasswordResets() {
         </div>
       </div>
 
+      {/* Password Generated Modal */}
+      <AnimatePresence>
+        {resetResult && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-gradient-to-br from-[#3A0310] to-[#5A0520] rounded-2xl p-6 text-white shadow-2xl border border-[#E8B4B8]/20"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-400" />
+                <h3 className="font-black uppercase tracking-widest text-xs">Senha Gerada com Sucesso</h3>
+              </div>
+              <button onClick={() => setResetResult(null)} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-white/10 rounded-xl p-4 mb-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">Utilizador</p>
+              <p className="font-black text-sm">{resetResult.name}</p>
+              <p className="text-xs text-white/60">{resetResult.email}</p>
+            </div>
+
+            <div className="bg-white/10 rounded-xl p-4 mb-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">Nova Senha Gerada</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 bg-black/30 rounded-lg px-4 py-3 font-mono text-lg font-black tracking-wider text-[#E8B4B8] select-all">
+                  {resetResult.password}
+                </code>
+                <button
+                  onClick={() => handleCopy(resetResult.password, 'modal')}
+                  className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors shrink-0 active:scale-95"
+                >
+                  {copiedId === 'modal' ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-white/50 text-center">Copie a senha e envie ao utilizador por email ou mensagem.</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Pending Requests */}
-      {pendingRequests.length === 0 ? (
+      {pendingRequests.length === 0 && !resetResult ? (
         <div className="bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-10 text-center">
           <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
           <p className="text-sm font-bold text-neutral-500 dark:text-neutral-400">Nenhum pedido pendente</p>
@@ -88,7 +143,6 @@ export function AdminPasswordResets() {
               className="bg-white dark:bg-white/5 rounded-2xl border-2 border-amber-400/50 dark:border-amber-500/30 p-5 shadow-lg"
             >
               <div className="flex items-center gap-4">
-                {/* Avatar */}
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3A0310] to-[#5A051A] flex items-center justify-center font-black text-lg force-white shadow-inner border border-[#E8B4B8]/20 overflow-hidden shrink-0">
                   {req.avatar ? (
                     <img src={req.avatar} alt="" className="w-full h-full object-cover" />
@@ -121,9 +175,9 @@ export function AdminPasswordResets() {
                   {processingId === req.id ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4" />
+                    <KeyRound className="w-4 h-4" />
                   )}
-                  Resetar Senha
+                  Gerar Nova Senha
                 </button>
               </div>
             </motion.div>
@@ -154,7 +208,7 @@ export function AdminPasswordResets() {
                     <p className="text-[10px] text-neutral-400">{req.email}</p>
                   </div>
                   <span className="px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-[8px] font-black uppercase tracking-widest">
-                    {req.status === 'sent' ? 'Enviado' : req.status}
+                    {req.status === 'sent' ? 'Senha Gerada' : req.status}
                   </span>
                 </div>
               </div>
