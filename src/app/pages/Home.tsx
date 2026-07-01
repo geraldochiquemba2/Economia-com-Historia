@@ -525,7 +525,7 @@ export function Home() {
                     className="block relative h-48 rounded-2xl overflow-hidden border border-white/10 group hover:border-[#E8B4B8]/50 transition-all duration-300 shadow-lg"
                   >
                     {item.thumbnail ? (
-                      <img src={item.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      <img src={item.thumbnail} alt="" className="absolute inset-0 w-full h-full object-contain bg-[#0F0F0F] group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                       <div className="absolute inset-0 bg-white/5" />
                     )}

@@ -42,7 +42,7 @@ export function Register() {
     <div className="relative min-h-screen flex items-center justify-center p-6 text-neutral-100 overflow-hidden bg-[#0a0508] selection:bg-[#E8B4B8]/30">
       {/* Animated background */}
       <div className="absolute inset-0">
-        <img src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920" alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <img src="https://estamosjuntos.co.ao/wp-content/uploads/2024/10/Crescimento-economico-Angola.jpeg" alt="Angola" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(232,180,184,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(232,180,184,0.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       </div>
 
