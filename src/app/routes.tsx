@@ -10,6 +10,8 @@ import { Profile } from "./pages/Profile";
 import { Rankings } from "./pages/Rankings";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ChangePassword } from "./pages/ChangePassword";
 
 import { ForumDetail } from "./pages/ForumDetail";
 import { CompletedStudies } from "./pages/CompletedStudies";
@@ -25,6 +27,7 @@ import { AdminQuiz } from "./pages/admin/AdminQuiz";
 import { AdminTrivia } from "./pages/admin/AdminTrivia";
 import { AdminReview } from "./pages/admin/AdminReview";
 import { AdminCategories } from "./pages/admin/AdminCategories";
+import { AdminPasswordResets } from "./pages/admin/AdminPasswordResets";
 
 // Layouts
 import { UserLayout } from "./layouts/UserLayout";
@@ -42,6 +45,14 @@ export const router = createBrowserRouter([
   {
     path: "/register",
     Component: Register,
+  },
+  {
+    path: "/forgot-password",
+    Component: ForgotPassword,
+  },
+  {
+    path: "/change-password",
+    Component: ChangePassword,
   },
   {
     path: "/app",
@@ -73,6 +84,7 @@ export const router = createBrowserRouter([
       { path: "quiz", Component: AdminQuiz },
       { path: "trivia", Component: AdminTrivia },
       { path: "categories", Component: AdminCategories },
+      { path: "password-resets", Component: AdminPasswordResets },
     ],
   },
 ]);

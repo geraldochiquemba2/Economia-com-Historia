@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -94,6 +95,55 @@ const pool = new Pool({
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+
+// Email transporter (Ethereal for dev / real SMTP via env)
+let emailTransporter = null;
+async function getEmailTransporter() {
+  if (emailTransporter) return emailTransporter;
+  if (process.env.SMTP_HOST) {
+    emailTransporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+    return emailTransporter;
+  }
+  // Fallback: Ethereal test account
+  const testAccount = await nodemailer.createTestAccount();
+  emailTransporter = nodemailer.createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    secure: false,
+    auth: { user: testAccount.user, pass: testAccount.pass },
+  });
+  console.log('[Email] Conta Ethereal criada:', testAccount.user);
+  return emailTransporter;
+}
+
+function generateRandomPassword(length = 10) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pass = '';
+  for (let i = 0; i < length; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+  return pass;
+}
+
+function requireAuth(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Não autorizado' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch { return res.status(401).json({ error: 'Token inválido' }); }
+}
+
+function requireAdmin(req, res, next) {
+  requireAuth(req, res, () => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Acesso negado' });
+    next();
+  });
+}
 
 // Função para garantir que a BD tem as tabelas corretas (Auto-Migrate)
 async function initDB() {
@@ -268,6 +318,22 @@ async function initDB() {
     // Add hidden column if not exists
     await pool.query(`ALTER TABLE "Category" ADD COLUMN IF NOT EXISTS "hidden" BOOLEAN DEFAULT FALSE`);
 
+    // 10. Tabela de pedidos de redefinição de senha
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "PasswordReset" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "userId" UUID REFERENCES "User"(id) ON DELETE CASCADE,
+        "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
+        "newPassword" VARCHAR(255),
+        "requestedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "resetAt" TIMESTAMPTZ,
+        "sentAt" TIMESTAMPTZ
+      );
+    `);
+
+    // 11. Coluna mustChangePassword na tabela User
+    await pool.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "mustChangePassword" BOOLEAN DEFAULT FALSE;`);
+
     // Seed default categories if empty
     const { rows: catCount } = await pool.query('SELECT COUNT(*) as count FROM "Category"');
     if (parseInt(catCount[0].count) === 0) {
@@ -365,14 +431,173 @@ app.post('/api/auth/login', async (req, res) => {
     if (rows.length === 0) return res.status(400).json({ error: 'Usuário não encontrado' });
 
     const user = rows[0];
+
+    // Verificar se há pedido de redefinição pendente
+    const { rows: pendingResets } = await pool.query(
+      `SELECT * FROM "PasswordReset" WHERE "userId" = $1 AND status = 'pending' ORDER BY "requestedAt" DESC LIMIT 1`,
+      [user.id]
+    );
+
+    // Verificar se há redefinição já processada (admin clicou reset mas user ainda não fez login com nova senha)
+    const { rows: readyResets } = await pool.query(
+      `SELECT * FROM "PasswordReset" WHERE "userId" = $1 AND status = 'sent' ORDER BY "resetAt" DESC LIMIT 1`,
+      [user.id]
+    );
+
     const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) return res.status(400).json({ error: 'Senha incorreta' });
+    if (!valid) {
+      if (pendingResets.length > 0) {
+        return res.status(400).json({ error: 'A sua senha será resetada em breve e receberá no seu email' });
+      }
+      if (readyResets.length > 0) {
+        return res.status(400).json({ error: 'Verifique o seu email, lá consta a sua nova senha' });
+      }
+      return res.status(400).json({ error: 'Senha incorreta' });
+    }
+
+    // Se tem mustChangePassword, devolver flag
+    if (user.mustChangePassword) {
+      const token = jwt.sign({ id: user.id, role: user.role, mustChangePassword: true }, JWT_SECRET, { expiresIn: '1h' });
+      return res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar || null, mustChangePassword: true } });
+    }
 
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar || null } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Pedir redefinição de senha (utilizador)
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const { rows } = await pool.query('SELECT id, name FROM "User" WHERE email = $1', [email]);
+    if (rows.length === 0) return res.status(400).json({ error: 'Email não encontrado' });
+
+    const user = rows[0];
+
+    // Verificar se já existe pedido pendente
+    const { rows: existing } = await pool.query(
+      `SELECT id FROM "PasswordReset" WHERE "userId" = $1 AND status = 'pending'`,
+      [user.id]
+    );
+    if (existing.length > 0) {
+      return res.json({ message: 'Já existe um pedido de redefinição em curso. Aguarde o administrador.' });
+    }
+
+    // Criar pedido
+    await pool.query(
+      `INSERT INTO "PasswordReset" ("userId", status) VALUES ($1, 'pending')`,
+      [user.id]
+    );
+
+    res.json({ message: 'Pedido enviado. O administrador irá processar o seu pedido e receberá a nova senha por email.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Listar pedidos de redefinição pendentes (admin)
+app.get('/api/admin/password-resets', requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT pr.*, u.name, u.email, u.avatar
+      FROM "PasswordReset" pr
+      JOIN "User" u ON pr."userId" = u.id
+      ORDER BY pr."requestedAt" DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar pedidos' });
+  }
+});
+
+// Admin: processar redefinição de senha
+app.post('/api/admin/password-resets/:id/reset', requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT pr.*, u.email, u.name FROM "PasswordReset" pr JOIN "User" u ON pr."userId" = u.id WHERE pr.id = $1`,
+      [req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Pedido não encontrado' });
+
+    const reset = rows[0];
+    if (reset.status !== 'pending') return res.status(400).json({ error: 'Este pedido já foi processado' });
+
+    // Gerar nova senha aleatória
+    const newPassword = generateRandomPassword(12);
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+
+    // Atualizar senha do utilizador e marcar mustChangePassword
+    await pool.query(
+      `UPDATE "User" SET password_hash = $1, "mustChangePassword" = TRUE WHERE id = $2`,
+      [hash, reset.userId]
+    );
+
+    // Atualizar pedido
+    await pool.query(
+      `UPDATE "PasswordReset" SET status = 'sent', "newPassword" = $1, "resetAt" = NOW() WHERE id = $2`,
+      [newPassword, req.params.id]
+    );
+
+    // Enviar email com a nova senha
+    try {
+      const transporter = await getEmailTransporter();
+      const info = await transporter.sendMail({
+        from: '"EconomiaJA" <noreply@economiaja.com>',
+        to: reset.email,
+        subject: 'Nova Senha - EconomiaJA',
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+            <h2 style="color:#3A0310;">Olá, ${reset.name}!</h2>
+            <p>A sua senha foi redefinida pelo administrador.</p>
+            <div style="background:#f5f5f5;border:2px dashed #3A0310;border-radius:12px;padding:20px;text-align:center;margin:20px 0;">
+              <p style="margin:0 0 8px;color:#666;font-size:12px;">A SUA NOVA SENHA:</p>
+              <p style="margin:0;font-size:24px;font-weight:bold;color:#3A0310;letter-spacing:2px;">${newPassword}</p>
+            </div>
+            <p><strong>Importante:</strong> Após fazer login, será solicitado que crie uma nova senha de sua preferência.</p>
+            <p style="color:#999;font-size:11px;margin-top:30px;">Se não solicitou esta redefinição, ignore este email.</p>
+          </div>
+        `,
+      });
+      console.log('[Email] Email enviado:', nodemailer.getTestMessageUrl(info));
+      await pool.query(`UPDATE "PasswordReset" SET "sentAt" = NOW() WHERE id = $1`, [req.params.id]);
+    } catch (emailErr) {
+      console.error('[Email] Erro ao enviar:', emailErr.message);
+      // Não falhar o request por causa do email
+    }
+
+    res.json({ message: 'Senha redefinida com sucesso. Email enviado ao utilizador.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao processar redefinição' });
+  }
+});
+
+// Utilizador: alterar senha (após reset forçado)
+app.post('/api/auth/change-password', requireAuth, async (req, res) => {
+  const { newPassword } = req.body;
+  try {
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres' });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+    await pool.query(
+      `UPDATE "User" SET password_hash = $1, "mustChangePassword" = FALSE WHERE id = $2`,
+      [hash, req.user.id]
+    );
+    // Limpar pedidos de reset antigos do user
+    await pool.query(`DELETE FROM "PasswordReset" WHERE "userId" = $1`, [req.user.id]);
+    res.json({ message: 'Senha alterada com sucesso' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao alterar senha' });
   }
 });
 
@@ -1329,18 +1554,7 @@ app.get('/api/stats', async (req, res) => {
 // TRIVIA / SABIAS QUE
 // ==========================================
 
-const requireAdmin = (req, res, next) => {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Acesso não autorizado' });
-  try {
-    const user = jwt.verify(auth.slice(7), process.env.JWT_SECRET || 'secret');
-    if (user.role !== 'admin') return res.status(403).json({ error: 'Apenas admin pode aceder' });
-    req.user = user;
-    next();
-  } catch (err) {
-    res.status(401).json({ error: 'Token inválido' });
-  }
-};
+// requireAdmin already defined above
 
 app.get('/api/trivia/active', async (req, res) => {
   try {

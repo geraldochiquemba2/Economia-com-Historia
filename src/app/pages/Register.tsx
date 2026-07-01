@@ -39,18 +39,17 @@ export function Register() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-6 text-neutral-100 overflow-hidden bg-[#0F0F0F] selection:bg-[#E8B4B8]/30">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/9/96/Bank_note_of_50_Angolan_kwanzas.jpg')] bg-cover bg-center opacity-20 pointer-events-none"></div>
-      
-      {/* Decorative gradient blobs */}
-      <div className="absolute top-[-10%] left-[-5%] w-[40rem] h-[40rem] bg-gradient-to-bl from-[#3A0310] to-purple-900/40 rounded-full blur-[120px] opacity-40 pointer-events-none animate-pulse-slow" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[35rem] h-[35rem] bg-gradient-to-tl from-[#E8B4B8]/20 to-[#3A0310]/30 rounded-full blur-[100px] opacity-30 pointer-events-none" />
+    <div className="relative min-h-screen flex items-center justify-center p-6 text-neutral-100 overflow-hidden bg-[#0a0508] selection:bg-[#E8B4B8]/30">
+      {/* Animated background */}
+      <div className="absolute inset-0">
+        <img src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920" alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(232,180,184,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(232,180,184,0.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+      </div>
 
       {/* Back to Home Button */}
       <Link 
         to="/" 
-        className="absolute top-6 left-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl text-white font-black uppercase tracking-widest text-[10px] transition-all duration-300 group shadow-2xl"
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl text-white force-white font-black uppercase tracking-widest text-[10px] transition-all duration-300 group shadow-2xl"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         <span className="hidden sm:inline">Voltar ao Início</span>
@@ -61,8 +60,8 @@ export function Register() {
         className="w-full max-w-md bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative z-10"
       >
         <div className="text-center mb-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#E8B4B8] mb-2">Junte-se a nós</p>
-          <h1 className="text-3xl font-black uppercase tracking-tight">Cadastro</h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#E8B4B8] mb-2 force-white">Junte-se a nós</p>
+          <h1 className="text-3xl font-black uppercase tracking-tight force-white">Cadastro</h1>
         </div>
 
         {error && (
@@ -132,9 +131,10 @@ export function Register() {
           </button>
         </form>
 
-        <p className="mt-8 text-center text-xs font-bold uppercase tracking-widest text-neutral-400">
-          Já possui conta? <Link to="/login" className="text-[#E8B4B8] hover:underline">Faça Login</Link>
+        <p className="mt-8 text-center text-xs font-bold uppercase tracking-widest force-white">
+          Já possui conta? <Link to="/login" className="text-[#E8B4B8] hover:underline force-white">Faça Login</Link>
         </p>
+        <p className="mt-3 text-center text-[10px] font-bold tracking-widest text-white/40 force-white">🇦🇴 Feito em Angola</p>
       </motion.div>
     </div>
   );

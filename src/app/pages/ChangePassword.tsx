@@ -1,38 +1,51 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { Lock, Mail, ArrowRight, Loader2, ArrowLeft, Home } from "lucide-react";
+import { Lock, ArrowRight, Loader2, KeyRound } from "lucide-react";
 
-export function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export function ChangePassword() {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
+    if (newPassword !== confirmPassword) {
+      setError("As senhas não coincidem");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await fetch("/api/auth/login", {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/auth/change-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newPassword }),
       });
-      const data = await response.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao alterar senha");
 
-      if (!response.ok) throw new Error(data.error || "Erro ao fazer login");
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      
-      if (data.user.mustChangePassword) {
-        navigate("/change-password");
-      } else {
-        navigate("/app");
+      // Atualizar user local para remover mustChangePassword
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        delete user.mustChangePassword;
+        localStorage.setItem("user", JSON.stringify(user));
       }
+
+      navigate("/app");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -42,29 +55,23 @@ export function Login() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-6 text-neutral-100 overflow-hidden bg-[#0a0508] selection:bg-[#E8B4B8]/30">
-      {/* Animated background */}
       <div className="absolute inset-0">
         <img src="https://images.unsplash.com/photo-1447069387593-a5de0862481e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920" alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(232,180,184,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(232,180,184,0.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       </div>
 
-      {/* Back to Home Button */}
-      <Link 
-        to="/" 
-        className="absolute top-6 left-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl text-white force-white font-black uppercase tracking-widest text-[10px] transition-all duration-300 group shadow-2xl"
-      >
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        <span className="hidden sm:inline">Voltar ao Início</span>
-      </Link>
-      
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative z-10"
       >
         <div className="text-center mb-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#E8B4B8] mb-2 force-white">Bem-vindo de volta</p>
-          <h1 className="text-3xl font-black uppercase tracking-tight force-white">Login</h1>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#3A0310]/30 border border-[#E8B4B8]/20 flex items-center justify-center">
+            <KeyRound className="w-8 h-8 text-[#E8B4B8]" />
+          </div>
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#E8B4B8] mb-2 force-white">Nova Senha</p>
+          <h1 className="text-2xl font-black uppercase tracking-tight force-white">Crie a sua nova senha</h1>
+          <p className="mt-3 text-xs text-white/50 force-white">A sua senha foi redefinida. Agora crie uma nova senha de sua preferência.</p>
         </div>
 
         {error && (
@@ -73,50 +80,42 @@ export function Login() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="relative">
-            <Mail className="absolute left-4 top-3.5 w-5 h-5 text-white/50 force-white-50" />
-            <input 
-              type="email" 
-              placeholder="SEU EMAIL" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-white/50 force-white-50" />
+            <input
+              type="password"
+              placeholder="NOVA SENHA"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               required
+              minLength={6}
               className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-medium text-sm force-white force-white-placeholder"
             />
           </div>
 
           <div className="relative">
             <Lock className="absolute left-4 top-3.5 w-5 h-5 text-white/50 force-white-50" />
-            <input 
-              type="password" 
-              placeholder="SUA SENHA" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+            <input
+              type="password"
+              placeholder="CONFIRMAR SENHA"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              minLength={6}
               className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/10 transition-all font-medium text-sm force-white force-white-placeholder"
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-[#3A0310] to-[#E8B4B8] text-white font-black uppercase tracking-widest py-4 rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Entrar"}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Guardar Nova Senha"}
             {!loading && <ArrowRight className="w-5 h-5" />}
           </button>
         </form>
-
-        <div className="mt-6 text-center">
-          <Link to="/forgot-password" className="text-[10px] font-bold uppercase tracking-widest text-[#E8B4B8]/70 hover:text-[#E8B4B8] transition-colors force-white">
-            Esqueceu a sua senha?
-          </Link>
-        </div>
-
-        <p className="mt-6 text-center text-xs font-bold uppercase tracking-widest force-white">
-          Não tem uma conta? <Link to="/register" className="text-[#E8B4B8] hover:underline force-white">Cadastre-se</Link>
-        </p>
         <p className="mt-3 text-center text-[10px] font-bold tracking-widest text-white/40 force-white">🇦🇴 Feito em Angola</p>
       </motion.div>
     </div>

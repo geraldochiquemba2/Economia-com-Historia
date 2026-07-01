@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useLocation, useNavigate, MemoryRouter } from "react-router";
-import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare, Trophy, Lightbulb, ClipboardCheck, Bell, Folder } from "lucide-react";
+import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare, Trophy, Lightbulb, ClipboardCheck, Bell, Folder, KeyRound } from "lucide-react";
 import { NotificationsModal } from "../components/NotificationsModal";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
@@ -10,6 +10,7 @@ export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [pendingCount, setPendingCount] = useState(0);
+  const [passwordResetCount, setPasswordResetCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const userStr = localStorage.getItem("user");
@@ -32,6 +33,18 @@ export function AdminLayout() {
     fetchPendingCount();
     const interval = setInterval(fetchPendingCount, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Buscar pedidos de redefinição de senha pendentes
+  React.useEffect(() => {
+    fetch("/api/admin/password-resets", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setPasswordResetCount(data.filter((r: any) => r.status === 'pending').length);
+      })
+      .catch(() => {});
   }, []);
 
   React.useEffect(() => {
@@ -73,6 +86,7 @@ export function AdminLayout() {
     { to: "/admin/quiz", icon: Trophy, label: "Quiz" },
     { to: "/admin/trivia", icon: Lightbulb, label: "Curiosidades" },
     { to: "/admin/categories", icon: Folder, label: "Categorias" },
+    { to: "/admin/password-resets", icon: KeyRound, label: "Senhas" },
   ];
 
   return (
@@ -105,6 +119,11 @@ export function AdminLayout() {
                 {item.to === "/admin/review" && pendingCount > 0 && (
                   <span className="absolute -top-2 -right-3 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full px-1 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]">
                     {pendingCount}
+                  </span>
+                )}
+                {item.to === "/admin/password-resets" && passwordResetCount > 0 && (
+                  <span className="absolute -top-2 -right-3 min-w-[18px] h-[18px] flex items-center justify-center bg-amber-500 text-white text-[8px] font-black rounded-full px-1 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+                    {passwordResetCount}
                   </span>
                 )}
               </NavLink>
@@ -171,6 +190,11 @@ export function AdminLayout() {
                 {item.to === "/admin/review" && pendingCount > 0 && (
                   <span className="absolute top-1 right-1/4 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-full px-0.5 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)] z-10">
                     {pendingCount}
+                  </span>
+                )}
+                {item.to === "/admin/password-resets" && passwordResetCount > 0 && (
+                  <span className="absolute top-1 right-1/4 min-w-[16px] h-[16px] flex items-center justify-center bg-amber-500 text-white text-[7px] font-black rounded-full px-0.5 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)] z-10">
+                    {passwordResetCount}
                   </span>
                 )}
                 <motion.div
