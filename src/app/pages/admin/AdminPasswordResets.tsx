@@ -193,7 +193,7 @@ export function AdminPasswordResets() {
             {processedRequests.map((req) => (
               <div
                 key={req.id}
-                className="bg-white dark:bg-white/5 rounded-xl border border-neutral-200 dark:border-white/10 p-4 opacity-70"
+                className="bg-white dark:bg-white/5 rounded-xl border border-neutral-200 dark:border-white/10 p-4"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-neutral-100 dark:bg-white/5 flex items-center justify-center overflow-hidden shrink-0">
@@ -206,9 +206,20 @@ export function AdminPasswordResets() {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-xs text-[#3A0310] dark:text-white truncate">{req.name}</p>
                     <p className="text-[10px] text-neutral-400">{req.email}</p>
+                    {req.newPassword && (
+                      <div className="flex items-center gap-2 mt-2 bg-neutral-50 dark:bg-white/5 rounded-lg px-3 py-2 border border-neutral-200 dark:border-white/10">
+                        <code className="flex-1 text-sm font-mono font-black text-[#3A0310] dark:text-[#E8B4B8] select-all">{req.newPassword}</code>
+                        <button
+                          onClick={() => handleCopy(req.newPassword!, req.id)}
+                          className="p-1.5 rounded-lg hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors shrink-0 active:scale-95"
+                        >
+                          {copiedId === req.id ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5 text-neutral-400" />}
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <span className="px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-[8px] font-black uppercase tracking-widest">
-                    {req.status === 'sent' ? 'Senha Gerada' : req.status}
+                    Gerada
                   </span>
                 </div>
               </div>
