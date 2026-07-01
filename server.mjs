@@ -1652,7 +1652,7 @@ app.patch('/api/users/:id', async (req, res) => {
 
     // Send notification on promotion/demotion
     if (oldRole && oldRole !== role && oldRole !== 'admin' && role !== 'admin') {
-      const roleLabels: Record<string, string> = {
+      const roleLabels = {
         elite: 'Elite', escritor: 'Escritor', revisor: 'Revisor', base: 'Acesso Base'
       };
       const isPromotion = ['elite', 'escritor', 'revisor'].includes(role) && role !== 'base';

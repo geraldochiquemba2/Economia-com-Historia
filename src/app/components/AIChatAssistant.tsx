@@ -73,8 +73,8 @@ export function AIChatAssistant() {
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-black text-sm uppercase tracking-wider">Assistente IA</h3>
-                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">economia</p>
+                <h3 className="text-white font-black text-sm uppercase tracking-wider force-white">Assistente IA</h3>
+                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest force-white">economia</p>
               </div>
               <button onClick={() => setIsOpen(false)} className="text-white/60 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
