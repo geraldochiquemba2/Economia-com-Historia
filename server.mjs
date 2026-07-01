@@ -592,8 +592,8 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
       `UPDATE "User" SET password_hash = $1, "mustChangePassword" = FALSE WHERE id = $2`,
       [hash, req.user.id]
     );
-    // Limpar pedidos de reset antigos do user
-    await pool.query(`DELETE FROM "PasswordReset" WHERE "userId" = $1`, [req.user.id]);
+    // Marcar pedido como concluído (senha já foi redefinida pelo utilizador)
+    await pool.query(`UPDATE "PasswordReset" SET status = 'completed' WHERE "userId" = $1 AND status = 'sent'`, [req.user.id]);
     res.json({ message: 'Senha alterada com sucesso' });
   } catch (error) {
     console.error(error);

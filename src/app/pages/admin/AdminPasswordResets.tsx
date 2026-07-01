@@ -206,7 +206,7 @@ export function AdminPasswordResets() {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-xs text-[#3A0310] dark:text-white truncate">{req.name}</p>
                     <p className="text-[10px] text-neutral-400">{req.email}</p>
-                    {req.newPassword && (
+                    {req.newPassword && req.status !== 'completed' && (
                       <div className="flex items-center gap-2 mt-2 bg-neutral-50 dark:bg-white/5 rounded-lg px-3 py-2 border border-neutral-200 dark:border-white/10">
                         <code className="flex-1 text-sm font-mono font-black text-[#3A0310] dark:text-[#E8B4B8] select-all">{req.newPassword}</code>
                         <button
@@ -216,6 +216,9 @@ export function AdminPasswordResets() {
                           {copiedId === req.id ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5 text-neutral-400" />}
                         </button>
                       </div>
+                    )}
+                    {req.status === 'completed' && (
+                      <p className="text-[10px] text-green-600 dark:text-green-400 font-bold mt-1">✅ Utilizador já criou nova senha</p>
                     )}
                   </div>
                   <span className="px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-[8px] font-black uppercase tracking-widest">
