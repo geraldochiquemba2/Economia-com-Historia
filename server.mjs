@@ -1177,7 +1177,7 @@ app.post('/api/ai/chat', async (req, res) => {
   try {
     // Fetch platform stats for context
     const [contentRes, usersRes, rankingsRes, categoriesRes] = await Promise.all([
-      pool.query('SELECT title, type, "viewCount", "likesCount", status FROM "Content" WHERE status = $1 ORDER BY "viewCount" DESC NULLS LAST LIMIT 20', ['approved']),
+      pool.query('SELECT title, type, status, array_length("likes", 1) as "likesCount" FROM "Content" WHERE status = $1 ORDER BY "createdAt" DESC LIMIT 20', ['approved']),
       pool.query('SELECT COUNT(*) as total FROM "User"'),
       pool.query('SELECT name, xp FROM "User" ORDER BY xp DESC LIMIT 10'),
       pool.query('SELECT name, icon FROM "Category" WHERE hidden = FALSE')
@@ -1193,7 +1193,7 @@ app.post('/api/ai/chat', async (req, res) => {
 CONHECIMENTO DA PLATAFORMA:
 - ${totalUsers} utilizadores registados
 - Categorias: ${categories.map(c => `${c.icon} ${c.name}`).join(', ') || 'Sem categorias'}
-- Top conteúdo mais acedido: ${topContent.slice(0, 10).map(c => `"${c.title}" (${c.type}, ${c.viewCount || 0} acessos, ${c.likesCount || 0} likes)`).join('\n  ') || 'Nenhum'}
+- Top conteúdo mais recente: ${topContent.slice(0, 10).map(c => `"${c.title}" (${c.type}, ${c.likesCount || 0} likes)`).join('\n  ') || 'Nenhum'}
 - Top utilizadores (ranking): ${topRankings.map((u, i) => `${i+1}º ${u.name} - ${u.xp} XP`).join('\n  ') || 'Sem rankings'}
 
 REGRAS:
