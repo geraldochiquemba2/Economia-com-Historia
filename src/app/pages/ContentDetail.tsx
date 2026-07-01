@@ -397,7 +397,7 @@ export function ContentDetail() {
           className="prose prose-invert max-w-none"
         >
           {content.description && (
-            <p className="text-xl text-neutral-700 dark:text-neutral-300 font-medium leading-relaxed italic mb-8 border-l-4 border-[#3A0310] pl-6">
+            <p className="text-lg md:text-xl text-neutral-700 dark:text-neutral-300 font-medium leading-relaxed italic mb-8 border-l-4 border-[#3A0310] pl-4 md:pl-6">
               {content.description}
             </p>
           )}

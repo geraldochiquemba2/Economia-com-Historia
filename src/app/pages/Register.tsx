@@ -57,11 +57,11 @@ export function Register() {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative z-10"
+        className="w-full max-w-md bg-black/40 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-[2.5rem] shadow-2xl relative z-10"
       >
         <div className="text-center mb-10">
           <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#E8B4B8] mb-2 force-white">Junte-se a nós</p>
-          <h1 className="text-3xl font-black uppercase tracking-tight force-white">Cadastro</h1>
+          <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight force-white">Cadastro</h1>
         </div>
 
         {error && (

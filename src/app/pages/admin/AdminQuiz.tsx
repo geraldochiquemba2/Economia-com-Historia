@@ -160,7 +160,7 @@ export function AdminQuiz() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-black text-neutral-800 dark:text-white uppercase tracking-tighter">Gestão de Quiz</h1>
@@ -192,6 +192,7 @@ export function AdminQuiz() {
       )}
 
       <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700 text-xs font-bold text-neutral-500 uppercase tracking-wider">
@@ -239,6 +240,7 @@ export function AdminQuiz() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <AnimatePresence>

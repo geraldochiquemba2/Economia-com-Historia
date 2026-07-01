@@ -220,12 +220,12 @@ export function ForumDetail() {
         </div>
       </motion.header>
 
-      <main className="p-6 space-y-8">
+      <main className="p-4 md:p-6 space-y-8">
         {/* Main Topic Card */}
         <motion.article
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/5 rounded-[2.5rem] border border-white/10 p-8 shadow-2xl relative overflow-hidden"
+          className="bg-white/5 rounded-[2.5rem] border border-white/10 p-5 md:p-8 shadow-2xl relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 w-full h-1.5 bg-[#3A0310]"></div>
 

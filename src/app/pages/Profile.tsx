@@ -392,7 +392,7 @@ export function Profile() {
           
           {/* Profile Stats Grid Column */}
           <div className="w-full md:col-span-7">
-            <div className={`grid gap-3 ${stats.rank !== '-' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <div className={`grid gap-3 ${stats.rank !== '-' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
               {stats.rank !== '-' && (
                 <div className="bg-[#3A0310]/30 backdrop-blur-md border-2 p-3 md:p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg transition-colors hover:bg-white/5" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
                   <Award className="w-4 h-4 force-white mb-1.5" />

@@ -153,8 +153,8 @@ export function Home() {
   return (
     <div className="bg-[#0F0F0F] min-h-screen pb-24 text-neutral-100 overflow-x-hidden selection:bg-[#3A0310] selection:text-white">
       {/* Decorative background elements */}
-      <div className="fixed top-0 right-0 w-96 h-96 bg-[#3A0310] rounded-full blur-[150px] opacity-20 pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-64 h-64 bg-[#E8B4B8] rounded-full blur-[150px] opacity-5 pointer-events-none" />
+      <div className="fixed top-0 right-0 w-64 h-64 md:w-96 md:h-96 bg-[#3A0310] rounded-full blur-[150px] opacity-20 pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-48 h-48 md:w-64 md:h-64 bg-[#E8B4B8] rounded-full blur-[150px] opacity-5 pointer-events-none" />
 
       {/* Header / Top Bar */}
       <motion.header 
@@ -366,7 +366,7 @@ export function Home() {
 
         {/* Quick Categories */}
         <section>
-          <div className="grid grid-cols-4 gap-4 md:gap-8 md:max-w-3xl md:mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-8 md:max-w-3xl md:mx-auto">
             {categories.map((cat, idx) => {
               const iconMap: Record<string, any> = {
                 FileText, Play, Mic, Flame, Award, BookOpen, Music, ImageIcon,
@@ -445,7 +445,7 @@ export function Home() {
               </Link>
             </div>
             
-            <div className="flex gap-6 overflow-x-auto pb-6 -mx-6 px-6">
+            <div className="flex gap-3 md:gap-6 overflow-x-auto pb-6 -mx-6 px-6">
               {recommendedThemes.map((rec, index) => (
               <motion.div
                 key={rec.id}

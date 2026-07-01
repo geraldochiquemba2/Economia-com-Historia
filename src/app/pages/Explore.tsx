@@ -268,7 +268,7 @@ export function Explore() {
       {/* Grid */}
       <div className="p-6 space-y-6">
         {filter === 'jindungo' && !localStorage.getItem('user') && (
-          <div className="bg-[#0a0a0a] border border-[#E8B4B8]/30 p-8 rounded-[2rem] text-center shadow-md relative overflow-hidden">
+            <div className="bg-[#0a0a0a] border border-[#E8B4B8]/30 p-5 md:p-8 rounded-[2rem] text-center shadow-md relative overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent pointer-events-none" />
              <div className="relative z-10 flex flex-col items-center">
                <Flame className="w-12 h-12 mb-4" style={{ color: '#E8B4B8' }} />
@@ -292,7 +292,7 @@ export function Explore() {
           const u = JSON.parse(userStr);
           if (['elite', 'admin', 'escritor', 'revisor'].includes(u.role)) return null;
           return (
-            <div className="bg-[#0a0a0a] border border-[#E8B4B8]/30 p-8 rounded-[2rem] text-center shadow-md relative overflow-hidden">
+          <div className="bg-[#0a0a0a] border border-[#E8B4B8]/30 p-5 md:p-8 rounded-[2rem] text-center shadow-md relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent pointer-events-none" />
               <div className="relative z-10 flex flex-col items-center">
                 <Flame className="w-14 h-14 mb-4" style={{ color: '#E8B4B8' }} />
