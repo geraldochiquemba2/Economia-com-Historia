@@ -13,6 +13,8 @@ type ContentItem = {
   thumbnail: string;
   fullText?: string;
   videoUrl?: string;
+  authorName?: string;
+  createdAt?: string;
 };
 
 export function Explore() {
@@ -76,7 +78,7 @@ export function Explore() {
     const userId = parsedUser.id;
 
     // Bloquear guardar conteúdo Jindungo para não-Elite
-    if (content.type === 'jindungo' && parsedUser.role !== 'elite' && parsedUser.role !== 'admin') {
+    if (content.type === 'jindungo' && !['elite', 'admin', 'escritor', 'revisor'].includes(parsedUser.role)) {
       toast.error('Acesso Restrito 🔥', {
         description: 'Só membros Elite podem guardar Textos com Jindungo. Solicita o acesso no teu Perfil.'
       });
@@ -288,7 +290,7 @@ export function Explore() {
           const userStr = localStorage.getItem('user');
           if (!userStr) return null;
           const u = JSON.parse(userStr);
-          if (u.role === 'elite' || u.role === 'admin') return null;
+          if (['elite', 'admin', 'escritor', 'revisor'].includes(u.role)) return null;
           return (
             <div className="bg-[#0a0a0a] border border-[#E8B4B8]/30 p-8 rounded-[2rem] text-center shadow-md relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent pointer-events-none" />
@@ -385,7 +387,7 @@ export function Explore() {
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         } else {
                           const user = JSON.parse(userStr);
-                          if (user.role !== 'elite' && user.role !== 'admin') {
+                          if (!['elite', 'admin', 'escritor', 'revisor'].includes(user.role)) {
                             e.preventDefault();
                             toast.error('Acesso Bloqueado', { description: 'Você precisa ser membro elite para ler este conteúdo.' });
                             navigate('/app/explore?filter=jindungo');
@@ -445,6 +447,14 @@ export function Explore() {
                         <p className="text-neutral-900 dark:text-white text-xs line-clamp-2 leading-relaxed font-medium">
                           {content.description}
                         </p>
+                        {content.authorName && (
+                          <p className="text-[10px] text-[#3A0310]/60 dark:text-[#E8B4B8]/60 font-bold mt-1.5">
+                            por {content.authorName}
+                            {content.createdAt && (
+                              <span className="font-medium ml-1.5">· {new Date(content.createdAt).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            )}
+                          </p>
+                        )}
                       </div>
 
                       <div className="mt-3 md:mt-6 flex items-center justify-between border-t border-neutral-100 dark:border-white/5 pt-2 md:pt-4">

@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, NavLink, Link, useLocation, useNavigate, MemoryRouter } from "react-router";
-import { Home, Compass, BookOpenCheck, MessageSquare, User, ShieldAlert, Sun, Moon, LogOut } from "lucide-react";
+import { Home, Compass, BookOpenCheck, MessageSquare, User, ShieldAlert, Sun, Moon, LogOut, PenLine, ClipboardCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
 import { ScrollToTop } from "../components/ScrollToTop";
@@ -25,6 +25,12 @@ export function UserLayout() {
     { to: "/app/quiz", icon: BookOpenCheck, label: "Quiz" },
     { to: "/app/forum", icon: MessageSquare, label: "Fórum" },
   ];
+  if (token && (user?.role === 'escritor' || user?.role === 'revisor')) {
+    navItems.push({ to: "/app/create", icon: PenLine, label: "Criar" });
+  }
+  if (token && user?.role === 'revisor') {
+    navItems.push({ to: "/admin/review", icon: ClipboardCheck, label: "Revisão" });
+  }
   if (token && user?.role !== 'admin') {
     navItems.push({ to: "/app/profile", icon: User, label: "Perfil" });
   }
@@ -87,7 +93,7 @@ export function UserLayout() {
             </span>
           </NavLink>
           
-          <nav className="flex items-center gap-1.5 lg:gap-2.5">
+          <nav className="flex items-center gap-1 lg:gap-1.5">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -97,7 +103,7 @@ export function UserLayout() {
                 title={item.label}
               >
               <item.icon className="w-4.5 h-4.5 stroke-[2px] flex-shrink-0" />
-              <span className="inline">{item.label}</span>
+              <span className="hidden lg:inline">{item.label}</span>
             </NavLink>
           ))}
 
@@ -109,7 +115,7 @@ export function UserLayout() {
               title="Painel Admin"
             >
               <ShieldAlert className="w-4.5 h-4.5 stroke-[2px] flex-shrink-0" />
-              <span className="inline">Painel Admin</span>
+              <span className="hidden lg:inline">Painel Admin</span>
             </NavLink>
           )}
 
@@ -131,10 +137,10 @@ export function UserLayout() {
               <button 
                 onClick={handleLogout}
                 title="Terminar Sessão"
-                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-600/10 dark:hover:bg-red-400/10 px-3 py-2 rounded-xl transition-all"
+                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-600/10 dark:hover:bg-red-400/10 px-2 lg:px-3 py-2 rounded-xl transition-all"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden md:inline">Sair</span>
+                <span className="hidden xl:inline">Sair</span>
               </button>
             </div>
           )}

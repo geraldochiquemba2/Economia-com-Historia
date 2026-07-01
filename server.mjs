@@ -127,6 +127,11 @@ async function initDB() {
     await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "likes" TEXT[] DEFAULT '{}';`);
     await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "dislikes" TEXT[] DEFAULT '{}';`);
     await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "author" VARCHAR(255) DEFAULT 'Autor Desconhecido';`);
+    await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "status" VARCHAR(20) DEFAULT 'approved';`);
+    await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "authorId" UUID;`);
+    await pool.query(`ALTER TABLE "Content" ADD COLUMN IF NOT EXISTS "rejectionReason" TEXT;`);
+    // Garantir que conteúdos antigos sem status ficam como approved
+    await pool.query(`UPDATE "Content" SET "status" = 'approved' WHERE "status" IS NULL;`);
 
     // 3. Garantir que a coluna avatar e xp existem na tabela User
     await pool.query(`
@@ -248,7 +253,32 @@ async function initDB() {
         "isRead" BOOLEAN DEFAULT FALSE,
         "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS "Category" (
+        "id" SERIAL PRIMARY KEY,
+        "name" VARCHAR(100) NOT NULL,
+        "icon" VARCHAR(100) NOT NULL DEFAULT 'Folder',
+        "color" VARCHAR(20) DEFAULT '#E8B4B8',
+        "sortOrder" INTEGER DEFAULT 0,
+        "hidden" BOOLEAN DEFAULT FALSE,
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
     `);
+
+    // Add hidden column if not exists
+    await pool.query(`ALTER TABLE "Category" ADD COLUMN IF NOT EXISTS "hidden" BOOLEAN DEFAULT FALSE`);
+
+    // Seed default categories if empty
+    const { rows: catCount } = await pool.query('SELECT COUNT(*) as count FROM "Category"');
+    if (parseInt(catCount[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO "Category" (name, icon, color, "sortOrder") VALUES
+        ('Textos', 'FileText', '#E8B4B8', 1),
+        ('Vídeos', 'Play', '#3A0310', 2),
+        ('Áudios', 'Mic', '#E8B4B8', 3),
+        ('Jindungo', 'Flame', '#ff6b35', 4)
+      `);
+    }
 
     console.log('[DB] Base de Dados sincronizada com sucesso.');
   } catch (err) {
@@ -833,10 +863,16 @@ app.delete('/api/admin/quiz/:id', async (req, res) => {
 
 // -- API DE CONTEÚDO --
 
-// Listar conteúdos (GET)
+// Listar conteúdos aprovados (GET) - público
 app.get('/api/content', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM "Content" ORDER BY "createdAt" DESC');
+    const { rows } = await pool.query(`
+      SELECT c.*, u.name as "authorName"
+      FROM "Content" c
+      LEFT JOIN "User" u ON c."authorId" = u.id
+      WHERE c."status" = $1
+      ORDER BY c."createdAt" DESC
+    `, ['approved']);
     res.json(rows);
   } catch (error) {
     console.error(error);
@@ -844,11 +880,104 @@ app.get('/api/content', async (req, res) => {
   }
 });
 
+// Listar todos os conteúdos (admin) - inclui pendentes e rejeitados
+app.get('/api/content/all', authMiddleware, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT c.*, u.name as "authorName"
+      FROM "Content" c
+      LEFT JOIN "User" u ON c."authorId" = u.id
+      WHERE c."status" != 'rejected'
+      ORDER BY c."createdAt" DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar conteúdos' });
+  }
+});
+
+// Listar conteúdos pendentes (para revisores)
+app.get('/api/content/pending', authMiddleware, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT c.*, u.name AS "authorName"
+      FROM "Content" c
+      LEFT JOIN "User" u ON c."authorId" = u.id
+      WHERE c."status" = $1
+      ORDER BY c."createdAt" DESC
+    `, ['pending']);
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar conteúdos pendentes' });
+  }
+});
+
+// Listar conteúdos do autor (escritor vê os seus)
+app.get('/api/content/my', authMiddleware, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM "Content" WHERE "authorId" = $1 ORDER BY "createdAt" DESC',
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar os teus conteúdos' });
+  }
+});
+
+// Aprovar conteúdo (revisor ou admin)
+app.patch('/api/content/:id/approve', authMiddleware, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
+  if (!['admin', 'revisor'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Sem permissão para aprovar conteúdo' });
+  }
+  try {
+    const { rows } = await pool.query(
+      'UPDATE "Content" SET "status" = $1, "updatedAt" = NOW() WHERE id = $2 RETURNING *',
+      ['approved', req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao aprovar conteúdo' });
+  }
+});
+
+// Rejeitar conteúdo (revisor ou admin)
+app.patch('/api/content/:id/reject', authMiddleware, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
+  if (!['admin', 'revisor'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Sem permissão para rejeitar conteúdo' });
+  }
+  try {
+    const { reason } = req.body;
+    const { rows } = await pool.query(
+      'UPDATE "Content" SET "status" = $1, "rejectionReason" = $2, "updatedAt" = NOW() WHERE id = $3 RETURNING *',
+      ['rejected', reason || null, req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao rejeitar conteúdo' });
+  }
+});
+
 // Buscar conteúdo por ID (GET)
 app.get('/api/content/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const { rows } = await pool.query('SELECT * FROM "Content" WHERE id = $1', [id]);
+    const { rows } = await pool.query(`
+      SELECT c.*, u.name as "authorName"
+      FROM "Content" c
+      LEFT JOIN "User" u ON c."authorId" = u.id
+      WHERE c.id = $1
+    `, [id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
     res.json(rows[0]);
   } catch (error) {
@@ -858,12 +987,18 @@ app.get('/api/content/:id', async (req, res) => {
 });
 
 // Criar conteúdo (POST)
-app.post('/api/content', async (req, res) => {
+app.post('/api/content', authMiddleware, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
   const { title, description, type, thumbnail, fullText, videoUrl, featured, recommended } = req.body;
   try {
+    // Escritores criam como pendente, admin cria como aprovado
+    const userRole = req.user.role;
+    const status = (userRole === 'escritor' || userRole === 'revisor') ? 'pending' : 'approved';
+    const authorId = req.user.id;
+    
     const result = await pool.query(
-      'INSERT INTO "Content" (title, description, type, thumbnail, "fullText", "videoUrl", featured, recommended, "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *',
-      [title, description, type, thumbnail || '', fullText || '', videoUrl || null, featured || false, recommended || false]
+      'INSERT INTO "Content" (title, description, type, thumbnail, "fullText", "videoUrl", featured, recommended, status, "authorId", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) RETURNING *',
+      [title, description, type, thumbnail || '', fullText || '', videoUrl || null, featured || false, recommended || false, status, authorId]
     );
     res.json(result.rows[0]);
   } catch (error) {
@@ -977,6 +1112,25 @@ app.delete('/api/content/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao apagar conteúdo' });
+  }
+});
+
+// Autor cancela o seu próprio conteúdo pendente
+app.delete('/api/content/:id/cancel', authMiddleware, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Autenticação necessária' });
+  try {
+    const { rows } = await pool.query('SELECT * FROM "Content" WHERE id = $1', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Conteúdo não encontrado' });
+    const content = rows[0];
+    // Só o próprio autor ou admin pode cancelar
+    if (content.authorId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Sem permissão' });
+    }
+    await pool.query('DELETE FROM "Content" WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao cancelar conteúdo' });
   }
 });
 
@@ -1219,6 +1373,20 @@ app.post('/api/trivia', requireAdmin, async (req, res) => {
   }
 });
 
+app.put('/api/trivia/:id', requireAdmin, async (req, res) => {
+  try {
+    const { title, fact, imageUrl } = req.body;
+    const result = await pool.query(
+      'UPDATE "Trivia" SET title = $1, fact = $2, "imageUrl" = $3 WHERE id = $4 RETURNING *',
+      [title, fact, imageUrl, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Trivia não encontrada' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar trivia' });
+  }
+});
+
 app.put('/api/trivia/:id/activate', requireAdmin, async (req, res) => {
   try {
     await pool.query('UPDATE "Trivia" SET "isActive" = FALSE');
@@ -1229,6 +1397,19 @@ app.put('/api/trivia/:id/activate', requireAdmin, async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao ativar trivia' });
+  }
+});
+
+app.put('/api/trivia/:id/deactivate', requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'UPDATE "Trivia" SET "isActive" = FALSE WHERE id = $1 RETURNING *',
+      [req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Trivia não encontrada' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao desativar trivia' });
   }
 });
 
@@ -1287,6 +1468,93 @@ app.patch('/api/users/:id/notifications/read-all', authMiddleware, async (req, r
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao marcar notificações' });
+  }
+});
+
+// === CATEGORIAS ===
+
+// Listar categorias (público - só visíveis)
+app.get('/api/categories', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM "Category" WHERE "hidden" = FALSE ORDER BY "sortOrder" ASC');
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar categorias' });
+  }
+});
+
+// Listar todas as categorias (admin - inclui ocultas)
+app.get('/api/categories/all', authMiddleware, async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'Apenas admins' });
+  try {
+    const { rows } = await pool.query('SELECT * FROM "Category" ORDER BY "sortOrder" ASC');
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar categorias' });
+  }
+});
+
+// Criar categoria (admin)
+app.post('/api/categories', authMiddleware, async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'Apenas admins' });
+  try {
+    const { name, icon, color, sortOrder } = req.body;
+    if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+    const { rows } = await pool.query(
+      'INSERT INTO "Category" (name, icon, color, "sortOrder") VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, icon || 'Folder', color || '#E8B4B8', sortOrder || 0]
+    );
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao criar categoria' });
+  }
+});
+
+// Atualizar categoria (admin)
+app.put('/api/categories/:id', authMiddleware, async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'Apenas admins' });
+  try {
+    const { name, icon, color, sortOrder } = req.body;
+    const { rows } = await pool.query(
+      'UPDATE "Category" SET name = $1, icon = $2, color = $3, "sortOrder" = $4 WHERE id = $5 RETURNING *',
+      [name, icon, color, sortOrder, req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Categoria não encontrada' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao atualizar categoria' });
+  }
+});
+
+// Apagar categoria (admin)
+app.delete('/api/categories/:id', authMiddleware, async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'Apenas admins' });
+  try {
+    await pool.query('DELETE FROM "Category" WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao apagar categoria' });
+  }
+});
+
+// Toggle ocultar/mostrar categoria (admin)
+app.patch('/api/categories/:id/toggle-hidden', authMiddleware, async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'Apenas admins' });
+  try {
+    const { rows } = await pool.query(
+      'UPDATE "Category" SET "hidden" = NOT "hidden" WHERE id = $1 RETURNING *',
+      [req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Categoria não encontrada' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao alterar visibilidade' });
   }
 });
 

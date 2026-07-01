@@ -151,12 +151,12 @@ export function Profile() {
   };
 
   React.useEffect(() => {
-    try {
-      setFavorites(JSON.parse(localStorage.getItem('forum_favorites') || '[]'));
-    } catch {
-      setFavorites([]);
-    }
-  }, []);
+    if (!user?.id) return;
+    fetch(`/api/users/${user.id}/saved`)
+      .then(res => res.json())
+      .then(data => setFavorites(Array.isArray(data) ? data : []))
+      .catch(() => setFavorites([]));
+  }, [user?.id]);
 
   React.useEffect(() => {
     if (!user.id) return;
@@ -286,7 +286,7 @@ export function Profile() {
                     value={tempName}
                     onChange={(e) => setTempName(e.target.value)}
                     placeholder="O seu nome"
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2 force-white font-black uppercase tracking-tighter text-center md:text-left focus:outline-none focus:border-[#E8B4B8]/50"
+                    className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2 force-white font-black tracking-tighter text-center md:text-left focus:outline-none focus:border-[#E8B4B8]/50"
                   />
                   <div className="relative w-full">
                     <select
@@ -324,7 +324,7 @@ export function Profile() {
               ) : (
                 <div className="group relative flex flex-col items-center md:items-start max-w-full">
                   <div className="flex items-center gap-3 justify-center md:justify-start w-full">
-                    <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-0.5 text-center md:text-left force-white">
+                    <h2 className="text-2xl md:text-3xl font-black tracking-tighter mb-0.5 text-center md:text-left force-white">
                       {profileName}
                     </h2>
                     <div className="flex flex-col items-center gap-0.5">
@@ -342,6 +342,20 @@ export function Profile() {
                     <p className="font-bold text-[9px] uppercase tracking-[0.2em] text-center md:text-left force-gold">
                       {profileProfession}
                     </p>
+                    {user.role && user.role !== 'student' && user.role !== 'user' && (
+                      <span className={`mt-1 text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
+                        user.role === 'admin' ? 'bg-[#3A0310]/20 text-[#E8B4B8] border-[#E8B4B8]/30' :
+                        user.role === 'escritor' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' :
+                        user.role === 'revisor' ? 'bg-violet-500/20 text-violet-300 border-violet-400/30' :
+                        user.role === 'elite' ? 'bg-amber-500/20 text-amber-300 border-amber-400/30' :
+                        'bg-white/10 text-white/70 border-white/20'
+                      }`}>
+                        {user.role === 'admin' && '🛡️ Administrador'}
+                        {user.role === 'escritor' && '✍️ Escritor'}
+                        {user.role === 'revisor' && '👁️ Revisor'}
+                        {user.role === 'elite' && '⭐ Membro Elite'}
+                      </span>
+                    )}
                     {user.email && (
                       <p className="text-[10px] font-medium text-white/70 lowercase tracking-wide text-center md:text-left mt-0.5 force-white opacity-70">
                         {user.email}
@@ -402,7 +416,7 @@ export function Profile() {
             <div className="absolute top-0 left-0 w-full h-1 bg-[#3A0310]"></div>
             
             <AnimatePresence mode="wait">
-              {user.role !== 'elite' && user.role !== 'admin' ? (
+              {!['elite', 'admin', 'escritor', 'revisor'].includes(user.role) ? (
                 <motion.div 
                    key="free-plan"
                    initial={{ opacity: 0 }}
@@ -412,9 +426,6 @@ export function Profile() {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] block mb-1.5 force-gold">
-                        Plano Atual
-                      </span>
                       <h3 className="text-xl font-black uppercase tracking-tight force-white">Membro Base</h3>
                     </div>
                   </div>

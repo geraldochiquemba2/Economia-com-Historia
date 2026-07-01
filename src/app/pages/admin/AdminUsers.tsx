@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Users, Search, Ban, Mail, Loader2, AlertTriangle, Trash2, ShieldCheck, ChevronDown, Check, Crown, Clock, XCircle, Bell } from "lucide-react";
+import { Users, Search, Ban, Mail, Loader2, AlertTriangle, Trash2, ShieldCheck, ChevronDown, Check, Crown, Clock, XCircle, Bell, ArrowDownUp, PenLine, Eye } from "lucide-react";
 import { ImageModal } from "../../components/ImageModal";
 
 type UserItem = {
@@ -17,11 +17,14 @@ type UserItem = {
 const PLANS = [
   { value: "base", label: "Acesso Base", color: "bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300" },
   { value: "elite", label: "Acesso Elite", color: "bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" },
-  { value: "admin", label: "Administrador", color: "bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8]" },
+  { value: "escritor", label: "Escritor", color: "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
+  { value: "revisor", label: "Revisor", color: "bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300" },
 ];
 
 function getPlanLabel(plan?: string, role?: string) {
-  if (role === "admin") return PLANS[2];
+  if (role === "admin") return { value: "admin", label: "Administrador", color: "bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8]" };
+  if (role === "escritor") return PLANS[2];
+  if (role === "revisor") return PLANS[3];
   if (plan === "elite" || role === "elite") return PLANS[1];
   return PLANS[0]; // base por defeito
 }
@@ -40,6 +43,7 @@ export function AdminUsers() {
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<{ id: string, userId: string, name: string } | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("todos");
 
   const fetchEliteRequests = async () => {
     try {
@@ -95,11 +99,22 @@ export function AdminUsers() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const filteredUsers = users.filter((u) =>
-    u.role !== "admin" &&
-    (u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filteredUsers = users
+    .filter((u) =>
+      (u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()))
+    )
+    .filter((u) => {
+      if (roleFilter === "todos") return true;
+      if (roleFilter === "recentes") return true;
+      if (roleFilter === "antigos") return true;
+      return u.role === roleFilter;
+    })
+    .sort((a, b) => {
+      if (roleFilter === "recentes") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (roleFilter === "antigos") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      return 0;
+    });
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
@@ -119,13 +134,16 @@ export function AdminUsers() {
     setUpdatingPlan(userId);
     setPlanDropdown(null);
     try {
-      const newRole = newPlan; // newPlan can be "admin", "elite", "student" or "user"
+      const newRole = newPlan;
       await fetch(`/api/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: newRole, plan: newPlan }),
       });
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole, plan: newPlan } : u));
+      // Rebuscar a lista completa para refletir em tempo real
+      const res = await fetch("/api/users");
+      const data = await res.json();
+      setUsers(Array.isArray(data) ? data : []);
     } catch {
       setError("Erro ao actualizar o plano.");
     } finally {
@@ -164,6 +182,35 @@ export function AdminUsers() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-white/5 border-2 border-[#3A0310] dark:border-[#E8B4B8]/60 rounded-[1.5rem] shadow-md focus:ring-2 focus:ring-[#3A0310]/30 focus:border-[#3A0310] dark:focus:border-[#E8B4B8] transition-all text-neutral-800 dark:text-white placeholder-[#3A0310]/40 dark:placeholder-neutral-400 text-sm font-medium outline-none"
         />
+      </div>
+
+      {/* Role Filters */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {[
+          { value: "todos", label: "Todos", icon: Users },
+          { value: "recentes", label: "Mais Recentes", icon: ArrowDownUp },
+          { value: "antigos", label: "Mais Antigos", icon: ArrowDownUp },
+          { value: "escritor", label: "Escritores", icon: PenLine },
+          { value: "revisor", label: "Revisores", icon: Eye },
+          { value: "elite", label: "Elite", icon: Crown },
+        ].map((filter) => {
+          const Icon = filter.icon;
+          const isActive = roleFilter === filter.value;
+          return (
+            <button
+              key={filter.value}
+              onClick={() => setRoleFilter(filter.value)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${
+                isActive
+                  ? "bg-[#3A0310] text-white dark:bg-[#E8B4B8] dark:text-[#3A0310] border-[#3A0310] dark:border-[#E8B4B8]"
+                  : "bg-white dark:bg-white/5 text-[#3A0310] dark:text-[#E8B4B8] border-[#3A0310]/20 dark:border-[#E8B4B8]/20 hover:bg-[#3A0310]/5 dark:hover:bg-[#E8B4B8]/10"
+              }`}
+            >
+              <Icon className="w-3 h-3" />
+              {filter.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Elite Requests Section */}

@@ -14,6 +14,8 @@ type ContentItem = {
   thumbnail: string;
   fullText?: string;
   videoUrl?: string;
+  authorName?: string;
+  createdAt?: string;
 };
 
 function getYouTubeId(url: string) {
@@ -169,7 +171,7 @@ export function ContentDetail() {
             return;
           }
           const user = JSON.parse(userStr);
-          if (user.role !== 'elite' && user.role !== 'admin') {
+          if (!['elite', 'admin', 'escritor', 'revisor'].includes(user.role)) {
             toast.error('Acesso Bloqueado', { description: 'Você precisa ser membro elite para ler este conteúdo.' });
             navigate('/app/explore?filter=jindungo');
             return;
@@ -303,6 +305,13 @@ export function ContentDetail() {
               <h1 className="text-3xl md:text-4xl font-black leading-none uppercase tracking-tighter drop-shadow-2xl" style={{ color: '#ffffff' }}>
                 {content.title}
               </h1>
+              {(content.authorName || content.createdAt) && (
+                <p className="text-white/70 text-xs font-medium mt-2">
+                  {content.authorName && `por ${content.authorName}`}
+                  {content.authorName && content.createdAt && ' · '}
+                  {content.createdAt && new Date(content.createdAt).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </p>
+              )}
             </div>
           </div>
         )}

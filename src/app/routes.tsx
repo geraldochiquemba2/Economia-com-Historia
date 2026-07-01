@@ -14,6 +14,8 @@ import { Register } from "./pages/Register";
 import { ForumDetail } from "./pages/ForumDetail";
 import { CompletedStudies } from "./pages/CompletedStudies";
 import { SavedDebates } from "./pages/SavedDebates";
+import { WriterContent } from "./pages/WriterContent";
+import { MyContent } from "./pages/MyContent";
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
@@ -21,6 +23,8 @@ import { AdminContent } from "./pages/admin/AdminContent";
 import { AdminUsers } from "./pages/admin/AdminUsers";
 import { AdminQuiz } from "./pages/admin/AdminQuiz";
 import { AdminTrivia } from "./pages/admin/AdminTrivia";
+import { AdminReview } from "./pages/admin/AdminReview";
+import { AdminCategories } from "./pages/admin/AdminCategories";
 
 // Layouts
 import { UserLayout } from "./layouts/UserLayout";
@@ -54,6 +58,8 @@ export const router = createBrowserRouter([
       { path: "profile", Component: Profile },
       { path: "completed", Component: CompletedStudies },
       { path: "saved", Component: SavedDebates },
+      { path: "create", Component: WriterContent },
+      { path: "my-content", Component: MyContent },
     ],
   },
   {
@@ -62,9 +68,11 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: AdminDashboard },
       { path: "content", Component: AdminContent },
+      { path: "review", Component: AdminReview },
       { path: "users", Component: AdminUsers },
       { path: "quiz", Component: AdminQuiz },
       { path: "trivia", Component: AdminTrivia },
+      { path: "categories", Component: AdminCategories },
     ],
   },
 ]);

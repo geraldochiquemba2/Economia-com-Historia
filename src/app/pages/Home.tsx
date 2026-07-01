@@ -15,7 +15,9 @@ import {
   Gem,
   Trophy,
   Sparkles,
-  Lightbulb
+  Lightbulb,
+  FileText,
+  Mic
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { NotificationsModal } from "../components/NotificationsModal";
@@ -34,18 +36,25 @@ export function Home() {
   const user = userStr ? JSON.parse(userStr) : null;
   const firstName = user ? user.name.split(" ")[0] : "";
 
-  const categories = [
-    { id: 1, name: "Macro", icon: TrendingUp },
-    { id: 2, name: "História", icon: History },
-    { id: 3, name: "Moedas", icon: Coins },
-    { id: 4, name: "Impérios", icon: Award },
-  ];
-
   const [featuredThemes, setFeaturedThemes] = useState<any[]>([]);
   const [recommendedThemes, setRecommendedThemes] = useState<any[]>([]);
+  const [recentContent, setRecentContent] = useState<any[]>([]);
   const [activeTrivia, setActiveTrivia] = useState<any>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!token || !user?.id) return;
+    fetch(`/api/users/${user.id}/notifications`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setUnreadCount(data.filter(n => !n.isRead).length);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/content')
@@ -54,6 +63,7 @@ export function Home() {
         if (Array.isArray(data)) {
           setFeaturedThemes(data.filter(item => item.featured));
           setRecommendedThemes(data.filter(item => item.recommended));
+          setRecentContent(data.slice(0, 6));
         }
       })
       .catch(err => console.error("Error fetching content:", err));
@@ -64,6 +74,13 @@ export function Home() {
         if (data && data.id) setActiveTrivia(data);
       })
       .catch(err => console.error("Error fetching trivia:", err));
+
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setCategories(data);
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -99,8 +116,12 @@ export function Home() {
             </div>
             
             <button onClick={() => { if (token) { setShowNotifications(true); } }} className="relative p-3 bg-white/5 backdrop-blur-xl rounded-full hover:bg-white/10 transition-all duration-500 border border-white/10 shadow-lg active:scale-95">
-              <Bell className="w-5 h-5" style={{ color: '#ffffff' }} />
-              {unreadCount > 0 && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#E8B4B8] rounded-full border border-[#0F0F0F]"></span>}
+              <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'animate-bounce' : ''}`} style={{ color: '#ffffff' }} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-[#E8B4B8] text-[#3A0310] text-[8px] font-black rounded-full border-2 border-[#0F0F0F] px-1 animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
           </div>
 
@@ -134,7 +155,7 @@ export function Home() {
               <div className="w-2.5 h-12 rounded-full bg-gradient-to-b from-[#3A0310] to-[#E8B4B8]" />
               <div>
                 <h2 className="text-2xl font-light text-white tracking-tight">Olá, {firstName}</h2>
-                <p className="text-[10px] text-neutral-400 font-medium uppercase tracking-wider mt-1 opacity-60">Pronto para a jornada de hoje?</p>
+                <p className="text-[10px] text-neutral-800 dark:text-neutral-400 font-medium uppercase tracking-wider mt-1 opacity-80">Pronto para a jornada de hoje?</p>
               </div>
             </div>
             <div className="flex items-center gap-1.5 bg-[#3A0310]/30 text-[#E8B4B8] px-4 py-2 rounded-full border border-[#E8B4B8]/20 text-[9px] font-black uppercase tracking-wider">
@@ -227,7 +248,7 @@ export function Home() {
                         navigate('/app/explore?filter=jindungo');
                       } else {
                         const user = JSON.parse(userStr);
-                        if (user.role !== 'elite' && user.role !== 'admin') {
+                        if (!['elite', 'admin', 'escritor', 'revisor'].includes(user.role)) {
                           e.preventDefault();
                           toast?.error('Acesso Bloqueado', { description: 'Você precisa ser membro elite para ler este conteúdo.' });
                           navigate('/app/explore?filter=jindungo');
@@ -279,21 +300,36 @@ export function Home() {
         {/* Quick Categories */}
         <section>
           <div className="grid grid-cols-4 gap-4 md:gap-8 md:max-w-3xl md:mx-auto">
-            {categories.map((cat, idx) => (
-              <Link 
-                key={cat.id} 
-                to="/app/explore" 
-                className="flex flex-col items-center gap-3 group"
-              >
-                <motion.div 
-                  whileHover={{ y: -5, scale: 1.05 }}
-                  className="w-16 h-16 rounded-[1.5rem] bg-white dark:bg-white/5 border border-[#3A0310]/30 dark:border-[#3A0310]/50 flex items-center justify-center group-hover:bg-[#3A0310]/10 dark:group-hover:bg-[#3A0310]/20 group-hover:border-[#3A0310]/80 transition-all duration-300 shadow-xl"
+            {categories.map((cat, idx) => {
+              const iconMap: Record<string, any> = {
+                FileText, Play, Mic, Flame, Award, BookOpen, Music, ImageIcon,
+                Users, MessageSquare, Star, Heart, Zap, Target, Globe, MapPin, Clock,
+                TrendingUp, Coins, Gem, Trophy, Sparkles, Lightbulb, Compass, Shield,
+                Crown, Swords, GraduationCap, Landmark, Banknote, BarChart3, PieChart,
+                Briefcase, Building, Factory, ShoppingCart, Truck, Plane, Ship, Train,
+                Car, Mountain, TreePine, Waves, Sun, Moon, Cloud, Leaf, Flower2,
+                Bird, Fish, Brain, Eye, Rocket, Radio, Monitor, Laptop, Camera,
+                Headphones, Database, Server, Terminal, Code, Search, Filter,
+                Download, Upload, Link2, Share2, Clipboard, Folder, Flag, Map, Navigation,
+              };
+              const IconComp = iconMap[cat.icon] || Folder;
+              return (
+                <Link 
+                  key={cat.id} 
+                  to={`/app/explore?filter=${cat.name.toLowerCase()}`} 
+                  className="flex flex-col items-center gap-3 group"
                 >
-                  <cat.icon className="w-6 h-6 text-[#3A0310] dark:text-[#E8B4B8] group-hover:scale-110 transition-transform" />
-                </motion.div>
-                <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest text-center group-hover:text-white transition-colors">{cat.name}</span>
-              </Link>
-            ))}
+                  <motion.div 
+                    whileHover={{ y: -5, scale: 1.05 }}
+                    className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-xl"
+                    style={{ backgroundColor: (cat.color || '#E8B4B8') + '20', border: `2px solid ${cat.color || '#E8B4B8'}40` }}
+                  >
+                    <IconComp className="w-6 h-6 group-hover:scale-110 transition-transform" style={{ color: cat.color || '#E8B4B8' }} />
+                  </motion.div>
+                  <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest text-center group-hover:text-white transition-colors">{cat.name}</span>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
@@ -362,7 +398,7 @@ export function Home() {
                         navigate('/app/explore?filter=jindungo');
                       } else {
                         const user = JSON.parse(userStr);
-                        if (user.role !== 'elite' && user.role !== 'admin') {
+                        if (!['elite', 'admin', 'escritor', 'revisor'].includes(user.role)) {
                           e.preventDefault();
                           toast?.error('Acesso Bloqueado', { description: 'Você precisa ser membro elite para ler este conteúdo.' });
                           navigate('/app/explore?filter=jindungo');
@@ -399,7 +435,56 @@ export function Home() {
           </div>
         </section>
         )}
-        
+
+        {/* Recent Content */}
+        {recentContent.length > 0 && (
+          <section className="pb-12">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-[#E8B4B8]" />
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter">Mais Recentes</h2>
+              </div>
+              <Link to="/app/explore" className="text-[10px] font-black text-[#E8B4B8] uppercase tracking-widest flex items-center gap-1 group">
+                Ver tudo <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentContent.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                >
+                  <Link
+                    to={`/app/explore/${item.id}`}
+                    className="block relative h-48 rounded-2xl overflow-hidden border border-white/10 group hover:border-[#E8B4B8]/50 transition-all duration-300 shadow-lg"
+                  >
+                    {item.thumbnail ? (
+                      <img src={item.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    ) : (
+                      <div className="absolute inset-0 bg-white/5" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                    <div className="absolute inset-0 p-4 flex flex-col justify-end">
+                      <span className="text-[8px] font-black uppercase tracking-widest bg-black/40 backdrop-blur-md text-[#E8B4B8] px-2 py-0.5 rounded-md border border-white/10 self-start mb-2 force-white">
+                        {({ jindungo: "Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[item.type] || item.type)}
+                      </span>
+                      <h3 className="text-white force-white font-black text-sm leading-tight group-hover:text-[#E8B4B8] transition-colors line-clamp-2 uppercase tracking-tight drop-shadow-lg">
+                        {item.title}
+                      </h3>
+                      {item.authorName && (
+                        <p className="text-[10px] text-white/70 force-white font-medium mt-1 drop-shadow-md">por {item.authorName}</p>
+                      )}
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {showNotifications && (
           <NotificationsModal
             isOpen={showNotifications}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2, Play, Star, Award } from "lucide-react";
+import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2, Play, Star, Award, Clock, Ban, Eye } from "lucide-react";
 
 type ContentItem = {
   id: string;
@@ -12,6 +12,9 @@ type ContentItem = {
   videoUrl?: string;
   featured?: boolean;
   recommended?: boolean;
+  status?: string;
+  authorId?: string;
+  rejectionReason?: string;
 };
 
 const EMPTY_FORM: ContentItem = {
@@ -38,6 +41,7 @@ export function AdminContent() {
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -53,11 +57,14 @@ export function AdminContent() {
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const [videoPlayer, setVideoPlayer] = useState<ContentItem | null>(null);
+  const [previewItem, setPreviewItem] = useState<ContentItem | null>(null);
 
   const fetchContent = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/content");
+      const res = await fetch("/api/content/all", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       const data = await res.json();
       setItems(Array.isArray(data) ? data : []);
     } catch {
@@ -191,7 +198,10 @@ export function AdminContent() {
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
         body: JSON.stringify({
           title: formData.title,
           description: formData.fullText ? (formData.fullText.length > 150 ? formData.fullText.substring(0, 150) + "..." : formData.fullText) : "",
@@ -225,6 +235,59 @@ export function AdminContent() {
 
   return (
     <div className="relative">
+
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+            onClick={() => setPreviewItem(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-2xl rounded-[2rem] overflow-hidden bg-white dark:bg-[#1A0A0D] border border-neutral-200 dark:border-[#3A0310]/60 shadow-2xl max-h-[85vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              {previewItem.thumbnail && (
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img src={previewItem.thumbnail} alt="" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                </div>
+              )}
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border border-[#3A0310] dark:border-[#E8B4B8]">
+                    {({ jindungo: "Jindungo", text: "Texto", video: "Vídeo", podcast: "Áudio" }[previewItem.type] || previewItem.type)}
+                  </span>
+                  <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${
+                    previewItem.status === 'approved' ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' :
+                    previewItem.status === 'rejected' ? 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400' :
+                    'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                  }`}>
+                    {previewItem.status === 'approved' ? 'Aprovado' : previewItem.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
+                  </span>
+                </div>
+                <h2 className="text-xl font-black text-neutral-900 dark:text-white uppercase tracking-tight mb-3">{previewItem.title}</h2>
+                <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed whitespace-pre-wrap">{previewItem.fullText || previewItem.description}</p>
+                {previewItem.videoUrl && (
+                  <div className="mt-4 p-3 bg-neutral-100 dark:bg-white/5 rounded-xl">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-1">Link do Vídeo/Áudio</p>
+                    <a href={previewItem.videoUrl} target="_blank" rel="noopener noreferrer" className="text-[#3A0310] dark:text-[#E8B4B8] text-xs font-medium break-all hover:underline">{previewItem.videoUrl}</a>
+                  </div>
+                )}
+                <button onClick={() => setPreviewItem(null)} className="mt-6 w-full py-3 rounded-2xl border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-neutral-300 font-black uppercase text-xs tracking-widest hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors">
+                  Fechar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Video Player Modal */}
       <AnimatePresence>
@@ -359,36 +422,56 @@ export function AdminContent() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-[#3A0310] dark:text-white font-black text-sm uppercase tracking-tight line-clamp-1">{item.title}</h3>
                     <span className="shrink-0 bg-[#3A0310]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border border-[#3A0310] dark:border-[#E8B4B8]">{({ jindungo: "Texto com Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[item.type] || item.type)}</span>
+                    {item.status === 'pending' && (
+                      <span className="shrink-0 bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Clock className="w-2.5 h-2.5" /> Pendente
+                      </span>
+                    )}
+                    {item.status === 'rejected' && (
+                      <span className="shrink-0 bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Ban className="w-2.5 h-2.5" /> Rejeitado
+                      </span>
+                    )}
                   </div>
                   <p className="text-neutral-600 dark:text-neutral-400 text-[10px] font-medium leading-relaxed line-clamp-2 flex-1">{item.description}</p>
                   <div className="flex items-center gap-2 mt-4 pt-4 border-t border-neutral-100 dark:border-white/10 flex-wrap">
-                    <button
-                      onClick={() => handleFeatureToggle(item)}
-                      title={item.featured ? "Remover destaque" : "Colocar em destaque"}
-                      className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
-                        item.featured
-                          ? "bg-amber-400/20 text-amber-600 dark:text-amber-400 hover:bg-amber-400/30"
-                          : "bg-neutral-100 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 hover:bg-amber-400/20 hover:text-amber-600"
-                      }`}
-                    >
-                      <Star className={`w-3.5 h-3.5 shrink-0 ${item.featured ? "fill-amber-500" : ""}`} />
-                      {item.featured ? "Dest." : "Dest."}
+                    {/* Botões só aparecem se NÃO estiver pendente */}
+                    {item.status !== 'pending' && (
+                      <>
+                        <button
+                          onClick={() => handleFeatureToggle(item)}
+                          title={item.featured ? "Remover destaque" : "Colocar em destaque"}
+                          className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
+                            item.featured
+                              ? "bg-amber-400/20 text-amber-600 dark:text-amber-400 hover:bg-amber-400/30"
+                              : "bg-neutral-100 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 hover:bg-amber-400/20 hover:text-amber-600"
+                          }`}
+                        >
+                          <Star className={`w-3.5 h-3.5 shrink-0 ${item.featured ? "fill-amber-500" : ""}`} />
+                          {item.featured ? "Dest." : "Dest."}
+                        </button>
+                        <button
+                          onClick={() => handleRecommendToggle(item)}
+                          title={item.recommended ? "Remover recomendação" : "Recomendar arquivo"}
+                          className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
+                            item.recommended
+                              ? "bg-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/30"
+                              : "bg-neutral-100 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 hover:bg-purple-500/20 hover:text-purple-600"
+                          }`}
+                        >
+                          <Award className="w-3.5 h-3.5 shrink-0" />
+                          {item.recommended ? "Rec." : "Rec."}
+                        </button>
+                        <button onClick={() => handleEditClick(item)} title="Editar" className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 rounded-xl hover:bg-[#3A0310]/10 transition-colors">
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
+                    {/* Ver detalhes — sempre visível */}
+                    <button onClick={() => setPreviewItem(item)} title="Ver detalhes" className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">
+                      <Eye className="w-3.5 h-3.5" />
                     </button>
-                    <button
-                      onClick={() => handleRecommendToggle(item)}
-                      title={item.recommended ? "Remover recomendação" : "Recomendar arquivo"}
-                      className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
-                        item.recommended
-                          ? "bg-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/30"
-                          : "bg-neutral-100 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 hover:bg-purple-500/20 hover:text-purple-600"
-                      }`}
-                    >
-                      <Award className="w-3.5 h-3.5 shrink-0" />
-                      {item.recommended ? "Rec." : "Rec."}
-                    </button>
-                    <button onClick={() => handleEditClick(item)} title="Editar" className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 rounded-xl hover:bg-[#3A0310]/10 transition-colors">
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Apagar — sempre visível */}
                     <button onClick={() => handleDeleteClick(item)} title="Apagar" className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

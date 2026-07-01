@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Outlet, NavLink, useLocation, useNavigate, MemoryRouter } from "react-router";
-import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare, Trophy, Lightbulb } from "lucide-react";
+import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare, Trophy, Lightbulb, ClipboardCheck, Bell, Folder } from "lucide-react";
+import { NotificationsModal } from "../components/NotificationsModal";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
 import { ScrollToTop } from "../components/ScrollToTop";
@@ -8,6 +9,42 @@ import { ScrollToTop } from "../components/ScrollToTop";
 export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [pendingCount, setPendingCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+
+  // Buscar conteúdos pendentes
+  const fetchPendingCount = async () => {
+    try {
+      const res = await fetch("/api/content/pending", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPendingCount(Array.isArray(data) ? data.length : 0);
+      }
+    } catch { /* ignorar */ }
+  };
+
+  React.useEffect(() => {
+    fetchPendingCount();
+    const interval = setInterval(fetchPendingCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  React.useEffect(() => {
+    if (!user?.id) return;
+    fetch(`/api/users/${user.id}/notifications`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setUnreadCount(data.filter(n => !n.isRead).length);
+      })
+      .catch(() => {});
+  }, []);
 
   // Aplicar o tema guardado quando o admin é montado
   React.useEffect(() => {
@@ -31,9 +68,11 @@ export function AdminLayout() {
   const navItems = [
     { to: "/admin", icon: LayoutDashboard, label: "Painel", exact: true },
     { to: "/admin/content", icon: FileVideo, label: "Conteúdo" },
+    { to: "/admin/review", icon: ClipboardCheck, label: "Revisão" },
     { to: "/admin/users", icon: Users, label: "Usuários" },
     { to: "/admin/quiz", icon: Trophy, label: "Quiz" },
     { to: "/admin/trivia", icon: Lightbulb, label: "Curiosidades" },
+    { to: "/admin/categories", icon: Folder, label: "Categorias" },
   ];
 
   return (
@@ -56,19 +95,32 @@ export function AdminLayout() {
                 to={item.to}
                 end={item.exact}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  `flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors relative ${
                     isActive ? "text-rose-500" : "text-neutral-500 dark:text-gray-400 hover:text-[#3A0310] dark:hover:text-white"
                   }`
                 }
               >
                 <item.icon className="w-4 h-4" />
                 <span>{item.label}</span>
+                {item.to === "/admin/review" && pendingCount > 0 && (
+                  <span className="absolute -top-2 -right-3 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full px-1 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]">
+                    {pendingCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
         </div>
 
         <div className="flex items-center gap-2">
+          <button onClick={() => setShowNotifications(true)} className="relative p-2.5 bg-[#3A0310]/10 dark:bg-white/5 rounded-xl hover:bg-[#3A0310]/20 dark:hover:bg-white/10 transition-all border border-[#3A0310]/20 dark:border-white/10 active:scale-95">
+            <Bell className={`w-4 h-4 text-[#3A0310] dark:text-[#E8B4B8] ${unreadCount > 0 ? 'animate-bounce' : ''}`} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-full border-2 border-white dark:border-[#0F0F0F] px-0.5 animate-pulse">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
           <button 
             onClick={() => navigate("/app")} 
             className="text-[#3A0310] dark:text-white hover:text-white transition-all flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-[#3A0310]/10 dark:bg-white/5 px-4 py-2.5 rounded-xl border border-[#3A0310]/20 dark:border-white/10 cursor-pointer hover:bg-[#3A0310] dark:hover:bg-white/10 shadow-sm hover:shadow-md active:scale-95"
@@ -116,6 +168,11 @@ export function AdminLayout() {
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
+                {item.to === "/admin/review" && pendingCount > 0 && (
+                  <span className="absolute top-1 right-1/4 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-full px-0.5 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)] z-10">
+                    {pendingCount}
+                  </span>
+                )}
                 <motion.div
                   animate={isActive ? { scale: 1.1, y: -2 } : { scale: 1, y: 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -128,6 +185,8 @@ export function AdminLayout() {
           </NavLink>
         ))}
       </nav>
+
+      <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} onUnreadCountChange={setUnreadCount} />
     </div>
   );
 }

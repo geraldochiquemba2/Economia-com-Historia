@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Bell, Heart, ThumbsDown, MessageCircle, X, CheckCheck } from "lucide-react";
 import { useNavigate } from "react-router";
 
-export function NotificationsModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+export function NotificationsModal({ isOpen, onClose, onUnreadCountChange }: { isOpen: boolean, onClose: () => void, onUnreadCountChange?: (count: number) => void }) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
@@ -16,7 +16,10 @@ export function NotificationsModal({ isOpen, onClose }: { isOpen: boolean, onClo
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) setNotifications(data);
+        if (Array.isArray(data)) {
+          setNotifications(data);
+          onUnreadCountChange?.(data.filter(n => !n.isRead).length);
+        }
       })
       .catch(console.error);
   };
@@ -33,7 +36,11 @@ export function NotificationsModal({ isOpen, onClose }: { isOpen: boolean, onClo
         method: 'PATCH',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+      setNotifications(prev => {
+        const updated = prev.map(n => n.id === id ? { ...n, isRead: true } : n);
+        onUnreadCountChange?.(updated.filter(n => !n.isRead).length);
+        return updated;
+      });
     } catch (error) {
       console.error("Erro ao marcar como lida:", error);
     }
@@ -46,7 +53,11 @@ export function NotificationsModal({ isOpen, onClose }: { isOpen: boolean, onClo
         method: 'PATCH',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setNotifications(prev => {
+        const updated = prev.map(n => ({ ...n, isRead: true }));
+        onUnreadCountChange?.(0);
+        return updated;
+      });
     } catch (error) {
       console.error("Erro ao marcar todas como lidas:", error);
     }

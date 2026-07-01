@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Lightbulb, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Image as ImageIcon, Star } from "lucide-react";
+import { Lightbulb, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Image as ImageIcon, Star, Edit3 } from "lucide-react";
 
 type TriviaItem = {
   id: string;
@@ -30,6 +30,7 @@ export function AdminTrivia() {
   const [error, setError] = useState("");
 
   const [uploadingThumb, setUploadingThumb] = useState(false);
+  const [editTarget, setEditTarget] = useState<TriviaItem | null>(null);
 
   const fetchContent = async () => {
     setLoading(true);
@@ -78,8 +79,56 @@ export function AdminTrivia() {
     }
   };
 
+  const handleDeactivate = async (item: TriviaItem) => {
+    try {
+      const res = await fetch(`/api/trivia/${item.id}/deactivate`, {
+        method: "PUT",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!res.ok) throw new Error();
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, isActive: false } : i));
+    } catch {
+      setError("Erro ao desativar curiosidade.");
+    }
+  };
+
+  const handleEditClick = (item: TriviaItem) => {
+    setEditTarget(item);
+    setFormData({ title: item.title, fact: item.fact, imageUrl: item.imageUrl || "" });
+    setSaveSuccess(false);
+    setError("");
+    setFormModal(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget) return;
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/trivia/${editTarget.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao guardar");
+      setItems(prev => prev.map(i => i.id === editTarget.id ? { ...i, ...data } : i));
+      setSaveSuccess(true);
+      setTimeout(() => { setFormModal(false); setSaveSuccess(false); setEditTarget(null); }, 1200);
+    } catch (err: any) {
+      setError(err.message || "Erro ao guardar. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleCreateClick = () => {
     setFormData(EMPTY_FORM);
+    setEditTarget(null);
     setSaveSuccess(false);
     setError("");
     setFormModal(true);
@@ -194,17 +243,25 @@ export function AdminTrivia() {
                   <p className="text-neutral-600 dark:text-neutral-400 text-[10px] font-medium leading-relaxed flex-1 line-clamp-3">{item.fact}</p>
                   
                   <div className="flex items-center gap-2 mt-4 pt-4 border-t border-neutral-100 dark:border-white/10">
-                    <button
-                      onClick={() => handleActivate(item)}
-                      disabled={item.isActive}
-                      className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
-                        item.isActive
-                          ? "bg-amber-400 text-black cursor-default"
-                          : "bg-neutral-100 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 hover:bg-amber-400/20 hover:text-amber-600"
-                      }`}
-                    >
-                      <Star className={`w-3.5 h-3.5 shrink-0 ${item.isActive ? "fill-black" : ""}`} />
-                      {item.isActive ? "Ativa" : "Definir como Ativa"}
+                    {item.isActive ? (
+                      <button
+                        onClick={() => handleDeactivate(item)}
+                        className="flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors bg-amber-400 text-black hover:bg-amber-500"
+                      >
+                        <Star className="w-3.5 h-3.5 shrink-0 fill-black" />
+                        Desativar
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleActivate(item)}
+                        className="flex-1 flex items-center justify-center gap-1 py-2 px-1 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors bg-neutral-100 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 hover:bg-amber-400/20 hover:text-amber-600"
+                      >
+                        <Star className="w-3.5 h-3.5 shrink-0" />
+                        Ativar
+                      </button>
+                    )}
+                    <button onClick={() => handleEditClick(item)} title="Editar" className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] bg-[#3A0310]/5 dark:bg-[#E8B4B8]/10 rounded-xl hover:bg-[#3A0310]/10 transition-colors">
+                      <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button onClick={() => handleDeleteClick(item)} title="Apagar" className="flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
@@ -251,16 +308,18 @@ export function AdminTrivia() {
         {formModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setFormModal(false)}>
+            onClick={() => { setFormModal(false); setEditTarget(null); }}>
             <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="bg-white dark:bg-[#1A0A0D] border border-neutral-200 dark:border-[#3A0310]/60 rounded-[2rem] p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}>
 
               <div className="flex items-center justify-between mb-7">
                 <div>
-                  <h2 className="text-xl font-black text-neutral-900 dark:text-white uppercase tracking-tight">Criar Curiosidade</h2>
+                  <h2 className="text-xl font-black text-neutral-900 dark:text-white uppercase tracking-tight">
+                    {editTarget ? "Editar Curiosidade" : "Criar Curiosidade"}
+                  </h2>
                 </div>
-                <button onClick={() => setFormModal(false)} className="p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/10">
+                <button onClick={() => { setFormModal(false); setEditTarget(null); }} className="p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/10">
                   <X className="w-5 h-5 text-neutral-500" />
                 </button>
               </div>
@@ -271,7 +330,7 @@ export function AdminTrivia() {
                 </div>
               )}
 
-              <form onSubmit={handleFormSubmit} className="space-y-5">
+              <form onSubmit={editTarget ? handleEditSubmit : handleFormSubmit} className="space-y-5">
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 block">Título *</label>
                   <input type="text" value={formData.title} onChange={e => setFormData(d => ({ ...d, title: e.target.value }))} required
@@ -312,10 +371,10 @@ export function AdminTrivia() {
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setFormModal(false)} className="flex-1 py-3.5 rounded-2xl border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-neutral-300 font-black uppercase text-xs tracking-widest">Cancelar</button>
+                  <button type="button" onClick={() => { setFormModal(false); setEditTarget(null); }} className="flex-1 py-3.5 rounded-2xl border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-neutral-300 font-black uppercase text-xs tracking-widest">Cancelar</button>
                   <button type="submit" disabled={saving || saveSuccess || !formData.imageUrl} style={{ color: 'white' }}
                     className={`flex-1 py-3.5 rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 ${saveSuccess ? "bg-green-500" : "bg-gradient-to-r from-[#3A0310] to-[#5A0520] hover:opacity-90"} disabled:opacity-70`}>
-                    {saveSuccess ? <><Check className="w-4 h-4" /> Guardado!</> : saving ? <><Loader2 className="w-4 h-4 animate-spin" /> A Guardar...</> : "Criar Curiosidade"}
+                    {saveSuccess ? <><Check className="w-4 h-4" /> Guardado!</> : saving ? <><Loader2 className="w-4 h-4 animate-spin" /> A Guardar...</> : editTarget ? "Guardar Alterações" : "Criar Curiosidade"}
                   </button>
                 </div>
               </form>
