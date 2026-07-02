@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import Groq from 'groq-sdk';
 
 dotenv.config();
@@ -97,29 +97,22 @@ const pool = new Pool({
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-// Email transporter (Ethereal for dev / real SMTP via env)
-let emailTransporter = null;
-async function getEmailTransporter() {
-  if (emailTransporter) return emailTransporter;
-  if (process.env.SMTP_HOST) {
-    emailTransporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    });
-    return emailTransporter;
+// Email via Resend
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+async function sendEmail({ to, subject, html }) {
+  if (!resend) {
+    console.log('[Email] RESEND_API_KEY não configurado. Email não enviado.');
+    return null;
   }
-  // Fallback: Ethereal test account
-  const testAccount = await nodemailer.createTestAccount();
-  emailTransporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    secure: false,
-    auth: { user: testAccount.user, pass: testAccount.pass },
+  const { data, error } = await resend.emails.send({
+    from: 'EconomiaJA <onboarding@resend.dev>',
+    to,
+    subject,
+    html,
   });
-  console.log('[Email] Conta Ethereal criada:', testAccount.user);
-  return emailTransporter;
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 function generateRandomPassword(length = 10) {
@@ -561,9 +554,7 @@ app.post('/api/admin/password-resets/:id/reset', requireAdmin, async (req, res) 
 
     // Enviar email com a nova senha
     try {
-      const transporter = await getEmailTransporter();
-      const info = await transporter.sendMail({
-        from: '"EconomiaJA" <noreply@economiaja.com>',
+      const info = await sendEmail({
         to: reset.email,
         subject: 'Nova Senha - EconomiaJA',
         html: `
@@ -579,11 +570,10 @@ app.post('/api/admin/password-resets/:id/reset', requireAdmin, async (req, res) 
           </div>
         `,
       });
-      console.log('[Email] Email enviado:', nodemailer.getTestMessageUrl(info));
+      console.log('[Email] Email enviado:', info?.id);
       await pool.query(`UPDATE "PasswordReset" SET "sentAt" = NOW() WHERE id = $1`, [req.params.id]);
     } catch (emailErr) {
       console.error('[Email] Erro ao enviar:', emailErr.message);
-      // Não falhar o request por causa do email
     }
 
     res.json({ message: 'Senha redefinida com sucesso.', newPassword, userName: reset.name, userEmail: reset.email });
