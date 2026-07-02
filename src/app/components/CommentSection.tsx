@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { MessageCircle, CornerDownRight, Send, Lock, Loader2, Pencil, Trash2, EyeOff, Eye, Check, X, ShieldAlert, ThumbsUp, ThumbsDown, ListFilter, Crown } from "lucide-react";
+import { MessageCircle, CornerDownRight, Send, Lock, Loader2, Pencil, Trash2, EyeOff, Eye, Check, X, ShieldAlert, ThumbsUp, ThumbsDown, ListFilter, Crown, Shield, AlertTriangle } from "lucide-react";
 import { Link } from "react-router";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -442,6 +442,9 @@ export function CommentSection({ contentId, contentType, title = "Discussões", 
   const [mentionSearch, setMentionSearch] = useState<string | null>(null);
   const [mentionResults, setMentionResults] = useState<any[]>([]);
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest" | "top">("oldest");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiResult, setAiResult] = useState<{ analysis: any[]; summary: string; totalAbusivos: number; totalSuspeitos: number } | null>(null);
+  const [showAiPanel, setShowAiPanel] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -568,6 +571,21 @@ export function CommentSection({ contentId, contentType, title = "Discussões", 
   const handleCollapse = (id: string) =>
     setExpandedReplies(prev => { const next = { ...prev }; delete next[id]; return next; });
 
+  const handleAnalyze = async () => {
+    if (!contentId || !token || user?.role !== 'admin') return;
+    setAnalyzing(true);
+    setAiResult(null);
+    setShowAiPanel(true);
+    try {
+      const res = await fetch(`/api/admin/comments/analyze/${encodeURIComponent(contentId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) setAiResult(data);
+    } catch (err) { console.error(err); }
+    finally { setAnalyzing(false); }
+  };
+
   const sortedComments = [...comments].sort((a, b) => {
     if (sortOrder === "recent") {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -591,21 +609,104 @@ export function CommentSection({ contentId, contentType, title = "Discussões", 
           {title} ({comments.length})
         </h3>
         
-        {comments.length > 0 && (
-          <div className="flex items-center gap-2">
-            <ListFilter className="w-4 h-4 text-neutral-400" />
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as any)}
-              className="bg-transparent border-none text-xs font-bold uppercase tracking-widest text-neutral-600 dark:text-neutral-300 focus:outline-none cursor-pointer"
+        <div className="flex items-center gap-2">
+          {user?.role === 'admin' && comments.length > 0 && (
+            <button
+              onClick={handleAnalyze}
+              disabled={analyzing}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors disabled:opacity-50"
             >
-              <option value="oldest">Mais Antigos</option>
-              <option value="recent">Mais Recentes</option>
-              <option value="top">Mais Destacados</option>
-            </select>
-          </div>
-        )}
+              {analyzing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Shield className="w-3 h-3" />}
+              {analyzing ? 'A analisar...' : 'Analisar IA'}
+            </button>
+          )}
+          {comments.length > 0 && (
+            <div className="flex items-center gap-2">
+              <ListFilter className="w-4 h-4 text-neutral-400" />
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as any)}
+                className="bg-transparent border-none text-xs font-bold uppercase tracking-widest text-neutral-600 dark:text-neutral-300 focus:outline-none cursor-pointer"
+              >
+                <option value="oldest">Mais Antigos</option>
+                <option value="recent">Mais Recentes</option>
+                <option value="top">Mais Destacados</option>
+              </select>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* AI Analysis Panel */}
+      {showAiPanel && (
+        <div className="mb-6 bg-violet-50 dark:bg-violet-500/5 border border-violet-200 dark:border-violet-500/20 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-violet-600 dark:text-violet-400">Análise IA de Comentários</span>
+            </div>
+            <button onClick={() => setShowAiPanel(false)} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-white">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          
+          {analyzing && (
+            <div className="flex items-center gap-2 py-4 justify-center">
+              <Loader2 className="w-5 h-5 animate-spin text-violet-600" />
+              <span className="text-xs font-bold text-violet-600">A analisar comentários com IA...</span>
+            </div>
+          )}
+          
+          {aiResult && (
+            <>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                <div className="bg-white dark:bg-white/5 rounded-xl p-2 text-center border border-neutral-200 dark:border-white/10">
+                  <p className="text-lg font-black text-neutral-800 dark:text-white">{aiResult.analysis.length}</p>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-neutral-500">Total</p>
+                </div>
+                <div className="bg-red-50 dark:bg-red-500/5 rounded-xl p-2 text-center border border-red-200 dark:border-red-500/20">
+                  <p className="text-lg font-black text-red-600">{aiResult.totalAbusivos || 0}</p>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-red-500">Abusivos</p>
+                </div>
+                <div className="bg-amber-50 dark:bg-amber-500/5 rounded-xl p-2 text-center border border-amber-200 dark:border-amber-500/20">
+                  <p className="text-lg font-black text-amber-600">{aiResult.totalSuspeitos || 0}</p>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-amber-500">Suspeitos</p>
+                </div>
+              </div>
+              
+              {aiResult.summary && (
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium mb-3 bg-white dark:bg-white/5 rounded-xl p-3 border border-neutral-200 dark:border-white/10">
+                  {aiResult.summary}
+                </p>
+              )}
+              
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {aiResult.analysis.map((item: any, idx: number) => (
+                  <div key={idx} className={`bg-white dark:bg-white/5 rounded-xl p-3 border ${
+                    item.status === 'abusivo' || item.status === 'violacao' ? 'border-red-300 dark:border-red-500/30' :
+                    item.status === 'suspeito' ? 'border-amber-300 dark:border-amber-500/30' :
+                    'border-green-200 dark:border-green-500/20'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
+                        item.status === 'abusivo' || item.status === 'violacao' ? 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400' :
+                        item.status === 'suspeito' ? 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400' :
+                        'bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+                      }`}>{item.status}</span>
+                      {item.severidade !== 'nenhuma' && (
+                        <span className="text-[8px] font-bold text-neutral-500">{item.severidade}</span>
+                      )}
+                      <span className="text-[8px] text-neutral-400 ml-auto">{item.comment?.author}</span>
+                    </div>
+                    <p className="text-[10px] text-neutral-700 dark:text-neutral-300 line-clamp-1">"{item.comment?.text}"</p>
+                    <p className="text-[8px] text-neutral-400 mt-1">{item.motivo}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="space-y-3 mb-10">
         {loading ? (

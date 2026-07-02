@@ -1165,34 +1165,48 @@ app.post('/api/ai/chat', async (req, res) => {
   if (!message) return res.status(400).json({ error: 'Mensagem é obrigatória' });
 
   try {
-    // Fetch platform stats for context
-    const [contentRes, usersRes, rankingsRes, categoriesRes] = await Promise.all([
-      pool.query('SELECT title, type, status, array_length("likes", 1) as "likesCount" FROM "Content" WHERE status = $1 ORDER BY "createdAt" DESC LIMIT 20', ['approved']),
+    const [contentRes, usersRes, rankingsRes, categoriesRes, forumRes, triviaRes] = await Promise.all([
+      pool.query('SELECT title, type, status, description, "fullText", author, array_length("likes", 1) as "likesCount", "createdAt" FROM "Content" WHERE status = $1 ORDER BY "createdAt" DESC LIMIT 30', ['approved']),
       pool.query('SELECT COUNT(*) as total FROM "User"'),
       pool.query('SELECT name, xp FROM "User" ORDER BY xp DESC LIMIT 10'),
-      pool.query('SELECT name, icon FROM "Category" WHERE hidden = FALSE')
+      pool.query('SELECT name, icon FROM "Category" WHERE hidden = FALSE'),
+      pool.query('SELECT title, author, description FROM "Content" WHERE type = $1 AND status = $2 ORDER BY "createdAt" DESC LIMIT 10', ['forum', 'approved']),
+      pool.query('SELECT title, fact FROM "Trivia" WHERE "isActive" = TRUE LIMIT 5')
     ]);
 
     const topContent = contentRes.rows;
     const totalUsers = usersRes.rows[0]?.total || 0;
     const topRankings = rankingsRes.rows;
     const categories = categoriesRes.rows;
+    const forums = forumRes.rows;
+    const trivia = triviaRes.rows;
 
     const systemPrompt = ` és um assistente de IA da plataforma "economia" — uma plataforma angolana de conteúdo, quizzes e debate sobre história, cultura, geografia, economia e sociedade de Angola.
 
 CONHECIMENTO DA PLATAFORMA:
 - ${totalUsers} utilizadores registados
 - Categorias: ${categories.map(c => `${c.icon} ${c.name}`).join(', ') || 'Sem categorias'}
-- Top conteúdo mais recente: ${topContent.slice(0, 10).map(c => `"${c.title}" (${c.type}, ${c.likesCount || 0} likes)`).join('\n  ') || 'Nenhum'}
-- Top utilizadores (ranking): ${topRankings.map((u, i) => `${i+1}º ${u.name} - ${u.xp} XP`).join('\n  ') || 'Sem rankings'}
+
+CONTEÚDO DISPONÍVEL NA PLATAFORMA:
+${topContent.map(c => `- "${c.title}" (${c.type}) por ${c.author || 'Anónimo'} | ${c.description ? c.description.substring(0, 120) : 'Sem descrição'} | ${c.likesCount || 0} likes`).join('\n') || 'Nenhum conteúdo'}
+
+FÓRUMS E DEBATES:
+${forums.map(f => `- "${f.title}" por ${f.author || 'Anónimo'} | ${f.description ? f.description.substring(0, 100) : ''}`).join('\n') || 'Nenhum fórum'}
+
+CURIOSIDADES:
+${trivia.map(t => `- ${t.title}: ${t.fact.substring(0, 100)}`).join('\n') || 'Sem curiosidades'}
+
+TOP UTILIZADORES (RANKING):
+${topRankings.map((u, i) => `${i+1}º ${u.name} - ${u.xp} XP`).join('\n') || 'Sem rankings'}
 
 REGRAS:
 - Responde em português
 - Sé mas amigável
 - Usa os dados da plataforma quando relevante
-- Recomenda conteúdo quando o utilizador pergunta sobre temas
+- Recomenda conteúdo específico quando o utilizador pergunta sobre temas
+- Podes citar títulos, descrições e autores dos conteúdos
 - Se não sabes algo, diz que não tens essa informação
-- Máximo 3 frases por resposta (curto e direto)
+- Máximo 4 frases por resposta (curto e direto)
 - Podes usar emojis`;
 
     const completion = await groq.chat.completions.create({
@@ -1202,7 +1216,7 @@ REGRAS:
         { role: 'user', content: message }
       ],
       temperature: 0.7,
-      max_tokens: 300
+      max_tokens: 350
     });
 
     const reply = completion.choices[0]?.message?.content || 'Desculpa, não consegui processar a tua pergunta.';
@@ -1283,6 +1297,76 @@ NÃO uses markdown. NÃO expliques. Apenas o JSON.`
     res.json({ analysis: merged, summary: analysis.resumo, totalAbusivos: analysis.totalAbusivos, totalSuspeitos: analysis.totalSuspeitos });
   } catch (error) {
     console.error('[AI Comment Analysis Error]', error);
+    res.status(500).json({ error: 'Erro ao analisar comentários' });
+  }
+});
+
+// Admin: Analisar comentários de um conteúdo específico
+app.get('/api/admin/comments/analyze/:contentId', requireAdmin, async (req, res) => {
+  try {
+    const { rows: comments } = await pool.query(`
+      SELECT c.id, c.text, c.author, c."userId", c."contentId", c."createdAt", c."isHidden",
+             ct.title as "contentTitle", ct.type as "contentType"
+      FROM "Comment" c
+      LEFT JOIN "Content" ct ON c."contentId" = ct.id::text
+      WHERE c."contentId" = $1 AND c."isDeleted" = FALSE
+      ORDER BY c."createdAt" DESC
+    `, [req.params.contentId]);
+
+    if (comments.length === 0) return res.json({ analysis: [], summary: 'Nenhum comentário encontrado para este conteúdo.', totalAbusivos: 0, totalSuspeitos: 0 });
+
+    const commentsText = comments.map((c, i) => `[${i+1}] Autor: ${c.author} | Texto: "${c.text}" | Data: ${new Date(c.createdAt).toLocaleDateString('pt-BR')}`).join('\n');
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: ` és um moderador de conteúdo especializado. Analisa os comentários de um conteúdo específico e identifica:
+
+1. Comentários abusivos (insultos, ameaças, discurso de ódio)
+2. Comentários suspeitos (spam, phishing, links maliciosos)
+3. Comentários que violam regras (off-topic, conteúdo inadequado)
+4. Comentários positivos e construtivos
+
+Para CADA comentário, retorna um objeto JSON com:
+- "id": o índice do comentário (1, 2, 3...)
+- "status": "limpo" | "suspeito" | "abusivo" | "violacao"
+- "motivo": explicação breve (máx 10 palavras)
+- "severidade": "nenhuma" | "baixa" | "media" | "alta"
+
+Retorna APENAS um JSON válido com:
+{
+  "analysis": [array de objetos],
+  "resumo": "resumo geral em 2-3 frases",
+  "totalAbusivos": número,
+  "totalSuspeitos": número
+}
+
+NÃO uses markdown. NÃO expliques. Apenas o JSON.`
+        },
+        {
+          role: 'user',
+          content: `Analisa estes ${comments.length} comentários:\n\n${commentsText}`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
+    });
+
+    const content = completion.choices[0]?.message?.content || '';
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(500).json({ error: 'Resposta da IA inválida' });
+
+    const analysis = JSON.parse(jsonMatch[0]);
+    const merged = analysis.analysis.map((a) => {
+      const original = comments[a.id - 1];
+      return { ...a, comment: original };
+    });
+
+    res.json({ analysis: merged, summary: analysis.resumo, totalAbusivos: analysis.totalAbusivos, totalSuspeitos: analysis.totalSuspeitos });
+  } catch (error) {
+    console.error('[AI Content Comment Analysis Error]', error);
     res.status(500).json({ error: 'Erro ao analisar comentários' });
   }
 });
