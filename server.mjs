@@ -2024,6 +2024,13 @@ app.get('/api/health', (req, res) => {
 // Serve static files from the React frontend app
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// SPA catch-all: serve index.html for all non-API routes
+app.get('/{*path}', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  }
+});
+
 // -- NOTIFICAÇÕES --
 
 app.get('/api/users/:id/notifications', authMiddleware, async (req, res) => {
