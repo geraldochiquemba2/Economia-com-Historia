@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2, Play, Star, Award, Clock, Ban, Eye } from "lucide-react";
+import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2, Play, Star, Award, Clock, Ban, Eye, Mic, Search } from "lucide-react";
 
 type ContentItem = {
   id: string;
@@ -41,7 +41,7 @@ export function AdminContent() {
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
 
   const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -80,7 +80,17 @@ export function AdminContent() {
     return () => clearInterval(interval);
   }, []);
 
-  const filteredItems = filter === "all" ? items : items.filter((i) => i.type === filter);
+  const filteredItems = items
+    .filter(i => filter === "all" || i.type === filter)
+    .filter(i => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        i.title?.toLowerCase().includes(q) ||
+        i.description?.toLowerCase().includes(q) ||
+        i.fullText?.toLowerCase().includes(q)
+      );
+    });
 
   const handleDeleteClick = (item: ContentItem) => setDeleteTarget(item);
 
@@ -142,16 +152,23 @@ export function AdminContent() {
     setFormModal(true);
   };
 
-  // Auto-preencher thumbnail quando é YouTube
+  // Auto-preencher thumbnail quando é YouTube, SoundCloud ou Spotify
   const handleVideoUrlChange = (url: string) => {
     setFormData(d => {
       const ytThumb = getYouTubeThumbnail(url);
-      return {
-        ...d,
-        videoUrl: url,
-        thumbnail: ytThumb && !d.thumbnail ? ytThumb : d.thumbnail,
-      };
+      const newThumbnail = ytThumb && !d.thumbnail ? ytThumb : d.thumbnail;
+      return { ...d, videoUrl: url, thumbnail: newThumbnail };
     });
+    if (url && !getYouTubeId(url) && formData.type === "podcast" && !formData.thumbnail) {
+      const isSpotify = /open\.spotify\.com/i.test(url);
+      const apiEndpoint = isSpotify ? '/api/spotify-oembed' : '/api/og-image';
+      fetch(`${apiEndpoint}?url=${encodeURIComponent(url)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.thumbnail) setFormData(d => ({ ...d, thumbnail: data.thumbnail }));
+        })
+        .catch(() => {});
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'thumbnail' | 'video') => {
@@ -348,7 +365,7 @@ export function AdminContent() {
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-[#3A0310] dark:text-white mb-0.5">Gerir Conteúdo</h1>
-            <p className="text-[#3A0310]/70 dark:text-[#E8B4B8]/70 text-[10px] font-black uppercase tracking-widest">Vídeos, textos e podcasts</p>
+            <p className="text-[#3A0310]/70 dark:text-[#E8B4B8]/70 text-[10px] font-black uppercase tracking-widest">Vídeos, textos e áudios</p>
           </div>
         </div>
         <button onClick={handleCreateClick} className="bg-[#3A0310] hover:bg-[#5A0520] p-3 rounded-2xl border border-[#E8B4B8]/30 shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center gap-2 px-5 text-xs font-black uppercase tracking-widest" style={{ color: 'white' }}>
@@ -370,6 +387,23 @@ export function AdminContent() {
             {f === "all" && "Todos"}{f === "video" && "Vídeo"}{f === "text" && "Texto"}{f === "podcast" && "Áudio"}{f === "jindungo" && "Texto com Jindungo"}{f === "forum" && "Fórum"}
           </button>
         ))}
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Pesquisar por título ou conteúdo..."
+          className="w-full bg-white dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 pl-11 pr-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-[#3A0310] dark:focus:border-[#E8B4B8]/50 transition-colors"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors">
+            <X className="w-3.5 h-3.5 text-neutral-400" />
+          </button>
+        )}
       </div>
 
       {/* Grid */}
@@ -512,8 +546,8 @@ export function AdminContent() {
               <div className="flex gap-3">
                 <button onClick={() => setDeleteTarget(null)} className="flex-1 py-3 rounded-2xl border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-neutral-300 font-black uppercase text-xs tracking-widest hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors">Cancelar</button>
                 <button onClick={handleDeleteConfirm} disabled={deleting}
-                  className="flex-1 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-widest transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
-                  {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  className="flex-1 py-3 rounded-2xl bg-red-600 hover:bg-red-700 force-white font-black uppercase text-xs tracking-widest transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                  {deleting ? <Loader2 className="w-4 h-4 animate-spin force-white" /> : <Trash2 className="w-4 h-4 force-white" />}
                   {deleting ? "A Apagar..." : "Apagar"}
                 </button>
               </div>
@@ -539,7 +573,7 @@ export function AdminContent() {
                     {formMode === "create" ? "Publicar Conteúdo" : "Editar Conteúdo"}
                   </h2>
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#3A0310]/70 dark:text-[#E8B4B8]/70 mt-0.5">
-                    {formMode === "create" ? "Adicionar novo artigo, vídeo ou podcast" : "Atualizar este conteúdo"}
+                    {formMode === "create" ? "Adicionar novo artigo, vídeo ou áudio" : "Atualizar este conteúdo"}
                   </p>
                 </div>
                 <button onClick={() => setFormModal(false)} className="p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors">
@@ -561,7 +595,7 @@ export function AdminContent() {
                     {["video", "text", "podcast", "jindungo", "forum"].map((t) => (
                       <button type="button" key={t} onClick={() => setFormData(d => ({ ...d, type: t }))}
                         className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${formData.type === t ? "bg-[#3A0310] text-white border-transparent" : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 hover:bg-neutral-200 dark:hover:bg-white/10"}`}>
-                        {t === "video" && "🎬 Vídeo"}{t === "text" && "📝 Texto"}{t === "podcast" && "🎙️ Podcast"}{t === "jindungo" && "🌶️ Texto com Jindungo"}{t === "forum" && "💬 Fórum"}
+                        {t === "video" && "🎬 Vídeo"}{t === "text" && "📝 Texto"}{t === "podcast" && "🎙️ Áudio"}{t === "jindungo" && "🌶️ Texto com Jindungo"}{t === "forum" && "💬 Fórum"}
                       </button>
                     ))}
                   </div>
@@ -587,17 +621,17 @@ export function AdminContent() {
 
 
 
-                {/* Media URL / Upload (Vídeo ou Podcast) */}
+                {/* Media URL / Upload (Vídeo ou Áudio) */}
                 {(formData.type === "video" || formData.type === "podcast") && (
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 flex items-center gap-1.5 block">
-                      <Youtube className="w-3.5 h-3.5 text-red-500" /> Link ou Upload do {formData.type === "podcast" ? "Áudio" : "Vídeo"}
+                      {formData.type === "podcast" ? <Mic className="w-3.5 h-3.5 text-[#3A0310] dark:text-[#E8B4B8]" /> : <Youtube className="w-3.5 h-3.5 text-red-500" />} Link ou Upload do {formData.type === "podcast" ? "Áudio" : "Vídeo"}
                     </label>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
                         <Link2 className="absolute left-4 top-3.5 w-4 h-4 text-neutral-400" />
                         <input type="text" value={formData.videoUrl || ""} onChange={e => handleVideoUrlChange(e.target.value)}
-                          placeholder="https://www.youtube.com/watch?v=..."
+                          placeholder={formData.type === "podcast" ? "Link do áudio (SoundCloud, Spotify, etc.)" : "https://www.youtube.com/watch?v=..."}
                           className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 pl-10 pr-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-red-500 dark:focus:border-red-500/50 transition-colors" />
                       </div>
                       <div className="relative overflow-hidden shrink-0">
@@ -608,7 +642,7 @@ export function AdminContent() {
                         </button>
                       </div>
                     </div>
-                    {formData.videoUrl && getYouTubeId(formData.videoUrl) && (
+                    {formData.type === "video" && formData.videoUrl && getYouTubeId(formData.videoUrl) && (
                       <div className="mt-3 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10">
                         <div className="relative h-32 w-full overflow-hidden bg-black/5">
                           <div className="absolute inset-0">

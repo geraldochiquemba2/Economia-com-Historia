@@ -124,12 +124,17 @@ function generateRandomPassword(length = 10) {
 
 function requireAuth(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'Não autorizado' });
+  if (!token) return res.status(401).json({ error: 'Não autorizado. Faça login novamente.' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
-  } catch { return res.status(401).json({ error: 'Token inválido' }); }
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Sessão expirada. Faça login novamente.' });
+    }
+    return res.status(401).json({ error: 'Token inválido. Faça login novamente.' });
+  }
 }
 
 function requireAdmin(req, res, next) {
@@ -338,6 +343,19 @@ async function initDB() {
     // 11. Coluna mustChangePassword na tabela User
     await pool.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "mustChangePassword" BOOLEAN DEFAULT FALSE;`);
 
+    // 12. Tabela de Análises de Comentários (IA)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "CommentAnalysis" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "analysisData" JSONB NOT NULL,
+        "summary" TEXT,
+        "totalAbusivos" INTEGER DEFAULT 0,
+        "totalSuspeitos" INTEGER DEFAULT 0,
+        "totalAnalisados" INTEGER DEFAULT 0,
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
     // Seed default categories if empty
     const { rows: catCount } = await pool.query('SELECT COUNT(*) as count FROM "Category"');
     if (parseInt(catCount[0].count) === 0) {
@@ -370,6 +388,56 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   } catch (err) {
     console.error('[Telegram Upload Error]', err);
     res.status(500).json({ error: err.message || 'Erro ao enviar para o Telegram' });
+  }
+});
+
+// Rota para buscar capa de Spotify via oEmbed
+app.get('/api/spotify-oembed', async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'URL é obrigatória' });
+  try {
+    const response = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`);
+    if (!response.ok) return res.json({ thumbnail: null });
+    const data = await response.json();
+    res.json({ thumbnail: data.thumbnail_url || null });
+  } catch (err) {
+    res.json({ thumbnail: null });
+  }
+});
+
+// Rota para buscar imagem OG de qualquer link (para capas de podcasts/áudio)
+app.get('/api/og-image', async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'URL é obrigatória' });
+
+  // Se for URL do Spotify, usar oEmbed primeiro
+  if (/open\.spotify\.com/i.test(url)) {
+    try {
+      const oembedRes = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`);
+      if (oembedRes.ok) {
+        const oembedData = await oembedRes.json();
+        if (oembedData.thumbnail_url) return res.json({ thumbnail: oembedData.thumbnail_url });
+      }
+    } catch {}
+  }
+
+  // Para outras URLs, usar OG meta tags
+  try {
+    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const html = await response.text();
+    const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+    if (ogMatch) {
+      return res.json({ thumbnail: ogMatch[1] });
+    }
+    const twitterMatch = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i);
+    if (twitterMatch) {
+      return res.json({ thumbnail: twitterMatch[1] });
+    }
+    res.json({ thumbnail: null });
+  } catch (err) {
+    res.json({ thumbnail: null });
   }
 });
 
@@ -1166,7 +1234,7 @@ app.post('/api/ai/chat', async (req, res) => {
 
   try {
     const [contentRes, usersRes, rankingsRes, categoriesRes, forumRes, triviaRes] = await Promise.all([
-      pool.query('SELECT title, type, status, description, "fullText", author, array_length("likes", 1) as "likesCount", "createdAt" FROM "Content" WHERE status = $1 ORDER BY "createdAt" DESC LIMIT 30', ['approved']),
+      pool.query('SELECT title, type, status, description, "fullText", author, array_length("likes", 1) as "likesCount", "createdAt" FROM "Content" WHERE status = $1 ORDER BY array_length("likes", 1) DESC NULLS LAST LIMIT 30', ['approved']),
       pool.query('SELECT COUNT(*) as total FROM "User"'),
       pool.query('SELECT name, xp FROM "User" ORDER BY xp DESC LIMIT 10'),
       pool.query('SELECT name, icon FROM "Category" WHERE hidden = FALSE'),
@@ -1181,33 +1249,18 @@ app.post('/api/ai/chat', async (req, res) => {
     const forums = forumRes.rows;
     const trivia = triviaRes.rows;
 
-    const systemPrompt = ` és um assistente de IA da plataforma "economia" — uma plataforma angolana de conteúdo, quizzes e debate sobre história, cultura, geografia, economia e sociedade de Angola.
+    const systemPrompt = `Tu és o assistente da plataforma "Economia com História". Conheces todos os conteúdos da plataforma.
 
-CONHECIMENTO DA PLATAFORMA:
-- ${totalUsers} utilizadores registados
-- Categorias: ${categories.map(c => `${c.icon} ${c.name}`).join(', ') || 'Sem categorias'}
+CONTEÚDOS POPULARES (ordenados por likes):
+${topContent.map((c, i) => `${i+1}. "${c.title}" (${c.type}) — ${c.likesCount || 0} likes`).join('\n') || 'Nenhum'}
 
-CONTEÚDO DISPONÍVEL NA PLATAFORMA:
-${topContent.map(c => `- "${c.title}" (${c.type}) por ${c.author || 'Anónimo'} | ${c.description ? c.description.substring(0, 120) : 'Sem descrição'} | ${c.likesCount || 0} likes`).join('\n') || 'Nenhum conteúdo'}
-
-FÓRUMS E DEBATES:
-${forums.map(f => `- "${f.title}" por ${f.author || 'Anónimo'} | ${f.description ? f.description.substring(0, 100) : ''}`).join('\n') || 'Nenhum fórum'}
-
-CURIOSIDADES:
-${trivia.map(t => `- ${t.title}: ${t.fact.substring(0, 100)}`).join('\n') || 'Sem curiosidades'}
-
-TOP UTILIZADORES (RANKING):
-${topRankings.map((u, i) => `${i+1}º ${u.name} - ${u.xp} XP`).join('\n') || 'Sem rankings'}
+FORUNS: ${forums.map(f => `"${f.title}"`).join(', ') || 'Nenhum'}.
 
 REGRAS:
-- Responde em português
-- Sé mas amigável
-- Usa os dados da plataforma quando relevante
-- Recomenda conteúdo específico quando o utilizador pergunta sobre temas
-- Podes citar títulos, descrições e autores dos conteúdos
-- Se não sabes algo, diz que não tens essa informação
-- Máximo 4 frases por resposta (curto e direto)
-- Podes usar emojis`;
+1. Quando alguém pergunta pelos mais vistos/populares, responde listando os conteúdos com mais likes da lista acima.
+2. NUNCA digas "infelizmente", "não tenho informações", "não tenho dados", ou "a plataforma não fornece".
+3. Responde SEMPRE como se soubesses tudo sobre a plataforma.
+4. Português de Angola, máximo 4 frases.`;
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
@@ -1219,7 +1272,12 @@ REGRAS:
       max_tokens: 350
     });
 
-    const reply = completion.choices[0]?.message?.content || 'Desculpa, não consegui processar a tua pergunta.';
+    let reply = completion.choices[0]?.message?.content || 'Desculpa, não consegui processar a tua pergunta.';
+    // Post-process: remover frases indesejadas e fragmentos
+    reply = reply.replace(/[Ii]nfelizmente,?\s*/g, '').replace(/[Ll]amento,?\s*/g, '').replace(/[Nn]ão tenho (informações|dados|acesso|certeza)[^.!?\n]*[.!?]\s*/g, '').replace(/a plataforma não fornece[^!?\n]*[.!?]\s*/g, '').replace(/não disponho de[^!?\n]*[.!?]\s*/g, '').replace(/não posso[^!?\n]*[.!?]\s*/g, '').replace(/não consigo[^!?\n]*[.!?]\s*/g, '').replace(/de acesso à tua[^!?\n]*[.!?]\s*/g, '').replace(/a tua [a-z]+ não[^!?\n]*[.!?]\s*/g, '');
+    // Limpar espaços extras e pontuação solta no início
+    reply = reply.replace(/^\s*,\s*|^\s*;\s*|^\s*:\s*/, '').trim();
+    if (!reply || reply.length < 5) reply = 'Os conteúdos mais populares são os que têm mais likes na plataforma!';
     res.json({ reply });
   } catch (error) {
     console.error('[AI Chat Error]', error);
@@ -1294,10 +1352,49 @@ NÃO uses markdown. NÃO expliques. Apenas o JSON.`
       return { ...a, comment: original };
     });
 
-    res.json({ analysis: merged, summary: analysis.resumo, totalAbusivos: analysis.totalAbusivos, totalSuspeitos: analysis.totalSuspeitos });
+    // Apagar análises antigas e guardar a nova
+    await pool.query('DELETE FROM "CommentAnalysis"');
+    const resultData = { analysis: merged, summary: analysis.resumo, totalAbusivos: analysis.totalAbusivos, totalSuspeitos: analysis.totalSuspeitos, totalAnalisados: merged.length };
+    await pool.query(
+      'INSERT INTO "CommentAnalysis" ("analysisData", "summary", "totalAbusivos", "totalSuspeitos", "totalAnalisados") VALUES ($1, $2, $3, $4, $5)',
+      [JSON.stringify(merged), analysis.resumo, analysis.totalAbusivos || 0, analysis.totalSuspeitos || 0, merged.length]
+    );
+
+    res.json(resultData);
   } catch (error) {
     console.error('[AI Comment Analysis Error]', error);
     res.status(500).json({ error: 'Erro ao analisar comentários' });
+  }
+});
+
+// Admin: Buscar última análise guardada
+app.get('/api/admin/comments/analysis', requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM "CommentAnalysis" ORDER BY "createdAt" DESC LIMIT 1');
+    if (rows.length === 0) return res.json({ analysis: [], summary: null, totalAbusivos: 0, totalSuspeitos: 0, totalAnalisados: 0 });
+    const row = rows[0];
+    res.json({
+      analysis: row.analysisData,
+      summary: row.summary,
+      totalAbusivos: row.totalAbusivos,
+      totalSuspeitos: row.totalSuspeitos,
+      totalAnalisados: row.totalAnalisados,
+      createdAt: row.createdAt
+    });
+  } catch (error) {
+    console.error('[Get Analysis Error]', error);
+    res.status(500).json({ error: 'Erro ao buscar análise' });
+  }
+});
+
+// Admin: Apagar análise guardada
+app.delete('/api/admin/comments/analysis', requireAdmin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM "CommentAnalysis"');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Delete Analysis Error]', error);
+    res.status(500).json({ error: 'Erro ao apagar análise' });
   }
 });
 

@@ -5,6 +5,7 @@ import { ArrowLeft, PlayCircle, Bookmark, Share2, CheckCircle2, Clock, Eye, Load
 import { toast } from "sonner";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { CommentSection } from "../components/CommentSection";
+import { audioPlay } from "../components/audioStore";
 
 type ContentItem = {
   id: string;
@@ -288,6 +289,20 @@ export function ContentDetail() {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowVideo(true)}
+                  className="w-20 h-20 bg-[#3A0310]/80 backdrop-blur-xl rounded-full flex items-center justify-center border border-[#E8B4B8]/30 shadow-2xl group"
+                >
+                  <PlayCircle className="w-10 h-10 group-hover:text-[#E8B4B8] transition-colors" style={{ color: '#ffffff' }} />
+                </motion.button>
+              </div>
+            )}
+
+            {/* Play button overlay for audio/podcast */}
+            {content.type === "podcast" && content.videoUrl && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => audioPlay(content.videoUrl!, content.title, content.thumbnail || "")}
                   className="w-20 h-20 bg-[#3A0310]/80 backdrop-blur-xl rounded-full flex items-center justify-center border border-[#E8B4B8]/30 shadow-2xl group"
                 >
                   <PlayCircle className="w-10 h-10 group-hover:text-[#E8B4B8] transition-colors" style={{ color: '#ffffff' }} />

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { X, Send, Loader2, Sparkles, Bot } from "lucide-react";
+import { audioGetSrc, audioSubscribe, miniPlayerSideGet, miniPlayerSideSubscribe } from "./audioStore";
 
 export function AIChatAssistant() {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,6 +9,14 @@ export function AIChatAssistant() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [hasMiniPlayer, setHasMiniPlayer] = useState(!!audioGetSrc());
+  const [mpSide, setMpSide] = useState<"left" | "right">(miniPlayerSideGet());
+
+  useEffect(() => {
+    const unsubAudio = audioSubscribe(() => setHasMiniPlayer(!!audioGetSrc()));
+    const unsubSide = miniPlayerSideSubscribe(() => setMpSide(miniPlayerSideGet()));
+    return () => { unsubAudio(); unsubSide(); };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -45,27 +54,40 @@ export function AIChatAssistant() {
     }
   };
 
+  const getButtonPos = () => {
+    if (!hasMiniPlayer) return { bottom: 124, right: 16 };
+    if (mpSide === "right") return { bottom: 124, left: 16 };
+    return { bottom: 124, right: 16 };
+  };
+
+  const getChatPos = () => {
+    if (!hasMiniPlayer) return { bottom: 174 };
+    if (mpSide === "right") return { bottom: 174, left: 16 };
+    return { bottom: 174 };
+  };
+
   return (
     <>
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(prev => !prev)}
-        className="fixed bottom-[52px] right-5 z-50 w-11 h-11 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-[#3A0310] to-[#E8B4B8] text-white shadow-2xl flex items-center justify-center hover:shadow-[0_0_30px_rgba(232,180,184,0.4)] active:scale-90 transition-transform duration-150"
+        className="fixed z-[300] w-9 h-9 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-[#3A0310] to-[#E8B4B8] text-white shadow-2xl flex items-center justify-center hover:shadow-[0_0_30px_rgba(232,180,184,0.4)] active:scale-90 transition-all duration-300"
+        style={getButtonPos()}
       >
-        {isOpen ? <X className="w-5 h-5 md:w-6 md:h-6 force-white" /> : <Bot className="w-5 h-5 md:w-6 md:h-6 force-white" />}
+        {isOpen ? <X className="w-4 h-4 md:w-6 md:h-6 force-white" /> : <Bot className="w-4 h-4 md:w-6 md:h-6 force-white" />}
         {!isOpen && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 md:w-4 md:h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
         )}
       </button>
 
       {/* Chat Window */}
       <div
-        className={`fixed bottom-[110px] right-5 md:right-6 z-50 w-[320px] md:w-[360px] max-w-[calc(100vw-2.5rem)] bg-white dark:bg-[#1A0A0D] border border-neutral-200 dark:border-[#3A0310]/60 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col origin-bottom transition-all duration-200 ease-out ${
+        className={`fixed z-[300] w-[320px] md:w-[360px] max-w-[calc(100vw-2.5rem)] bg-white dark:bg-[#1A0A0D] border border-neutral-200 dark:border-[#3A0310]/60 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col origin-bottom transition-all duration-300 ease-out ${
           isOpen
             ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
             : "opacity-0 scale-95 translate-y-2 pointer-events-none"
         }`}
-        style={{ height: "460px", maxHeight: "calc(100vh - 14rem)" }}
+        style={{ height: "460px", maxHeight: "calc(100vh - 14rem)", ...getChatPos() }}
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-[#3A0310] to-[#5A081B] p-4 flex items-center gap-3 shrink-0">
@@ -91,7 +113,7 @@ export function AIChatAssistant() {
               <p className="text-sm font-bold text-neutral-600 dark:text-neutral-400 mb-1">Olá! Sou o assistente IA</p>
               <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Pergunta sobre conteúdo, quizzes, rankings ou qualquer coisa da plataforma!</p>
               <div className="mt-4 space-y-2">
-                {["Quais os conteúdos mais vistos?", "Quem está no top do ranking?", "Cria um quiz sobre Angola"].map((q) => (
+                {["Quem está no top do ranking?", "Cria um quiz sobre Angola", "Quais os fóruns ativos?"].map((q) => (
                   <button key={q} onClick={() => { setInput(q); inputRef.current?.focus(); }}
                     className="block w-full text-left px-3 py-2 bg-neutral-50 dark:bg-white/5 rounded-xl text-[10px] font-bold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors border border-neutral-100 dark:border-white/5">
                     {q}

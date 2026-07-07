@@ -740,7 +740,7 @@ export function CommentSection({ contentId, contentType, title = "Discussões", 
       </div>
 
       {/* Input Bar */}
-      <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[calc(100%-48px)] md:max-w-xl z-[60]">
+      <div className="fixed bottom-16 md:bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[calc(100%-48px)] md:max-w-xl z-[60]">
         <AnimatePresence>
           {replyingToId !== null && (
             <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 10, opacity: 0 }}

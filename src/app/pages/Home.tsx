@@ -273,10 +273,10 @@ export function Home() {
                   <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center shadow-lg">
                     <Lightbulb className="w-4 h-4 text-[#3A0310]" />
                   </div>
-                  <span className="text-[10px] font-medium text-amber-400 uppercase tracking-[0.3em]">Curiosidade</span>
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-[0.3em]" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}>Curiosidade</span>
                 </div>
-                <h2 className="text-3xl md:text-5xl font-light tracking-tight mb-4 leading-tight drop-shadow-2xl force-white" style={{ color: "#ffffff" }}>{activeTrivia.title}</h2>
-                <p className="text-sm md:text-base font-medium leading-relaxed max-w-2xl drop-shadow-md force-white" style={{ color: "#ffffff" }}>{activeTrivia.fact}</p>
+                <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-tight" style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,1), 0 1px 4px rgba(0,0,0,1)' }}>{activeTrivia.title}</h2>
+                <p className="text-sm md:text-base font-semibold leading-relaxed max-w-2xl" style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,1)' }}>{activeTrivia.fact}</p>
               </div>
             </div>
           </motion.section>
@@ -330,7 +330,7 @@ export function Home() {
                     alt={theme.title}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
                   
                   <div className="absolute inset-0 p-4 md:p-8 flex flex-col justify-end">
                     <div className="flex items-center gap-2 mb-4">
@@ -341,16 +341,16 @@ export function Home() {
                         <Gem className="w-3 h-3" style={{ color: '#ffffff' }} />
                       </div>
                     </div>
-                    <h3 className="font-light text-base md:text-2xl leading-tight mb-2 md:mb-3 drop-shadow-lg tracking-tight" style={{ color: '#ffffff' }}>
+                    <h3 className="font-bold text-base md:text-2xl leading-tight mb-2 md:mb-3 tracking-tight" style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,1), 0 1px 4px rgba(0,0,0,1)' }}>
                       {theme.title}
                     </h3>
-                    <p className="text-sm font-light line-clamp-2 opacity-80 mb-3 md:mb-6 hidden md:block" style={{ color: '#e5e5e5' }}>
+                    <p className="text-sm font-semibold line-clamp-2 mb-3 md:mb-6 hidden md:block" style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,1)' }}>
                       {theme.description}
                     </p>
                     
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-black/40 rounded-md border border-white/10" style={{ color: '#a3a3a3' }}>Ver Discussões</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-black/60 rounded-md border border-white/20" style={{ color: '#ffffff' }}>Ver Discussões</span>
                       </div>
                       <div className="w-9 h-9 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-[#3A0310] group-hover:border-[#E8B4B8]/30 transition-all duration-300 shadow-2xl">
                         <Play className="w-4 h-4 ml-0.5" fill="currentColor" style={{ color: '#ffffff' }} />
@@ -438,9 +438,9 @@ export function Home() {
             <div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-[#E8B4B8]" />
-                <h2 className="text-xl font-black text-white uppercase tracking-tighter">Arquivos Recomendados</h2>
+                <h2 className="text-xl font-black text-white tracking-tighter">Arquivos Recomendados</h2>
               </div>
-              <Link to="/app/explore" className="text-[10px] font-black text-[#E8B4B8] uppercase tracking-widest flex items-center gap-1 group">
+              <Link to="/app/explore" className="text-[10px] font-black text-[#E8B4B8] tracking-widest flex items-center gap-1 group">
                 Explorar <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -487,13 +487,13 @@ export function Home() {
                     <span className="text-[9px] font-black text-[#E8B4B8] uppercase tracking-[0.2em] mb-1 block">
                       {({ jindungo: "Texto com Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[rec.type] || rec.type)}
                     </span>
-                    <h3 className="text-[#3A0310] dark:text-white font-black text-sm leading-tight group-hover:text-[#5A051A] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-2 uppercase tracking-tight">
+                    <h3 className="text-[#3A0310] dark:text-white font-black text-sm leading-tight group-hover:text-[#5A051A] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-2 tracking-tight">
                       {rec.title}
                     </h3>
                     
                      <div className="mt-3 flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#3A0310] dark:bg-[#E8B4B8]" />
-                        <span className="text-[8px] font-black text-[#3A0310] dark:text-[#E8B4B8] uppercase tracking-widest">Aceder ao Arquivo</span>
+                        <span className="text-[8px] font-black text-[#3A0310] dark:text-[#E8B4B8] tracking-widest">Aceder ao Arquivo</span>
                      </div>
                   </div>
                 </Link>
@@ -509,40 +509,43 @@ export function Home() {
             <div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-2">
                 <Flame className="w-5 h-5 text-[#E8B4B8]" />
-                <h2 className="text-xl font-black text-white uppercase tracking-tighter">Mais Recentes</h2>
+                <h2 className="text-xl font-black text-white tracking-tighter">Mais Recentes</h2>
               </div>
-              <Link to="/app/explore" className="text-[10px] font-black text-[#E8B4B8] uppercase tracking-widest flex items-center gap-1 group">
+              <Link to="/app/explore" className="text-[10px] font-black text-[#E8B4B8] tracking-widest flex items-center gap-1 group">
                 Ver tudo <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex gap-3 md:gap-6 overflow-x-auto pb-6 -mx-6 px-6">
               {recentContent.map((item, index) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
+                  className="flex-shrink-0 w-[72vw] max-w-[280px]"
                 >
                   <Link
                     to={`/app/explore/${item.id}`}
-                    className="block relative h-48 rounded-2xl overflow-hidden border border-white/10 group hover:border-[#E8B4B8]/50 transition-all duration-300 shadow-lg"
+                    className="flex bg-white dark:bg-white/5 rounded-2xl md:rounded-[2rem] p-3 md:p-4 border-2 border-[#3A0310] dark:border-white/10 hover:bg-[#3A0310]/5 dark:hover:bg-white/10 hover:border-[#5A051A] dark:hover:border-[#E8B4B8]/80 transition-all duration-300 group shadow-lg overflow-hidden relative"
                   >
-                    {item.thumbnail ? (
-                      <img src={item.thumbnail} alt="" className="absolute inset-0 w-full h-full object-contain bg-[#0F0F0F] group-hover:scale-105 transition-transform duration-700" />
-                    ) : (
-                      <div className="absolute inset-0 bg-white/5" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                    <div className="absolute inset-0 p-4 flex flex-col justify-end">
-                      <span className="text-[8px] font-black uppercase tracking-widest bg-black/40 backdrop-blur-md text-[#E8B4B8] px-2 py-0.5 rounded-md border border-white/10 self-start mb-2 force-white">
-                        {({ jindungo: "Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[item.type] || item.type)}
+                    <div className="relative w-16 h-16 md:w-24 md:h-24 rounded-xl md:rounded-2xl overflow-hidden flex-shrink-0 border border-[#3A0310]/20 dark:border-white/10 shadow-xl">
+                      {item.thumbnail ? (
+                        <img src={item.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                      ) : (
+                        <div className="w-full h-full bg-white/5" />
+                      )}
+                    </div>
+
+                    <div className="flex flex-col justify-center ml-5 flex-1">
+                      <span className="text-[9px] font-black text-[#E8B4B8] uppercase tracking-[0.2em] mb-1 block">
+                        {({ jindungo: "Texto com Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[item.type] || item.type)}
                       </span>
-                      <h3 className="text-white force-white font-black text-sm leading-tight group-hover:text-[#E8B4B8] transition-colors line-clamp-2 uppercase tracking-tight drop-shadow-lg">
+                      <h3 className="text-[#3A0310] dark:text-white font-black text-sm leading-tight group-hover:text-[#5A051A] dark:group-hover:text-[#E8B4B8] transition-colors line-clamp-2 tracking-tight">
                         {item.title}
                       </h3>
                       {item.authorName && (
-                        <p className="text-[10px] text-white/70 force-white font-medium mt-1 drop-shadow-md">por {item.authorName}</p>
+                        <p className="text-[9px] text-neutral-400 dark:text-neutral-500 font-medium mt-1 line-clamp-1">por {item.authorName}</p>
                       )}
                     </div>
                   </Link>
@@ -559,6 +562,39 @@ export function Home() {
             onUnreadCountChange={setUnreadCount}
           />
         )}
+
+        {/* Footer */}
+        <footer className="mt-8 border-t border-neutral-200 dark:border-white/5 pt-6 pb-4 px-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Brand */}
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-[#3A0310] dark:text-[#E8B4B8] mb-3">Economia com História</h3>
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-snug font-medium">
+                  Plataforma angolana de conteúdo, quizzes e debate sobre história, cultura, geografia, economia e sociedade de Angola.
+                </p>
+              </div>
+              {/* Links */}
+              <div>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500 mb-3">Navegação</h4>
+                <div className="flex flex-col gap-2">
+                  <Link to="/app/explore" className="text-[11px] text-neutral-500 dark:text-neutral-400 hover:text-[#3A0310] dark:hover:text-[#E8B4B8] transition-colors font-medium">Explorar Conteúdo</Link>
+                  <Link to="/app/quiz" className="text-[11px] text-neutral-500 dark:text-neutral-400 hover:text-[#3A0310] dark:hover:text-[#E8B4B8] transition-colors font-medium">Quizzes</Link>
+                  <Link to="/app/forum" className="text-[11px] text-neutral-500 dark:text-neutral-400 hover:text-[#3A0310] dark:hover:text-[#E8B4B8] transition-colors font-medium">Fórum e Debates</Link>
+                  <Link to="/app/rankings" className="text-[11px] text-neutral-500 dark:text-neutral-400 hover:text-[#3A0310] dark:hover:text-[#E8B4B8] transition-colors font-medium">Rankings</Link>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-neutral-200 dark:border-white/5 pt-4 flex flex-col md:flex-row items-center justify-between gap-3">
+              <p className="text-[9px] text-neutral-400 dark:text-neutral-600 font-medium uppercase tracking-widest">
+                © {new Date().getFullYear()} Economia com História. Todos os direitos reservados.
+              </p>
+              <p className="text-[9px] text-neutral-400 dark:text-neutral-600 font-medium uppercase tracking-widest">
+                Feito com ❤️ em Angola
+              </p>
+            </div>
+          </div>
+        </footer>
       </main>
     </div>
   );

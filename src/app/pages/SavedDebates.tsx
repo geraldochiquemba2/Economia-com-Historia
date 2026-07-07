@@ -157,7 +157,7 @@ export function SavedDebates() {
                           {content.title || "Conteúdo"}
                         </h3>
                         <p className="text-[9px] text-neutral-400 dark:text-neutral-500 font-black uppercase tracking-widest">
-                          {content.type === "video" ? "Vídeo" : content.type === "text" ? "Texto" : content.type === "podcast" ? "Podcast" : content.type === "jindungo" ? "Com Jindungo" : content.type}
+                          {content.type === "video" ? "Vídeo" : content.type === "text" ? "Texto" : content.type === "podcast" ? "Áudio" : content.type === "jindungo" ? "Com Jindungo" : content.type}
                         </p>
                       </div>
 

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useLocation, useNavigate, MemoryRouter } from "react-router";
-import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, MessageSquare, Trophy, Lightbulb, ClipboardCheck, Bell, Folder, KeyRound, Shield } from "lucide-react";
+import { LayoutDashboard, FileVideo, Users, LogOut, ShieldAlert, Trophy, Lightbulb, ClipboardCheck, Bell, Folder, KeyRound, Shield, Menu, X } from "lucide-react";
 import { NotificationsModal } from "../components/NotificationsModal";
+import { MiniPlayer } from "../components/MiniPlayer";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "../components/PageTransition";
 import { ScrollToTop } from "../components/ScrollToTop";
@@ -13,6 +14,7 @@ export function AdminLayout() {
   const [passwordResetCount, setPasswordResetCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
 
@@ -53,6 +55,28 @@ export function AdminLayout() {
     return () => clearInterval(interval);
   }, []);
 
+  // Verificar se o token é válido ao carregar o admin
+  React.useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin/password-resets', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          navigate('/login');
+        }
+      } catch {}
+    };
+    verifyToken();
+  }, []);
+
   React.useEffect(() => {
     if (!user?.id) return;
     const fetchNotifications = async () => {
@@ -82,6 +106,10 @@ export function AdminLayout() {
     }
   }, []);
 
+  React.useEffect(() => {
+    setShowMobileMenu(false);
+  }, [location.pathname]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -105,70 +133,127 @@ export function AdminLayout() {
       <ScrollToTop />
       
       {/* Header */}
-      <header className="bg-white/80 dark:bg-[#0F0F0F]/80 backdrop-blur-md border-b border-[#3A0310]/20 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between shadow-md z-10 sticky top-0 w-full">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-[#E8B4B8] cursor-pointer" onClick={() => navigate("/admin")}>
+      <header className="bg-white/80 dark:bg-[#0F0F0F]/80 backdrop-blur-md border-b border-[#3A0310]/20 px-4 md:px-6 py-3 md:py-4 shadow-md z-20 sticky top-0 w-full">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Hamburger - Mobile only */}
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="md:hidden p-2 rounded-xl bg-[#3A0310]/10 dark:bg-white/5 border border-[#3A0310]/20 dark:border-white/10 active:scale-95 transition-all shrink-0"
+          >
+            {showMobileMenu ? (
+              <X className="w-5 h-5 text-[#3A0310] dark:text-[#E8B4B8]" />
+            ) : (
+              <Menu className="w-5 h-5 text-[#3A0310] dark:text-[#E8B4B8]" />
+            )}
+          </button>
+
+          <div className="flex items-center gap-2 text-[#E8B4B8] cursor-pointer shrink-0" onClick={() => navigate("/admin")}>
             <ShieldAlert className="w-5 h-5 text-[#3A0310] dark:text-[#E8B4B8]" />
             <span className="font-bold text-lg tracking-tight text-[#3A0310] dark:text-white uppercase">Admin</span>
           </div>
           
-          {/* Horizontal Nav Links for PC */}
-          <nav className="md:flex hidden items-center gap-6">
+          {/* Nav horizontal - Desktop only, wraps if needed */}
+          <nav className="hidden md:flex flex-wrap items-center gap-1">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.exact}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors relative ${
-                    isActive ? "text-rose-500" : "text-neutral-500 dark:text-gray-400 hover:text-[#3A0310] dark:hover:text-white"
+                  `flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors relative whitespace-nowrap px-2.5 py-1.5 rounded-lg ${
+                    isActive ? "text-rose-500 bg-rose-500/10" : "text-neutral-500 dark:text-gray-400 hover:text-[#3A0310] dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/5"
                   }`
                 }
               >
-                <item.icon className="w-4 h-4" />
+                <item.icon className="w-3.5 h-3.5" />
                 <span>{item.label}</span>
                 {item.to === "/admin/review" && pendingCount > 0 && (
-                  <span className="absolute -top-2 -right-3 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full px-1 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]">
-                    {pendingCount}
-                  </span>
+                  <span className="absolute -top-2 -right-3 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full px-1 animate-pulse">{pendingCount}</span>
                 )}
                 {item.to === "/admin/password-resets" && passwordResetCount > 0 && (
-                  <span className="absolute -top-2 -right-3 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full px-1 animate-bounce shadow-[0_0_12px_rgba(239,68,68,0.7)]">
-                    {passwordResetCount}
-                  </span>
+                  <span className="absolute -top-2 -right-3 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[8px] font-black rounded-full px-1 animate-bounce">{passwordResetCount}</span>
                 )}
               </NavLink>
             ))}
           </nav>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button onClick={() => setShowNotifications(true)} className="relative p-2.5 bg-[#3A0310]/10 dark:bg-white/5 rounded-xl hover:bg-[#3A0310]/20 dark:hover:bg-white/10 transition-all border border-[#3A0310]/20 dark:border-white/10 active:scale-95">
-            <Bell className={`w-4 h-4 text-[#3A0310] dark:text-[#E8B4B8] ${unreadCount > 0 ? 'animate-bounce' : ''}`} />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-full border-2 border-white dark:border-[#0F0F0F] px-0.5 animate-pulse">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
-          <button 
-            onClick={() => navigate("/app")} 
-            className="text-[#3A0310] dark:text-white hover:text-white transition-all flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-[#3A0310]/10 dark:bg-white/5 px-4 py-2.5 rounded-xl border border-[#3A0310]/20 dark:border-white/10 cursor-pointer hover:bg-[#3A0310] dark:hover:bg-white/10 shadow-sm hover:shadow-md active:scale-95"
-          >
-            <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Voltar ao App</span>
-          </button>
-          <button 
-            onClick={handleLogout}
-            title="Terminar Sessão"
-            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white force-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-95 border border-red-700/50"
-          >
-            <LogOut className="w-4 h-4" /> <span className="hidden md:inline">Sair</span>
-          </button>
+          <div className="flex items-center gap-1.5 ml-auto shrink-0">
+            <button onClick={() => setShowNotifications(true)} className="relative p-2 bg-[#3A0310]/10 dark:bg-white/5 rounded-xl hover:bg-[#3A0310]/20 dark:hover:bg-white/10 transition-all border border-[#3A0310]/20 dark:border-white/10 active:scale-95">
+              <Bell className={`w-4 h-4 text-[#3A0310] dark:text-[#E8B4B8] ${unreadCount > 0 ? 'animate-bounce' : ''}`} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-full border-2 border-white dark:border-[#0F0F0F] px-0.5 animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            <button onClick={() => navigate("/app")} className="text-[#3A0310] dark:text-white hover:text-white transition-all flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-[#3A0310]/10 dark:bg-white/5 px-3 py-2 rounded-xl border border-[#3A0310]/20 dark:border-white/10 cursor-pointer hover:bg-[#3A0310] dark:hover:bg-white/10 shadow-sm hover:shadow-md active:scale-95">
+              <LogOut className="w-4 h-4" /> <span className="hidden lg:inline">Voltar ao App</span>
+            </button>
+            <button onClick={handleLogout} title="Terminar Sessão" className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white force-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 px-3 py-2 rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-95 border border-red-700/50">
+              <LogOut className="w-4 h-4" /> <span className="hidden lg:inline">Sair</span>
+            </button>
+          </div>
         </div>
       </header>
 
+      {/* Mobile Menu Dropdown */}
+      <AnimatePresence>
+        {showMobileMenu && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden fixed inset-0 bg-black/50 z-30"
+              onClick={() => setShowMobileMenu(false)}
+            />
+            <motion.div
+              initial={{ y: -20, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: -20, opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="md:hidden fixed top-[57px] left-2 right-2 bg-white dark:bg-[#0F0F0F] rounded-2xl border border-[#3A0310]/20 dark:border-white/10 shadow-2xl z-40 max-h-[75vh] overflow-y-auto"
+            >
+              <nav className="py-2">
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.exact}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 mx-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                        isActive
+                          ? "text-rose-500 bg-rose-500/10"
+                          : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-[#3A0310] dark:hover:text-white"
+                      }`
+                    }
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                    {item.to === "/admin/review" && pendingCount > 0 && (
+                      <span className="ml-auto min-w-[20px] h-[20px] flex items-center justify-center bg-red-500 text-white text-[9px] font-black rounded-full px-1 animate-pulse">{pendingCount}</span>
+                    )}
+                    {item.to === "/admin/password-resets" && passwordResetCount > 0 && (
+                      <span className="ml-auto min-w-[20px] h-[20px] flex items-center justify-center bg-red-500 text-white text-[9px] font-black rounded-full px-1 animate-bounce">{passwordResetCount}</span>
+                    )}
+                  </NavLink>
+                ))}
+                <div className="border-t border-neutral-200 dark:border-white/10 mx-4 my-2" />
+                <button onClick={() => { setShowMobileMenu(false); navigate("/app"); }} className="flex items-center gap-3 w-full mx-2 px-4 py-3 rounded-xl text-sm font-bold text-[#3A0310] dark:text-white hover:bg-neutral-100 dark:hover:bg-white/5 transition-all">
+                  <LogOut className="w-5 h-5" /> Voltar ao App
+                </button>
+                <button onClick={() => { setShowMobileMenu(false); handleLogout(); }} className="flex items-center gap-3 w-full mx-2 px-4 py-3 rounded-xl text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
+                  <LogOut className="w-5 h-5" /> Sair
+                </button>
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pb-20 relative w-full md:max-w-5xl md:mx-auto md:px-6 md:pt-10">
+      <main className="flex-1 overflow-y-auto relative w-full md:max-w-5xl md:mx-auto md:px-6 md:pt-10">
         <AnimatePresence mode="wait">
           <PageTransition key={location.pathname} className="h-full">
             <Outlet />
@@ -176,52 +261,8 @@ export function AdminLayout() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation for Mobile */}
-      <nav className="bg-white dark:bg-gray-950 border-t border-[#3A0310]/20 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-safe-area flex md:hidden justify-around items-center h-14 md:h-16 shadow-[0_-4px_15px_-1px_rgba(0,0,0,0.8)] z-20 border-x-2 md:border-x-4 border-[#3A0310] border-b-2 md:border-b-4 border-b-[#3A0310]">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.exact}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full h-full relative transition-colors ${
-                isActive ? "text-rose-500" : "text-gray-500 hover:text-gray-300"
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <motion.div
-                    layoutId="admin-bottom-nav-indicator"
-                    className="absolute -top-1 w-1/2 h-1 bg-rose-500 rounded-b-full shadow-[0_0_10px_rgba(244,63,94,0.5)]"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                )}
-                {item.to === "/admin/review" && pendingCount > 0 && (
-                  <span className="absolute top-1 right-1/4 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-full px-0.5 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)] z-10">
-                    {pendingCount}
-                  </span>
-                )}
-                {item.to === "/admin/password-resets" && passwordResetCount > 0 && (
-                  <span className="absolute top-1 right-1/4 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-full px-0.5 animate-bounce shadow-[0_0_12px_rgba(239,68,68,0.7)] z-10">
-                    {passwordResetCount}
-                  </span>
-                )}
-                <motion.div
-                  animate={isActive ? { scale: 1.1, y: -2 } : { scale: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <item.icon className="w-5 h-5 mb-1" />
-                </motion.div>
-                <span className="text-[10px] font-medium tracking-wide">{item.label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
-
       <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} onUnreadCountChange={setUnreadCount} />
+      <MiniPlayer />
     </div>
   );
 }

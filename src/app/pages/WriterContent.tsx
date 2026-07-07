@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { PenLine, Loader2, AlertTriangle, Check, Image as ImageIcon, Link2, Youtube, FileText } from "lucide-react";
+import { PenLine, Loader2, AlertTriangle, Check, Image as ImageIcon, Link2, Youtube, FileText, Mic } from "lucide-react";
 
 function getYouTubeId(url: string) {
   const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -50,12 +50,19 @@ export function WriterContent() {
   const handleVideoUrlChange = (url: string) => {
     setFormData(d => {
       const ytThumb = getYouTubeThumbnail(url);
-      return {
-        ...d,
-        videoUrl: url,
-        thumbnail: ytThumb && !d.thumbnail ? ytThumb : d.thumbnail,
-      };
+      const newThumbnail = ytThumb && !d.thumbnail ? ytThumb : d.thumbnail;
+      return { ...d, videoUrl: url, thumbnail: newThumbnail };
     });
+    if (url && !getYouTubeId(url) && formData.type === "podcast" && !formData.thumbnail) {
+      const isSpotify = /open\.spotify\.com/i.test(url);
+      const apiEndpoint = isSpotify ? '/api/spotify-oembed' : '/api/og-image';
+      fetch(`${apiEndpoint}?url=${encodeURIComponent(url)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.thumbnail) setFormData(d => ({ ...d, thumbnail: data.thumbnail }));
+        })
+        .catch(() => {});
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,7 +174,7 @@ export function WriterContent() {
               {["text", "video", "podcast", "jindungo"].map((t) => (
                 <button type="button" key={t} onClick={() => setFormData(d => ({ ...d, type: t }))}
                   className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${formData.type === t ? "bg-[#3A0310] text-white border-transparent" : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 hover:bg-neutral-200 dark:hover:bg-white/10"}`}>
-                  {t === "text" && "📝 Texto"}{t === "video" && "🎬 Vídeo"}{t === "podcast" && "🎙️ Podcast"}{t === "jindungo" && "🌶️ Jindungo"}
+                  {t === "text" && "📝 Texto"}{t === "video" && "🎬 Vídeo"}{t === "podcast" && "🎙️ Áudio"}{t === "jindungo" && "🌶️ Jindungo"}
                 </button>
               ))}
             </div>
@@ -195,12 +202,12 @@ export function WriterContent() {
           {(formData.type === "video" || formData.type === "podcast") && (
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2 flex items-center gap-1.5 block">
-                <Youtube className="w-3.5 h-3.5 text-red-500" /> Link do {formData.type === "podcast" ? "Áudio" : "Vídeo"}
+                {formData.type === "podcast" ? <Mic className="w-3.5 h-3.5 text-[#3A0310] dark:text-[#E8B4B8]" /> : <Youtube className="w-3.5 h-3.5 text-red-500" />} Link do {formData.type === "podcast" ? "Áudio" : "Vídeo"}
               </label>
               <div className="relative">
                 <Link2 className="absolute left-4 top-3.5 w-4 h-4 text-neutral-400" />
                 <input type="text" value={formData.videoUrl || ""} onChange={e => handleVideoUrlChange(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=..."
+                  placeholder={formData.type === "podcast" ? "Link do áudio (SoundCloud, Spotify, etc.)" : "https://www.youtube.com/watch?v=..."}
                   className="w-full bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl py-3 pl-10 pr-4 text-neutral-900 dark:text-white placeholder-neutral-400 text-sm font-medium focus:outline-none focus:border-red-500 dark:focus:border-red-500/50 transition-colors" />
               </div>
             </div>
