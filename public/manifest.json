@@ -1,0 +1,54 @@
+{
+  "name": "Economia com História",
+  "short_name": "EcH",
+  "description": "Plataforma de aprendizagem sobre economia angolana com vídeos, quizzes, podcasts e muito mais.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F0F0F",
+  "theme_color": "#3A0310",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "pt-AO",
+  "categories": ["education", "business"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Explorar",
+      "short_name": "Explorar",
+      "url": "/explore",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Quizzes",
+      "short_name": "Quizzes",
+      "url": "/quizzes",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

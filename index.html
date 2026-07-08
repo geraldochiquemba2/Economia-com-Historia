@@ -1,16 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-AO">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <meta name="theme-color" content="#3A0310" />
+    <meta name="description" content="Economia com História - Plataforma de aprendizagem sobre economia angolana" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="EcH" />
+    <meta name="application-name" content="Economia com História" />
+    <meta name="msapplication-TileColor" content="#3A0310" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <title>Economia com História</title>
+    
+    <style>
+      html, body { height: 100%; margin: 0; }
+      #root { height: 100%; }
+      
+      /* PWA install prompt styling */
+      .pwa-install-prompt {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #3A0310, #5A0520);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(58, 3, 16, 0.4);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        gap: 12px;
+        max-width: 90vw;
+        border: 1px solid rgba(232, 180, 184, 0.2);
+      }
+      
+      .pwa-install-prompt.show {
+        display: flex;
+      }
+      
+      .pwa-install-btn {
+        background: #E8B4B8;
+        color: #3A0310;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      
+      .pwa-dismiss-btn {
+        background: transparent;
+        color: #E8B4B8;
+        border: 1px solid #E8B4B8;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
 
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-      <title>Mobile app design with animations</title>
-      <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
-    </head>
-
-    <body>
-      <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
-    </body>
-  </html>
-  
+  <body>
+    <div id="root"></div>
+    
+    <!-- PWA Install Prompt -->
+    <div id="pwa-install-prompt" class="pwa-install-prompt">
+      <div style="flex: 1;">
+        <p style="margin: 0; font-weight: bold;">Instalar Economia com História</p>
+        <p style="margin: 4px 0 0; font-size: 12px; opacity: 0.8;">Acesse mesmo sem internet</p>
+      </div>
+      <button id="pwa-install-btn" class="pwa-install-btn">Instalar</button>
+      <button id="pwa-dismiss-btn" class="pwa-dismiss-btn">Agora não</button>
+    </div>
+    
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered:', registration.scope);
+            })
+            .catch((error) => {
+              console.log('SW registration failed:', error);
+            });
+        });
+      }
+      
+      // PWA Install Prompt
+      let deferredPrompt;
+      
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show install prompt
+        const installPrompt = document.getElementById('pwa-install-prompt');
+        if (installPrompt) {
+          installPrompt.classList.add('show');
+        }
+      });
+      
+      document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('User response:', outcome);
+          deferredPrompt = null;
+          
+          const installPrompt = document.getElementById('pwa-install-prompt');
+          if (installPrompt) {
+            installPrompt.classList.remove('show');
+          }
+        }
+      });
+      
+      document.getElementById('pwa-dismiss-btn')?.addEventListener('click', () => {
+        const installPrompt = document.getElementById('pwa-install-prompt');
+        if (installPrompt) {
+          installPrompt.classList.remove('show');
+        }
+      });
+      
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA installed');
+        deferredPrompt = null;
+        
+        const installPrompt = document.getElementById('pwa-install-prompt');
+        if (installPrompt) {
+          installPrompt.classList.remove('show');
+        }
+      });
+    </script>
+  </body>
+</html>
