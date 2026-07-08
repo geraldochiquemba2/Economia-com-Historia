@@ -436,7 +436,7 @@ export function Explore() {
 
                     <div className="p-3 md:p-6 flex flex-col justify-between grow">
                       <div>
-                        <div className="flex items-center gap-2 mb-2 md:mb-2.5 flex-wrap">
+                        <div className="flex items-center gap-2 mb-2 md:mb-2.5 flex-wrap justify-center md:justify-start">
                           <h3 className="font-medium text-neutral-800 dark:text-white text-xs md:text-lg group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2">
                             {content.title}
                           </h3>
