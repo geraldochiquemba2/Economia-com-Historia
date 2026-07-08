@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2, Play, Star, Award, Clock, Ban, Eye, Mic, Search } from "lucide-react";
+import { FileVideo, Edit3, Trash2, PlusCircle, LayoutGrid, X, Loader2, AlertTriangle, Check, Youtube, Image as ImageIcon, Link2, Play, Star, Award, Clock, Ban, Eye, Mic, Search, Upload } from "lucide-react";
 
 type ContentItem = {
   id: string;
@@ -55,6 +55,7 @@ export function AdminContent() {
 
   const [uploadingThumb, setUploadingThumb] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
 
   const [videoPlayer, setVideoPlayer] = useState<ContentItem | null>(null);
   const [previewItem, setPreviewItem] = useState<ContentItem | null>(null);
@@ -156,7 +157,7 @@ export function AdminContent() {
   const handleVideoUrlChange = (url: string) => {
     setFormData(d => {
       const ytThumb = getYouTubeThumbnail(url);
-      const newThumbnail = ytThumb && !d.thumbnail ? ytThumb : d.thumbnail;
+      const newThumbnail = ytThumb ? ytThumb : d.thumbnail;
       return { ...d, videoUrl: url, thumbnail: newThumbnail };
     });
     if (url && !getYouTubeId(url) && formData.type === "podcast" && !formData.thumbnail) {
@@ -177,12 +178,14 @@ export function AdminContent() {
 
     if (target === 'thumbnail') setUploadingThumb(true);
     else setUploadingVideo(true);
+    setUploadProgress(target === 'video' ? 'A enviar vídeo para o servidor...' : 'A enviar imagem...');
     setError("");
 
     const fd = new FormData();
     fd.append('file', file);
 
     try {
+      if (target === 'video') setUploadProgress('A processar vídeo (pode demorar)...');
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: fd
@@ -190,12 +193,14 @@ export function AdminContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro no upload");
 
+      setUploadProgress('');
       if (target === 'thumbnail') {
         setFormData(d => ({ ...d, thumbnail: data.url }));
       } else {
         setFormData(d => ({ ...d, videoUrl: data.url }));
       }
     } catch (err: any) {
+      setUploadProgress('');
       setError(err.message || "Erro no upload. Tente novamente.");
     } finally {
       if (target === 'thumbnail') setUploadingThumb(false);
@@ -213,7 +218,10 @@ export function AdminContent() {
 
       // Auto-gerar thumbnail de YouTube se não houver
       let thumbnail = formData.thumbnail;
-      if (!thumbnail && formData.videoUrl) {
+      if (formData.videoUrl && getYouTubeId(formData.videoUrl)) {
+        const ytThumb = getYouTubeThumbnail(formData.videoUrl);
+        if (ytThumb) thumbnail = ytThumb;
+      } else if (!thumbnail && formData.videoUrl) {
         thumbnail = getYouTubeThumbnail(formData.videoUrl) || "";
       }
 
@@ -642,6 +650,18 @@ export function AdminContent() {
                         </button>
                       </div>
                     </div>
+                    {uploadingVideo && uploadProgress && (
+                      <div className="mt-3 flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-2xl">
+                        <div className="relative">
+                          <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-blue-700 dark:text-blue-300">{uploadProgress}</p>
+                          <p className="text-[10px] text-blue-500 dark:text-blue-400 mt-0.5">Não feche esta janela</p>
+                        </div>
+                        <Upload className="w-4 h-4 text-blue-400 animate-bounce" />
+                      </div>
+                    )}
                     {formData.type === "video" && formData.videoUrl && getYouTubeId(formData.videoUrl) && (
                       <div className="mt-3 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10">
                         <div className="relative h-32 w-full overflow-hidden bg-black/5">
@@ -674,6 +694,12 @@ export function AdminContent() {
                         </button>
                       </div>
                     </div>
+                    {uploadingThumb && uploadProgress && (
+                      <div className="mt-3 flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-2xl">
+                        <Loader2 className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-spin" />
+                        <p className="text-xs font-bold text-blue-700 dark:text-blue-300">{uploadProgress}</p>
+                      </div>
+                    )}
                     {formData.thumbnail && (
                       <div className="relative mt-3 h-24 w-full rounded-xl overflow-hidden border border-neutral-200 dark:border-white/10 bg-black/5">
                         <div className="absolute inset-0">

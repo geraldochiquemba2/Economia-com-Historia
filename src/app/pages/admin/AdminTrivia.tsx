@@ -30,6 +30,7 @@ export function AdminTrivia() {
   const [error, setError] = useState("");
 
   const [uploadingThumb, setUploadingThumb] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [editTarget, setEditTarget] = useState<TriviaItem | null>(null);
 
   const fetchContent = async () => {
@@ -143,6 +144,7 @@ export function AdminTrivia() {
     if (!file) return;
 
     setUploadingThumb(true);
+    setUploadProgress("A enviar imagem...");
     setError("");
 
     const fd = new FormData();
@@ -153,8 +155,10 @@ export function AdminTrivia() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro no upload");
 
+      setUploadProgress("");
       setFormData(d => ({ ...d, imageUrl: data.url }));
     } catch (err: any) {
+      setUploadProgress("");
       setError(err.message || "Erro no upload. Tente novamente.");
     } finally {
       setUploadingThumb(false);
@@ -364,6 +368,12 @@ export function AdminTrivia() {
                       </button>
                     </div>
                   </div>
+                  {uploadingThumb && uploadProgress && (
+                    <div className="mt-3 flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-2xl">
+                      <Loader2 className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-spin" />
+                      <p className="text-xs font-bold text-blue-700 dark:text-blue-300">{uploadProgress}</p>
+                    </div>
+                  )}
                   {formData.imageUrl && (
                     <div className="relative mt-3 h-24 w-full rounded-xl overflow-hidden border border-neutral-200 dark:border-white/10 bg-black/5">
                       <div className="absolute inset-0">

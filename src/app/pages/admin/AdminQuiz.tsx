@@ -214,7 +214,7 @@ export function AdminQuiz() {
                   </span>
                 </td>
                 <td className="p-4 text-right">
-                  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex justify-end gap-2">
                     <button
                       onClick={() => handleOpenModal(q)}
                       className="p-2 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"

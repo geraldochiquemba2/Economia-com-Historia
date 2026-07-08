@@ -27,6 +27,7 @@ export function WriterContent() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState("");
   const [uploadingThumb, setUploadingThumb] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [retryId, setRetryId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export function WriterContent() {
   const handleVideoUrlChange = (url: string) => {
     setFormData(d => {
       const ytThumb = getYouTubeThumbnail(url);
-      const newThumbnail = ytThumb && !d.thumbnail ? ytThumb : d.thumbnail;
+      const newThumbnail = ytThumb ? ytThumb : d.thumbnail;
       return { ...d, videoUrl: url, thumbnail: newThumbnail };
     });
     if (url && !getYouTubeId(url) && formData.type === "podcast" && !formData.thumbnail) {
@@ -69,6 +70,7 @@ export function WriterContent() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingThumb(true);
+    setUploadProgress("A enviar imagem...");
     setError("");
     const fd = new FormData();
     fd.append('file', file);
@@ -76,8 +78,10 @@ export function WriterContent() {
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro no upload");
+      setUploadProgress("");
       setFormData(d => ({ ...d, thumbnail: data.url }));
     } catch (err: any) {
+      setUploadProgress("");
       setError(err.message || "Erro no upload.");
     } finally {
       setUploadingThumb(false);
@@ -90,7 +94,10 @@ export function WriterContent() {
     setError("");
     try {
       let thumbnail = formData.thumbnail;
-      if (!thumbnail && formData.videoUrl) {
+      if (formData.videoUrl && getYouTubeId(formData.videoUrl)) {
+        const ytThumb = getYouTubeThumbnail(formData.videoUrl);
+        if (ytThumb) thumbnail = ytThumb;
+      } else if (!thumbnail && formData.videoUrl) {
         thumbnail = getYouTubeThumbnail(formData.videoUrl) || "";
       }
 
@@ -229,6 +236,12 @@ export function WriterContent() {
                 </button>
               </div>
             </div>
+            {uploadingThumb && uploadProgress && (
+              <div className="mt-3 flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-2xl">
+                <Loader2 className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-spin" />
+                <p className="text-xs font-bold text-blue-700 dark:text-blue-300">{uploadProgress}</p>
+              </div>
+            )}
             {formData.thumbnail && (
               <div className="relative mt-3 h-24 w-full rounded-xl overflow-hidden border border-neutral-200 dark:border-white/10 bg-black/5">
                 <div className="absolute inset-0">
