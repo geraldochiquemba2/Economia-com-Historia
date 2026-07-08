@@ -436,14 +436,12 @@ export function Explore() {
 
                     <div className="p-3 md:p-6 flex flex-col justify-between grow">
                       <div>
-                        <div className="flex items-center gap-2 mb-2 md:mb-2.5 flex-wrap justify-center md:justify-start">
-                          <h3 className="font-medium text-neutral-800 dark:text-white text-xs md:text-lg group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2">
-                            {content.title}
-                          </h3>
-                          <span className="shrink-0 flex items-center gap-1 bg-[#0a0a0a]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[9px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded-md border border-white/10 dark:border-[#E8B4B8]">
-                            {typeIcon(content.type)}{typeLabel(content.type)}
-                          </span>
-                        </div>
+                        <span className="inline-flex items-center gap-1 bg-[#0a0a0a]/10 dark:bg-[#E8B4B8]/10 text-[#3A0310] dark:text-[#E8B4B8] text-[9px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded-md border border-white/10 dark:border-[#E8B4B8] mb-2 md:mb-2.5">
+                          {typeIcon(content.type)}{typeLabel(content.type)}
+                        </span>
+                        <h3 className="font-medium text-neutral-800 dark:text-white text-xs md:text-lg group-hover:text-[#3A0310] dark:group-hover:text-[#E8B4B8] transition-colors leading-tight uppercase tracking-tight line-clamp-2 mb-1">
+                          {content.title}
+                        </h3>
                         <p className="text-neutral-900 dark:text-white text-xs line-clamp-2 leading-relaxed font-medium">
                           {content.description}
                         </p>
