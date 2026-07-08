@@ -156,6 +156,10 @@ export function ContentDetail() {
   };
 
   useEffect(() => {
+    setShowVideo(false);
+  }, [id]);
+
+  useEffect(() => {
     if (!id) return;
     setLoading(true);
     fetch(`/api/content/${id}`)
@@ -265,7 +269,7 @@ export function ContentDetail() {
             )}
           </div>
         ) : (
-          <div className="relative w-full h-[50vh]">
+          <div className="relative w-full h-[40vh] sm:h-[50vh]">
             {content.thumbnail ? (
               <>
                 <div className="absolute inset-0">
@@ -284,12 +288,12 @@ export function ContentDetail() {
 
             {/* Play button overlay for videos */}
             {content.type === "video" && content.videoUrl && (
-              <div className="absolute inset-0 z-30 flex items-center justify-center">
+              <div className="absolute inset-0 z-40 flex items-center justify-center pb-16 sm:pb-24">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowVideo(true)}
-                  className="w-20 h-20 bg-[#3A0310]/80 backdrop-blur-xl rounded-full flex items-center justify-center border border-[#E8B4B8]/30 shadow-2xl group"
+                  className="w-16 h-16 sm:w-20 sm:h-20 bg-[#3A0310]/80 backdrop-blur-xl rounded-full flex items-center justify-center border border-[#E8B4B8]/30 shadow-2xl group"
                 >
                   <PlayCircle className="w-10 h-10 group-hover:text-[#E8B4B8] transition-colors" style={{ color: '#ffffff' }} />
                 </motion.button>
@@ -298,12 +302,12 @@ export function ContentDetail() {
 
             {/* Play button overlay for audio/podcast */}
             {content.type === "podcast" && content.videoUrl && (
-              <div className="absolute inset-0 z-30 flex items-center justify-center">
+              <div className="absolute inset-0 z-40 flex items-center justify-center pb-16 sm:pb-24">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => audioPlay(content.videoUrl!, content.title, content.thumbnail || "")}
-                  className="w-20 h-20 bg-[#3A0310]/80 backdrop-blur-xl rounded-full flex items-center justify-center border border-[#E8B4B8]/30 shadow-2xl group"
+                  className="w-16 h-16 sm:w-20 sm:h-20 bg-[#3A0310]/80 backdrop-blur-xl rounded-full flex items-center justify-center border border-[#E8B4B8]/30 shadow-2xl group"
                 >
                   <PlayCircle className="w-10 h-10 group-hover:text-[#E8B4B8] transition-colors" style={{ color: '#ffffff' }} />
                 </motion.button>
@@ -311,13 +315,13 @@ export function ContentDetail() {
             )}
 
             {/* Title overlay */}
-            <div className="absolute bottom-10 left-0 right-0 px-6 z-30">
+            <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 py-4 sm:py-6 z-30 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
               <div className="flex items-center gap-2 mb-4">
                 <span className="bg-[#3A0310] px-3 py-1 rounded-full uppercase tracking-widest border border-[#E8B4B8]/20 text-[10px] font-black" style={{ color: '#E8B4B8' }}>
                   {({ jindungo: "Texto com Jindungo 🔥", text: "Texto", video: "Vídeo", podcast: "Áudio" }[content.type] || content.type)}
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-black leading-none uppercase tracking-tighter drop-shadow-2xl" style={{ color: '#ffffff' }}>
+              <h1 className="text-lg sm:text-2xl md:text-4xl font-black leading-none uppercase tracking-tighter drop-shadow-2xl line-clamp-2" style={{ color: '#ffffff' }}>
                 {content.title}
               </h1>
               {(content.authorName || content.createdAt) && (
