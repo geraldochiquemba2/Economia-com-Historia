@@ -8,6 +8,11 @@ function getSpotifyEmbed(url: string): string | null {
   return null;
 }
 
+function getYouTubeId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+}
+
 export function MiniPlayer() {
   const [src, setSrc] = useState<string | null>(audioGetSrc());
   const [title, setTitle] = useState("");
@@ -57,6 +62,8 @@ export function MiniPlayer() {
 
   const isSpotify = /open\.spotify\.com/i.test(src);
   const spotifyEmbed = isSpotify ? getSpotifyEmbed(src) : null;
+  const isYouTube = /(?:youtube\.com|youtu\.be)/i.test(src);
+  const youtubeId = isYouTube ? getYouTubeId(src) : null;
 
   const toggleDock = () => {
     const newDocked = !miniPlayerDockedGet();
@@ -68,7 +75,7 @@ export function MiniPlayer() {
 
   const togglePlay = () => {
     const el = audioGetEl();
-    if (!el || isSpotify) return;
+    if (!el || isSpotify || isYouTube) return;
     if (el.paused) el.play().catch(() => {});
     else el.pause();
   };
@@ -104,7 +111,7 @@ export function MiniPlayer() {
               <Volume2 style={{ width: 14, height: 14, color: "#E8B4B8" }} />
             </div>
           )}
-          {!isSpotify && (
+          {!isSpotify && !isYouTube && (
             <div onClick={(e) => { e.stopPropagation(); togglePlay(); }} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {isPlaying ? (
                 <svg style={{ width: 16, height: 16 }} fill="white" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
@@ -122,7 +129,32 @@ export function MiniPlayer() {
       {/* ===== FULL PLAYER ===== */}
       <div style={{ position: "fixed", bottom: 170, left: 12, right: 12, zIndex: 200, display: docked ? "none" : "block" }}
            className="md:!bottom-[115px] md:!left-auto md:!right-6 md:!w-96">
-        {isSpotify && spotifyEmbed ? (
+        {isYouTube && youtubeId ? (
+          <div style={{ background: "#1A1A1A", borderRadius: 16, border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)", overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px 0 12px" }}>
+              {thumb ? <img src={thumb} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} /> : (
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "#3A0310", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Volume2 style={{ width: 14, height: 14, color: "#E8B4B8" }} /></div>
+              )}
+              <p style={{ color: "white", fontSize: 10, fontWeight: 700, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{title}</p>
+              <button onClick={toggleDock} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
+                <Minus style={{ width: 16, height: 16, color: "white" }} />
+              </button>
+              <button onClick={audioStop} style={{ width: 32, height: 32, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
+                <X style={{ width: 14, height: 14, color: "#1A1A1A" }} />
+              </button>
+            </div>
+            <div style={{ padding: "8px 12px 12px 12px" }}>
+              <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%", borderRadius: 8, overflow: "hidden" }}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                  frameBorder="0"
+                  allow="autoplay"
+                />
+              </div>
+            </div>
+          </div>
+        ) : isSpotify && spotifyEmbed ? (
           <div style={{ background: "#1A1A1A", borderRadius: 16, border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)", overflow: "hidden" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px 0 12px" }}>
               {thumb ? <img src={thumb} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} /> : (

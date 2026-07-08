@@ -24,8 +24,9 @@ function emit() { getA().listeners.forEach((fn: () => void) => fn()); }
 export function audioPlay(src: string, title: string, thumbnail: string) {
   const a = getA();
   const isSpotify = /open\.spotify\.com/i.test(src);
+  const isYouTube = /(?:youtube\.com|youtu\.be)/i.test(src);
 
-  if (!isSpotify) {
+  if (!isSpotify && !isYouTube) {
     a.el.src = src;
     a.el.load();
     a.el.play().catch(() => {});
