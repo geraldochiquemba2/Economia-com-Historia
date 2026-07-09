@@ -54,9 +54,10 @@ export function AdminUsers() {
     if (!blockTarget) return;
     setBlocking(true);
     try {
+      const token = localStorage.getItem("token");
       await fetch(`/api/users/${blockTarget.id}/block`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ reason: blockReason }),
       });
       setUsers(prev => prev.map(u => u.id === blockTarget.id ? { ...u, blocked: true, blockReason: blockReason } : u));
@@ -71,7 +72,8 @@ export function AdminUsers() {
 
   const handleUnblock = async (user: UserItem) => {
     try {
-      await fetch(`/api/users/${user.id}/unblock`, { method: "PUT" });
+      const token = localStorage.getItem("token");
+      await fetch(`/api/users/${user.id}/unblock`, { method: "PUT", headers: { Authorization: `Bearer ${token}` } });
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, blocked: false, blockReason: undefined } : u));
     } catch {
       setError("Erro ao desbloquear utilizador.");
@@ -80,7 +82,8 @@ export function AdminUsers() {
 
   const fetchEliteRequests = async () => {
     try {
-      const res = await fetch('/api/elite-requests');
+      const token = localStorage.getItem("token");
+      const res = await fetch('/api/elite-requests', { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       setEliteRequests(Array.isArray(data) ? data : []);
     } catch { /* ignorar */ }
@@ -89,9 +92,10 @@ export function AdminUsers() {
   const handleEliteAction = async (requestId: string, userId: string, action: 'approve' | 'reject', reason?: string) => {
     setProcessingRequest(requestId);
     try {
+      const token = localStorage.getItem("token");
       await fetch(`/api/elite-requests/${requestId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action, reason }),
       });
       // Atualizar estado local
@@ -159,7 +163,8 @@ export function AdminUsers() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch(`/api/users/${deleteTarget.id}`, { method: "DELETE" });
+      const token = localStorage.getItem("token");
+      await fetch(`/api/users/${deleteTarget.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       setUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
       setDeleteTarget(null);
     } catch {
@@ -174,13 +179,14 @@ export function AdminUsers() {
     setPlanDropdown(null);
     try {
       const newRole = newPlan;
+      const token = localStorage.getItem("token");
       await fetch(`/api/users/${userId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ role: newRole, plan: newPlan }),
       });
       // Rebuscar a lista completa para refletir em tempo real
-      const res = await fetch("/api/users");
+      const res = await fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       setUsers(Array.isArray(data) ? data : []);
     } catch {
