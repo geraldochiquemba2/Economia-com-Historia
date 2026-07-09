@@ -28,3 +28,10 @@ html.light body .force-white-50,
 .force-white-50 {
   color: rgba(255, 255, 255, 0.5) !important;
 }
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}

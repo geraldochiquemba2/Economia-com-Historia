@@ -216,12 +216,21 @@ export function Home() {
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.8)' }} />
             </div>
-            <input 
-              type="text" 
-              placeholder={placeholders[placeholderIndex]} 
-              className="w-full bg-white/5 backdrop-blur-xl border border-white/10 placeholder-white/50 rounded-full py-4 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/20 transition-all text-xs font-light tracking-wide shadow-xl force-white force-white-placeholder"
-              style={{ color: '#ffffff' }}
-            />
+            <div className="relative">
+              <input 
+                type="text" 
+                placeholder=" " 
+                className="w-full bg-white/5 backdrop-blur-xl border border-white/10 placeholder-white/50 rounded-full py-4 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/20 transition-all text-xs font-light tracking-wide shadow-xl force-white force-white-placeholder"
+                style={{ color: '#ffffff' }}
+              />
+              <span 
+                key={placeholderIndex}
+                className="absolute left-12 top-1/2 -translate-y-1/2 text-xs font-light tracking-wide text-white/50 pointer-events-none animate-fade"
+                style={{ animation: 'fadeInOut 3s ease-in-out infinite' }}
+              >
+                {placeholders[placeholderIndex]}
+              </span>
+            </div>
           </div>
         </div>
       </motion.header>
