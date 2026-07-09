@@ -1035,22 +1035,31 @@ app.post('/api/comments', authMiddleware, async (req, res) => {
 
     // --- NOTIFICAÇÕES DE MENÇÃO ---
     const mentions = text.match(/@([A-Za-zÀ-ÿ0-9_]+)/g);
+    console.log('[MENTION] text:', text, '| mentions found:', mentions);
     if (mentions) {
       const uniqueMentions = [...new Set(mentions.map(m => m.substring(1)))];
       for (const mentionedName of uniqueMentions) {
+        console.log('[MENTION] looking for user:', mentionedName);
         // Procurar utilizador removendo espacos do nome (mencao nao tem espacos)
         const userRes = await pool.query(
-          'SELECT id FROM "User" WHERE REPLACE(name, \' \', \'\') ILIKE $1',
+          'SELECT id, name FROM "User" WHERE REPLACE(name, \' \', \'\') ILIKE $1',
           [mentionedName]
         );
+        console.log('[MENTION] user found:', userRes.rows);
         if (userRes.rows.length > 0) {
           const mentionedUserId = userRes.rows[0].id;
           if (mentionedUserId !== user.id) {
+            console.log('[MENTION] creating notification for userId:', mentionedUserId);
             await pool.query(
               'INSERT INTO "Notification" ("userId", "actorName", type, "contentId", "commentId") VALUES ($1, $2, $3, $4, $5)',
               [mentionedUserId, author, 'mention', contentId, result.rows[0].id]
             );
+            console.log('[MENTION] notification created!');
+          } else {
+            console.log('[MENTION] skip: same user');
           }
+        } else {
+          console.log('[MENTION] no user found for:', mentionedName);
         }
       }
     }
@@ -1607,6 +1616,31 @@ app.post('/api/content', authMiddleware, async (req, res) => {
       'INSERT INTO "Content" (title, description, type, thumbnail, "fullText", "videoUrl", featured, recommended, status, "authorId", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) RETURNING *',
       [title, description, type, thumbnail || '', fullText || '', videoUrl || null, featured || false, recommended || false, status, authorId]
     );
+
+    // --- NOTIFICAÇÕES DE MENÇÃO NO POST ---
+    const allText = [title, description, fullText].filter(Boolean).join(' ');
+    const mentions = allText.match(/@([A-Za-zÀ-ÿ0-9_]+)/g);
+    if (mentions) {
+      const uniqueMentions = [...new Set(mentions.map(m => m.substring(1)))];
+      for (const mentionedName of uniqueMentions) {
+        try {
+          const userRes = await pool.query(
+            'SELECT id FROM "User" WHERE REPLACE(name, \' \', \'\') ILIKE $1',
+            [mentionedName]
+          );
+          if (userRes.rows.length > 0) {
+            const mentionedUserId = userRes.rows[0].id;
+            if (mentionedUserId !== authorId) {
+              await pool.query(
+                'INSERT INTO "Notification" ("userId", "actorName", type, "contentId") VALUES ($1, $2, $3, $4)',
+                [mentionedUserId, req.user.name || 'Alguém', 'mention', result.rows[0].id]
+              );
+            }
+          }
+        } catch (e) { /* ignore individual mention errors */ }
+      }
+    }
+
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
@@ -2122,22 +2156,28 @@ app.get('/api/health', (req, res) => {
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // SPA catch-all: serve index.html for all non-API routes
-app.get('/{*path}', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+app.get('/{*path}', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
   }
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 // -- NOTIFICAÇÕES --
 
 app.get('/api/users/:id/notifications', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  if (!req.user || req.user.id !== id) return res.status(403).json({ error: 'Acesso negado' });
+  console.log('[NOTIF] request for userId:', id, '| req.user.id:', req.user?.id);
+  if (!req.user || req.user.id !== id) {
+    console.log('[NOTIF] ACCESS DENIED - mismatch:', req.user?.id, '!==', id);
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
   try {
     const { rows } = await pool.query(
       'SELECT * FROM "Notification" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 50',
       [id]
     );
+    console.log('[NOTIF] found', rows.length, 'notifications for user', id);
     res.json(rows);
   } catch (error) {
     console.error(error);
