@@ -1833,7 +1833,7 @@ app.put('/api/users/:id/block', requireAdmin, async (req, res) => {
 app.put('/api/users/:id/unblock', requireAdmin, async (req, res) => {
   try {
     await pool.query(
-      `UPDATE "User" SET blocked = FALSE, "blockReason" = NULL WHERE id = $2`,
+      `UPDATE "User" SET blocked = FALSE, "blockReason" = NULL WHERE id = $1`,
       [req.params.id]
     );
     res.json({ message: 'Utilizador desbloqueado com sucesso' });
