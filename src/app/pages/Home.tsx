@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, MemoryRouter, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -106,6 +106,25 @@ export function Home() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [categories, setCategories] = useState<any[]>([]);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  
+  const placeholders = [
+    "Procurar sobre inflação...",
+    "O que é o PIB?",
+    "Como funciona o mercado cambial?",
+    "Aprender sobre o Kwanza",
+    "História da economia angolana",
+    "OGE orçamento geral",
+    "Petróleo e economia",
+    "Finanças pessoais",
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!token || !user?.id) return;
@@ -199,7 +218,7 @@ export function Home() {
             </div>
             <input 
               type="text" 
-              placeholder="Procurar tesouros de conhecimento..." 
+              placeholder={placeholders[placeholderIndex]} 
               className="w-full bg-white/5 backdrop-blur-xl border border-white/10 placeholder-white/50 rounded-full py-4 pl-12 pr-4 focus:outline-none focus:border-[#E8B4B8]/50 focus:bg-white/20 transition-all text-xs font-light tracking-wide shadow-xl force-white force-white-placeholder"
               style={{ color: '#ffffff' }}
             />
