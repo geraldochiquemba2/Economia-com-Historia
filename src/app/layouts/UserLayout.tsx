@@ -16,13 +16,25 @@ export function UserLayout() {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (!token) return;
-    fetch("/api/profile", { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => {
-        if (r.status === 403) return r.json().then(d => { if (d.blocked) { localStorage.removeItem("token"); localStorage.removeItem("user"); navigate("/"); } });
-      })
-      .catch(() => {});
-  }, []);
+    if (!token || window.__blockedInterceptorInstalled) return;
+    window.__blockedInterceptorInstalled = true;
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const res = await originalFetch(...args);
+      if (res.status === 403) {
+        const clone = res.clone();
+        try {
+          const body = await clone.json();
+          if (body.blocked) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/";
+          }
+        } catch {}
+      }
+      return res;
+    };
+  }, [token]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
