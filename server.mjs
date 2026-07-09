@@ -122,11 +122,15 @@ function generateRandomPassword(length = 10) {
   return pass;
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Não autorizado. Faça login novamente.' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    const { rows } = await pool.query('SELECT blocked FROM "User" WHERE id = $1', [decoded.id]);
+    if (rows.length > 0 && rows[0].blocked) {
+      return res.status(403).json({ error: 'Conta bloqueada. Contacte o administrador.', blocked: true });
+    }
     req.user = decoded;
     next();
   } catch (err) {

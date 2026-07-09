@@ -15,6 +15,15 @@ export function UserLayout() {
   const user = userStr ? JSON.parse(userStr) : null;
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    if (!token) return;
+    fetch("/api/profile", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => {
+        if (r.status === 403) return r.json().then(d => { if (d.blocked) { localStorage.removeItem("token"); localStorage.removeItem("user"); navigate("/"); } });
+      })
+      .catch(() => {});
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
